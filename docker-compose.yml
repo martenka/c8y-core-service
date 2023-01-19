@@ -1,0 +1,41 @@
+# Use root/example as user/password credentials
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.11.6-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - "5672:5672" # Rabbitmq suhtlusport
+      - "15672:15672" # Rabbitmq UI adminliidese port
+    hostname: cumuservice_rabbitmq
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq/
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+  cumudb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    restart: "no"
+    volumes:
+      - cumu-data:/data/db #/host/path:/container/path. Devis on see WSL peal
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+
+  cumudb-express:
+    image: mongo-express
+    depends_on:
+      - cumudb
+    restart: "unless-stopped"
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@cumudb:27017
+volumes:
+  cumu-data:
+  rabbitmq-data:
