@@ -10,6 +10,6 @@ import { Group, GroupSchema } from '../../models/Group';
   ],
   controllers: [GroupsController],
   providers: [GroupsService],
-  exports: [GroupsService],
+  exports: [GroupsService, MongooseModule],
 })
 export class GroupsModule {}

@@ -15,3 +15,9 @@ export interface GroupSearchOptions extends BaseSearchOptions {
   name?: string;
   sensors?: string[];
 }
+
+export interface FileTaskSearchOptions extends BaseSearchOptions {
+  status?: string;
+  name?: string;
+  type?: string;
+}

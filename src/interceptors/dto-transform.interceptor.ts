@@ -3,6 +3,8 @@ import {
   CallHandler,
   ExecutionContext,
   Injectable,
+  InternalServerErrorException,
+  Logger,
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -18,6 +20,8 @@ import { isNil } from '@nestjs/common/utils/shared.utils';
 
 @Injectable()
 export class DtoTransformInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(DtoTransformInterceptor.name);
+
   constructor(private readonly reflector: Reflector) {}
   intercept(
     context: ExecutionContext,
@@ -31,20 +35,35 @@ export class DtoTransformInterceptor implements NestInterceptor {
       map((data: HydratedDocument<unknown> | HydratedDocument<unknown>[]) => {
         if (isArray(data)) {
           return data.map((value: HydratedDocument<unknown>) =>
-            toDTO(dto, value),
+            toOutputDTO(dto, value, () => noDtoHandler(dto, this.logger)),
           );
         }
-        return toDTO(dto, data);
+        return toOutputDTO(dto, data, () => noDtoHandler(dto, this.logger));
       }),
     );
   }
 }
-export function toDTO(
+
+function noDtoHandler(dto, logger: Logger) {
+  if (isNil(dto)) {
+    logger?.warn(
+      'DTO transform interceptor set, but not DTO was provided. Check your controller annotations! ',
+    );
+    throw new InternalServerErrorException();
+  }
+}
+
+function toOutputDTO(
   dto: ClassConstructor<unknown> | typeof NO_DTO_VALIDATION,
   data: HydratedDocument<unknown>,
+  noDtoProvidedHandler?: () => void,
 ) {
-  if (isNil(data) || dto === NO_DTO_VALIDATION) {
+  if (dto === NO_DTO_VALIDATION) {
     return data;
+  }
+
+  if (isNil(dto)) {
+    noDtoProvidedHandler();
   }
 
   return plainToClass(dto, instanceToPlain(data.toObject()), {

@@ -16,7 +16,10 @@ import { isNil } from '@nestjs/common/utils/shared.utils';
 
 @Injectable()
 export class SensorsService {
-  constructor(@InjectModel(Sensor.name) private sensorModel: SensorModel) {}
+  constructor(
+    @InjectModel(Sensor.name)
+    private sensorModel: SensorModel,
+  ) {}
   async createSensors(
     createSensorDtos: CreateSensorDto[],
   ): Promise<SensorDocument[] | undefined> {

@@ -10,5 +10,8 @@ export abstract class Base {
   deletedAt?: Date;
 
   @Prop({ default: Date.now })
+  createdAt?: Date;
+
+  @Prop({ default: Date.now })
   updatedAt?: Date;
 }
