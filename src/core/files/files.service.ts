@@ -39,6 +39,7 @@ export class FilesService {
     const downloadDTO = { ...fileDownloadDTO, entities };
     const entity = await this.createFileTaskEntity(downloadDTO);
     await entity.populate('data.sensorData.sensor');
+
     this.messagesService.sendFileDownloadScheduledMessage({
       taskId: entity._id.toString(),
       dateTo: fileDownloadDTO.dateTo.toISOString(),
@@ -57,6 +58,8 @@ export class FilesService {
       },
     });
 
+    entity.status = 'IN_QUEUE';
+    await entity.save();
     return entity;
   }
 

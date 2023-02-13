@@ -21,6 +21,9 @@ export class MessagesHandlerService {
 
     const sensorData = ensureArray(message.content.data).map((value) => ({
       fileName: value.fileName,
+      filePath: value.filePath,
+      bucket: value.bucket,
+      fileURL: value.fileURL,
       sensor: new Types.ObjectId(value.sensorId),
     }));
 

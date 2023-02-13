@@ -27,16 +27,25 @@ export type TaskStatus = keyof typeof TaskSteps;
     },
   },
 })
-class SensorWithFileName extends Document {
+class SensorData extends Document {
   @Prop({ type: Types.ObjectId, ref: () => Sensor })
   sensor: Sensor;
 
   @Prop()
   fileName?: string;
+
+  @Prop()
+  bucket?: string;
+
+  @Prop()
+  filePath?: string;
+
+  @Prop()
+  fileURL?: string;
 }
 
 export const SensorWithFileNameSchema =
-  SchemaFactory.createForClass(SensorWithFileName);
+  SchemaFactory.createForClass(SensorData);
 
 @Schema({
   _id: false,
@@ -53,7 +62,7 @@ export const SensorWithFileNameSchema =
 })
 class FileTaskData extends Document {
   @Prop({ type: [SensorWithFileNameSchema], default: [] })
-  sensorData: SensorWithFileName[];
+  sensorData: SensorData[];
 
   @Prop({ required: true, type: Date })
   dateFrom: Date;
