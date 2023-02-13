@@ -4,8 +4,7 @@ import { UpdateSensorDto } from './dto/update-sensor.dto';
 import { Sensor } from '../../models';
 import { SensorDocument, SensorModel } from '../../models/Sensor';
 import { InjectModel } from '@nestjs/mongoose';
-import { SensorSearchOptions } from '../../models/types/types';
-import { ensureArray, hasNoOwnKeys, notNil } from '../../utils/validation';
+import { hasNoOwnKeys, notNil } from '../../utils/validation';
 import {
   idToObjectID,
   pickBy,
@@ -13,12 +12,16 @@ import {
   awaitAllPromises,
 } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
+import { SkipPagingService } from '../paging/skip-paging.service';
+import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
+import { SensorSearchOptions } from '../../global/query/types';
 
 @Injectable()
 export class SensorsService {
   constructor(
     @InjectModel(Sensor.name)
     private sensorModel: SensorModel,
+    private skipPagingService: SkipPagingService,
   ) {}
   async createSensors(
     createSensorDtos: CreateSensorDto[],
@@ -26,9 +29,17 @@ export class SensorsService {
     return await this.sensorModel.create(createSensorDtos);
   }
 
-  async findMany(options: SensorSearchOptions): Promise<SensorDocument[]> {
-    return ensureArray(
-      await this.sensorModel.find({ ...remapIDAndRemoveNil(options) }).exec(),
+  async findMany(
+    searchOptions: SensorSearchOptions,
+    pagingOptions: IPagingOptions,
+  ): Promise<DBPagingResult<Sensor>> {
+    return await this.skipPagingService.findWithPagination(
+      this.sensorModel,
+      {
+        ...remapIDAndRemoveNil(searchOptions),
+      },
+      { _id: 1 },
+      pagingOptions,
     );
   }
 

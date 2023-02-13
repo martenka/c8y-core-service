@@ -13,8 +13,8 @@ import {
 
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Group, GroupDocument, GroupModel } from '../../models/Group';
-import { GroupSearchOptions } from '../../models/types/types';
 import { InjectModel } from '@nestjs/mongoose';
+import { GroupSearchOptions } from '../../global/query/types';
 
 @Injectable()
 export class GroupsService {

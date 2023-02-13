@@ -15,10 +15,15 @@ import { CreateSensorDto } from './dto/create-sensor.dto';
 import { UpdateSensorDto } from './dto/update-sensor.dto';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
 import { SetControllerDTO } from '../../decorators/dto';
-import { OutputSensorDto } from './dto/output-sensor.dto';
-import { SensorDocument } from '../../models/Sensor';
-import { SensorSearchOptions } from '../../models/types/types';
+import {
+  OutputSensorDto,
+  PaginatedOutputSensorDto,
+} from './dto/output-sensor.dto';
+import { Sensor, SensorDocument } from '../../models/Sensor';
 import { UpdateGroupDto } from '../groups/dto/update-group.dto';
+import { DBPagingResult } from '../../global/pagination/types';
+import { SensorQuery } from './query/sensor.query';
+import { PagingQuery } from '../../global/pagination/pagination';
 
 @Controller('sensors')
 @UseInterceptors(DtoTransformInterceptor)
@@ -34,30 +39,19 @@ export class SensorsController {
     return await this.sensorsService.createSensors(createSensorDtos);
   }
 
-  @Get()
-  @SetControllerDTO(OutputSensorDto)
-  async searchSensors(
-    @Query('id') id?: string,
-    @Query('managedObjectId') managedObjectId?: string,
-    @Query('managedObjectName') managedObjectName?: string,
-    @Query('valueFragmentType') valueFragmentType?: string,
-    @Query('valueFragmentDisplayName') valueFragmentDisplayName?: string,
-  ): Promise<SensorDocument | SensorDocument[] | undefined> {
-    const options: SensorSearchOptions = {
-      id,
-      managedObjectId,
-      managedObjectName,
-      valueFragmentType,
-      valueFragmentDisplayName,
-    };
-
-    return await this.sensorsService.findMany(options);
-  }
-
   @Get(':id')
   @SetControllerDTO(OutputSensorDto)
   async findOne(@Param('id') id: string): Promise<SensorDocument | undefined> {
     return this.sensorsService.findOne({ id });
+  }
+
+  @Get()
+  @SetControllerDTO(PaginatedOutputSensorDto)
+  async searchSensors(
+    @Query() searchQuery: SensorQuery,
+    @Query() pagingQuery: PagingQuery,
+  ): Promise<DBPagingResult<Sensor> | undefined> {
+    return await this.sensorsService.findMany(searchQuery, pagingQuery);
   }
 
   @Patch()

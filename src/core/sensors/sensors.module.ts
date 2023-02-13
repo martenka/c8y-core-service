@@ -4,9 +4,11 @@ import { SensorsController } from './sensors.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Sensor } from '../../models';
 import { SensorSchema } from '../../models/Sensor';
+import { PagingModule } from '../paging/paging.module';
 
 @Module({
   imports: [
+    PagingModule,
     MongooseModule.forFeature([{ name: Sensor.name, schema: SensorSchema }]),
   ],
   controllers: [SensorsController],

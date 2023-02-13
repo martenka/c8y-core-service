@@ -36,16 +36,16 @@ export class GroupsController {
     return newGroups;
   }
 
-  @Get()
-  @SetControllerDTO(OutputGroupDto)
-  findAll() {
-    return this.groupsService.findAllGroups();
-  }
-
   @Get(':id')
   @SetControllerDTO(OutputGroupDto)
   findOne(@Param('id') id: string) {
     return this.groupsService.findOne({ id });
+  }
+
+  @Get()
+  @SetControllerDTO(OutputGroupDto)
+  findAll() {
+    return this.groupsService.findAllGroups();
   }
 
   @Patch()

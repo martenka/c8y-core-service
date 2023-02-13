@@ -1,5 +1,7 @@
 import { CustomAttributes } from '../../../models/types/types';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
+import { BaseDBPagination } from '../../../global/pagination/pagination';
+import { ValidateNested } from 'class-validator';
 
 @Exclude()
 export class OutputSensorDto {
@@ -23,4 +25,12 @@ export class OutputSensorDto {
 
   @Expose()
   customAttributes?: CustomAttributes;
+}
+
+@Exclude()
+export class PaginatedOutputSensorDto extends BaseDBPagination<OutputSensorDto> {
+  @Expose()
+  @Type(() => OutputSensorDto)
+  @ValidateNested({ each: true })
+  data: OutputSensorDto[];
 }

@@ -1,6 +1,8 @@
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { OutputSensorDto } from '../../sensors/dto/output-sensor.dto';
 import { Types } from 'mongoose';
+import { BaseDBPagination } from '../../../global/pagination/pagination';
+import { ValidateNested } from 'class-validator';
 
 @Exclude()
 export class OutputSensorWithFilenameDto {
@@ -74,4 +76,12 @@ export class OutputFileDto {
 
   @Expose()
   failReason: string;
+}
+
+@Exclude()
+export class PaginatedOutputFileDto extends BaseDBPagination<OutputFileDto> {
+  @Expose()
+  @Type(() => OutputFileDto)
+  @ValidateNested({ each: true })
+  data: OutputFileDto[];
 }

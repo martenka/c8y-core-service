@@ -5,7 +5,6 @@ import {
   FileDownloadDto,
   FileDownloadEntityDto,
 } from './dto/file-download.dto';
-import { FileTaskSearchOptions } from '../../models/types/types';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   FileTask,
@@ -14,16 +13,19 @@ import {
   TaskSteps,
 } from '../../models/FileTask';
 import { idToObjectID, remapIDAndRemoveNil } from '../../utils/helpers';
-import { hasNoOwnKeys } from '../../utils/validation';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Types } from 'mongoose';
 import { Group } from '../../models';
 import { GroupModel } from '../../models/Group';
+import { SkipPagingService } from '../paging/skip-paging.service';
+import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
+import { FileTaskSearchOptions } from '../../global/query/types';
 
 @Injectable()
 export class FilesService {
   constructor(
     private readonly messagesService: MessagesProducerService,
+    private readonly skipPagingService: SkipPagingService,
     @InjectModel(FileTask.name) private readonly fileTaskModel: TaskModel,
     @InjectModel(Group.name) private readonly groupModel: GroupModel,
   ) {}
@@ -64,14 +66,15 @@ export class FilesService {
   }
 
   async find(
-    options: FileTaskSearchOptions,
-  ): Promise<TaskDocument[] | undefined> {
-    const searchOptions = remapIDAndRemoveNil(options);
-    if (hasNoOwnKeys(searchOptions)) {
-      return undefined;
-    }
-
-    return this.fileTaskModel.find(searchOptions).exec();
+    searchOptions: FileTaskSearchOptions,
+    pagingOptions: IPagingOptions,
+  ): Promise<DBPagingResult<FileTask>> {
+    return await this.skipPagingService.findWithPagination(
+      this.fileTaskModel,
+      remapIDAndRemoveNil(searchOptions),
+      { _id: 1 },
+      pagingOptions,
+    );
   }
 
   async findOne(id: string): Promise<TaskDocument | undefined> {

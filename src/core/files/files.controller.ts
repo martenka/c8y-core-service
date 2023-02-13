@@ -14,8 +14,11 @@ import { UpdateFileDto } from './dto/update-file.dto';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
 import { FileDownloadDto } from './dto/file-download.dto';
 import { SetControllerDTO } from '../../decorators/dto';
-import { OutputFileDto } from './dto/output-file.dto';
-import { TaskDocument } from '../../models/FileTask';
+import { OutputFileDto, PaginatedOutputFileDto } from './dto/output-file.dto';
+import { FileTask, TaskDocument } from '../../models/FileTask';
+import { FileTaskQuery } from './query/query.file';
+import { DBPagingResult } from '../../global/pagination/types';
+import { PagingQuery } from '../../global/pagination/pagination';
 
 @Controller('files')
 @UseInterceptors(DtoTransformInterceptor)
@@ -31,13 +34,12 @@ export class FilesController {
   }
 
   @Get('/downloads')
-  @SetControllerDTO(OutputFileDto)
+  @SetControllerDTO(PaginatedOutputFileDto)
   async find(
-    @Query('status') status?: string,
-    @Query('name') name?: string,
-    @Query('type') type?: string,
-  ): Promise<TaskDocument[] | undefined> {
-    return await this.filesService.find({ status, name, type });
+    @Query() searchQuery: FileTaskQuery,
+    @Query() pagingQuery: PagingQuery,
+  ): Promise<DBPagingResult<FileTask> | undefined> {
+    return await this.filesService.find(searchQuery, pagingQuery);
   }
 
   @Get('/downloads/:id')

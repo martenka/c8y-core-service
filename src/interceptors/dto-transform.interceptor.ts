@@ -1,4 +1,3 @@
-import { HydratedDocument } from 'mongoose';
 import {
   CallHandler,
   ExecutionContext,
@@ -19,6 +18,10 @@ import { isArray } from 'class-validator';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 
 @Injectable()
+/**
+ * Expects input data as an object with toObject() method or an array with the same method <br>
+ * Based on this method input will be converted into specified DTO
+ */
 export class DtoTransformInterceptor implements NestInterceptor {
   private readonly logger = new Logger(DtoTransformInterceptor.name);
 
@@ -32,9 +35,9 @@ export class DtoTransformInterceptor implements NestInterceptor {
     >(CONTROLLER_DTO, [context.getClass(), context.getHandler()]);
 
     return next.handle().pipe(
-      map((data: HydratedDocument<unknown> | HydratedDocument<unknown>[]) => {
+      map((data: { toObject: () => object }) => {
         if (isArray(data)) {
-          return data.map((value: HydratedDocument<unknown>) =>
+          return data.map((value) =>
             toOutputDTO(dto, value, () => noDtoHandler(dto, this.logger)),
           );
         }
@@ -55,18 +58,22 @@ function noDtoHandler(dto, logger: Logger) {
 
 function toOutputDTO(
   dto: ClassConstructor<unknown> | typeof NO_DTO_VALIDATION,
-  data: HydratedDocument<unknown>,
+  input: { toObject: () => object },
   noDtoProvidedHandler?: () => void,
 ) {
+  if (isNil(input)) {
+    return undefined;
+  }
+
   if (dto === NO_DTO_VALIDATION) {
-    return data;
+    return input;
   }
 
   if (isNil(dto)) {
     noDtoProvidedHandler();
   }
 
-  return plainToClass(dto, instanceToPlain(data.toObject()), {
+  return plainToClass(dto, instanceToPlain(input.toObject()), {
     excludeExtraneousValues: true,
   });
 }
