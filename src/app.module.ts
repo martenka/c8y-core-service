@@ -1,26 +1,23 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SensorsModule } from './core/sensors/sensors.module';
 import { GroupsModule } from './core/groups/groups.module';
-
 import { FilesModule } from './core/files/files.module';
+import { ApplicationConfigService } from './core/application-config/application-config.service';
+import { ApplicationConfigModule } from './core/application-config/application-config.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    MongooseModule.forRoot(
-      `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@localhost:27017`,
-      {
-        dbName: process.env.MONGO_DB,
-        minPoolSize: 3,
-        maxPoolSize: 5,
+    ApplicationConfigModule,
+    MongooseModule.forRootAsync({
+      useFactory: async (config: ApplicationConfigService) => {
+        console.dir(config.mongooseModuleOptions);
+        return config.mongooseModuleOptions;
       },
-    ),
+      inject: [ApplicationConfigService],
+    }),
     SensorsModule,
     GroupsModule,
     FilesModule,
