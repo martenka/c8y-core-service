@@ -1,9 +1,8 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { MessagesProducerService } from './messages-producer.service';
 import { ExchangeTypes } from './types/exchanges';
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
-import { FileDownloadStatusMessage } from './types/messageTypes';
-import { ConsumeMessage } from 'amqplib';
+import { BaseMessage, MessageTypes } from './types/messageTypes';
 import { MessagesHandlerService } from './messages-handler.service';
 
 @Controller()
@@ -15,7 +14,7 @@ export class MessagesController {
 
   @RabbitSubscribe({
     exchange: ExchangeTypes.FILE,
-    queue: 'File.DownloadComplete',
+    queue: 'File.DownloadStatus',
     createQueueIfNotExists: true,
     errorHandler: (channel, msg, error) => {
       console.error(error);
@@ -26,12 +25,8 @@ export class MessagesController {
     },
   })
   async handleFileDownloadStatusMessage(
-    payload: FileDownloadStatusMessage,
-    amqpMsg: ConsumeMessage,
+    payload: BaseMessage<MessageTypes['File.DownloadStatus']>,
   ) {
     await this.messageHandlerService.handleFileDownloadStatusMessage(payload);
-    Logger.log(payload.taskId, MessagesController.name);
-    console.log(amqpMsg.fields.routingKey);
-    console.log(Buffer.from(amqpMsg.content).toString('utf-8'));
   }
 }

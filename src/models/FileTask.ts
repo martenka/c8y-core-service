@@ -17,12 +17,13 @@ export type TaskStatus = keyof typeof TaskSteps;
   _id: false,
   toJSON: {
     transform: (doc, ret) => {
-      ret.sensor = ret.sensor.toString();
+      if (notNil(ret?.sensor)) ret.sensor = ret.sensor.toString();
     },
   },
   toObject: {
     transform: (doc, ret) => {
-      ret.sensor = ret.sensor.toString();
+      if (notNil(ret?.sensor) && ret.sensor instanceof Types.ObjectId)
+        ret.sensor = ret.sensor.toString();
     },
   },
 })
@@ -30,10 +31,8 @@ class SensorWithFileName extends Document {
   @Prop({ type: Types.ObjectId, ref: () => Sensor })
   sensor: Sensor;
 
-  @Prop({
-    default: `sensor_datafile-${process.hrtime.bigint().toString()}`,
-  })
-  filename?: string;
+  @Prop()
+  fileName?: string;
 }
 
 export const SensorWithFileNameSchema =
@@ -54,7 +53,7 @@ export const SensorWithFileNameSchema =
 })
 class FileTaskData extends Document {
   @Prop({ type: [SensorWithFileNameSchema], default: [] })
-  sensorData: Types.DocumentArray<SensorWithFileName>;
+  sensorData: SensorWithFileName[];
 
   @Prop({ required: true, type: Date })
   dateFrom: Date;

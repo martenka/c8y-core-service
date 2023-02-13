@@ -16,7 +16,7 @@ import { FilesModule } from '../files/files.module';
           createExchangeIfNotExists: true,
         },
       ],
-      uri: `amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@localhost:5672`,
+      uri: `amqp://${'guest'}:${'guest'}@localhost:5672`,
       prefetchCount: 1,
       enableControllerDiscovery: true,
       connectionInitOptions: {

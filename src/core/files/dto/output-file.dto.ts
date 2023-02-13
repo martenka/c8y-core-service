@@ -1,13 +1,22 @@
-import { Exclude, Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { OutputSensorDto } from '../../sensors/dto/output-sensor.dto';
+import { Types } from 'mongoose';
 
 @Exclude()
 export class OutputSensorWithFilenameDto {
   @Expose()
+  @Transform(({ value }) => {
+    if (typeof value === 'object') {
+      return value['_id'] ?? value['id'];
+    }
+    if (value instanceof Types.ObjectId) {
+      return value.toString();
+    }
+  })
   sensor: string;
 
   @Expose()
-  filename?: string;
+  fileName?: string;
 }
 
 @Exclude()

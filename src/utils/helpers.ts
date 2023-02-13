@@ -6,19 +6,21 @@ import { Buffer } from 'buffer';
 
 export type ParsedPromisesResult<T> = { fulfilled: T[]; rejected: unknown[] };
 
+export function removeNilProperties<T extends object>(value: T): Partial<T> {
+  return pickBy(value, (element) => notNil(element));
+}
+
 export function remapIDAndRemoveNil<T extends { id?: string }>(
   value: T,
   newID?: Types.ObjectId,
 ) {
-  let mappedObj: Partial<T> = { ...value };
+  const mappedObj: Partial<T> = { ...value };
 
   if (notNil(value.id)) {
     mappedObj['_id'] = newID ?? idToObjectID(value.id);
   }
 
-  mappedObj = pickBy(mappedObj, (key) => notNil(key));
-
-  const { id: _, ...result } = mappedObj;
+  const { id: _, ...result } = removeNilProperties(mappedObj);
   return result;
 }
 type TestType =

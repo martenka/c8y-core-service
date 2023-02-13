@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-import {
-  BaseMessage,
-  FileDownloadScheduledMessage,
-  MessageTypes,
-} from './types/messageTypes';
+import { BaseMessage, MessageTypes } from './types/messageTypes';
 import { ExchangeTypes } from './types/exchanges';
 
 @Injectable()
@@ -18,7 +14,9 @@ export class MessagesProducerService {
     this.amqpConnection.publish(ExchangeTypes[exchange], routingKey, message);
   }
 
-  sendFileDownloadScheduledMessage(message: FileDownloadScheduledMessage) {
+  sendFileDownloadScheduledMessage(
+    message: MessageTypes['File.DownloadScheduled'],
+  ) {
     this.sendMessage(
       ExchangeTypes.FILE,
       'File.DownloadScheduled',
@@ -32,7 +30,7 @@ export class MessagesProducerService {
   ): BaseMessage<T> {
     return {
       scheduledAt: scheduledAt ?? new Date().toISOString(),
-      data,
+      content: data,
     };
   }
 }
