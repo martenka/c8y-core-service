@@ -39,19 +39,19 @@ export class SensorsController {
     return await this.sensorsService.createSensors(createSensorDtos);
   }
 
-  @Get(':id')
-  @SetControllerDTO(OutputSensorDto)
-  async findOne(@Param('id') id: string): Promise<SensorDocument | undefined> {
-    return this.sensorsService.findOne({ id });
-  }
-
-  @Get()
+  @Get('/search')
   @SetControllerDTO(PaginatedOutputSensorDto)
   async searchSensors(
     @Query() searchQuery: SensorQuery,
     @Query() pagingQuery: PagingQuery,
   ): Promise<DBPagingResult<Sensor> | undefined> {
     return await this.sensorsService.findMany(searchQuery, pagingQuery);
+  }
+
+  @Get(':id')
+  @SetControllerDTO(OutputSensorDto)
+  async findOne(@Param('id') id: string): Promise<SensorDocument | undefined> {
+    return this.sensorsService.findOne({ id });
   }
 
   @Patch()

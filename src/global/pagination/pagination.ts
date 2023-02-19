@@ -74,7 +74,17 @@ export class PagingQuery implements IPagingOptions {
   currentPage?: number;
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      switch (value.toLowerCase()) {
+        case 'true':
+          return true;
+        case 'false':
+          return false;
+      }
+    }
+    return value;
+  })
   @IsBoolean()
   withTotalElements?: boolean;
 
