@@ -7,6 +7,9 @@ import { GroupsModule } from './core/groups/groups.module';
 import { FilesModule } from './core/files/files.module';
 import { ApplicationConfigService } from './core/application-config/application-config.service';
 import { ApplicationConfigModule } from './core/application-config/application-config.module';
+import { AuthModule } from './core/auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './core/auth/jwt/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -18,12 +21,13 @@ import { ApplicationConfigModule } from './core/application-config/application-c
       },
       inject: [ApplicationConfigService],
     }),
+    AuthModule,
     SensorsModule,
     GroupsModule,
     FilesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }, AppService],
   exports: [AppService],
 })
 export class AppModule {}

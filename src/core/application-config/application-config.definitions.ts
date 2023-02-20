@@ -1,4 +1,4 @@
-import { IsString, ValidateNested } from 'class-validator';
+import { IsString, IsStrongPassword, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class RabbitConfig {
@@ -23,6 +23,14 @@ export class MongoConfig {
   PORT = '27017';
 }
 
+export class JwtConfig {
+  @IsStrongPassword()
+  SECRET: string;
+
+  @IsString()
+  EXPIRES_IN: string;
+}
+
 export class RootConfig {
   @Type(() => MongoConfig)
   @ValidateNested()
@@ -31,4 +39,8 @@ export class RootConfig {
   @Type(() => RabbitConfig)
   @ValidateNested()
   RABBITMQ: RabbitConfig;
+
+  @Type(() => JwtConfig)
+  @ValidateNested()
+  JWT: JwtConfig;
 }

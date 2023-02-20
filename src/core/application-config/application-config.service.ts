@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  JwtConfig,
   MongoConfig,
   RabbitConfig,
   RootConfig,
@@ -7,6 +8,7 @@ import {
 import { MongooseModuleOptions } from '@nestjs/mongoose';
 import { RabbitMQConfig } from '@golevelup/nestjs-rabbitmq';
 import { ExchangeTypes } from '../messages/types/exchanges';
+import { JwtModuleOptions } from '@nestjs/jwt/dist/interfaces/jwt-module-options.interface';
 
 @Injectable()
 export class ApplicationConfigService {
@@ -14,6 +16,7 @@ export class ApplicationConfigService {
     readonly rootEnvironment: RootConfig,
     readonly mongoEnvironment: MongoConfig,
     readonly rabbitEnvironment: RabbitConfig,
+    readonly jwtEnvironment: JwtConfig,
   ) {}
 
   get mongooseModuleOptions(): MongooseModuleOptions {
@@ -40,6 +43,15 @@ export class ApplicationConfigService {
       connectionInitOptions: {
         wait: true,
       },
+    };
+  }
+
+  get jwtConfig(): JwtModuleOptions {
+    return {
+      signOptions: {
+        expiresIn: this.jwtEnvironment.EXPIRES_IN,
+      },
+      secret: this.jwtEnvironment.SECRET,
     };
   }
 }

@@ -19,3 +19,7 @@ export interface FileTaskSearchOptions extends BaseSearchOptions {
   name?: string;
   type?: string;
 }
+
+export interface UserSearchOptions extends BaseSearchOptions {
+  username?: string;
+}
