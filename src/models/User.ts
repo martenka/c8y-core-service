@@ -57,5 +57,9 @@ export class User extends Base {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
+export interface PasswordCheck {
+  isPasswordMatch: (passwordToCompare: string) => Promise<boolean>;
+}
+
 export type UserDocument = HydratedDocument<User>;
 export type UserModel = Model<User>;

@@ -16,15 +16,14 @@ import { JwtAuthGuard } from './core/auth/jwt/jwt-auth.guard';
     ApplicationConfigModule,
     MongooseModule.forRootAsync({
       useFactory: async (config: ApplicationConfigService) => {
-        console.dir(config.mongooseModuleOptions);
         return config.mongooseModuleOptions;
       },
       inject: [ApplicationConfigService],
     }),
-    AuthModule,
     SensorsModule,
     GroupsModule,
     FilesModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }, AppService],

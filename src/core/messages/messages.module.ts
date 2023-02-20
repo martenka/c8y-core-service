@@ -9,10 +9,7 @@ import { ApplicationConfigService } from '../application-config/application-conf
 @Module({
   imports: [
     RabbitMQModule.forRootAsync(RabbitMQModule, {
-      useFactory: (config: ApplicationConfigService) => {
-        console.dir(config, { depth: 10 });
-        return config.messagingConfig;
-      },
+      useFactory: (config: ApplicationConfigService) => config.messagingConfig,
       inject: [ApplicationConfigService],
     }),
     forwardRef(() => FilesModule),

@@ -1,5 +1,11 @@
-import { IsString, IsStrongPassword, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsStrongPassword,
+  ValidateNested,
+} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class RabbitConfig {
   @IsString()
@@ -31,6 +37,12 @@ export class JwtConfig {
   EXPIRES_IN: string;
 }
 
+export class SecretConfig {
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber({ allowInfinity: false, allowNaN: false })
+  SALT_WORK_FACTOR = 10;
+}
+
 export class RootConfig {
   @Type(() => MongoConfig)
   @ValidateNested()
@@ -43,4 +55,9 @@ export class RootConfig {
   @Type(() => JwtConfig)
   @ValidateNested()
   JWT: JwtConfig;
+
+  @IsOptional()
+  @Type(() => SecretConfig)
+  @ValidateNested()
+  SECRET: SecretConfig = new SecretConfig();
 }

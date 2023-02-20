@@ -12,13 +12,22 @@ export class UsersService {
     @InjectModel(User.name)
     private userModel: UserModel,
   ) {}
-  async findOne(options: UserSearchOptions): Promise<UserDocument | undefined> {
+  async findOne(
+    options: UserSearchOptions,
+    selectPassword?: boolean,
+  ): Promise<UserDocument | undefined> {
     const searchOptions = removeNilProperties(options);
     if (hasNoOwnKeys(searchOptions)) {
       return undefined;
     }
 
-    return await this.userModel.findOne(searchOptions).exec();
+    let query = this.userModel.findOne(searchOptions);
+    if (selectPassword === true) {
+      const passwordField: UserDocument['password'] = 'password';
+      query = query.select(`+${passwordField}`);
+    }
+
+    return await query.exec();
   }
 
   async create(options: CreateUserDto) {

@@ -3,7 +3,7 @@ import {
   JwtConfig,
   MongoConfig,
   RabbitConfig,
-  RootConfig,
+  SecretConfig,
 } from './application-config.definitions';
 import { MongooseModuleOptions } from '@nestjs/mongoose';
 import { RabbitMQConfig } from '@golevelup/nestjs-rabbitmq';
@@ -13,10 +13,10 @@ import { JwtModuleOptions } from '@nestjs/jwt/dist/interfaces/jwt-module-options
 @Injectable()
 export class ApplicationConfigService {
   constructor(
-    readonly rootEnvironment: RootConfig,
     readonly mongoEnvironment: MongoConfig,
     readonly rabbitEnvironment: RabbitConfig,
     readonly jwtEnvironment: JwtConfig,
+    readonly secretEnvironment: SecretConfig,
   ) {}
 
   get mongooseModuleOptions(): MongooseModuleOptions {
@@ -49,9 +49,19 @@ export class ApplicationConfigService {
   get jwtConfig(): JwtModuleOptions {
     return {
       signOptions: {
+        algorithm: 'HS256',
         expiresIn: this.jwtEnvironment.EXPIRES_IN,
       },
       secret: this.jwtEnvironment.SECRET,
+      verifyOptions: {
+        algorithms: ['HS256'],
+      },
+    };
+  }
+
+  get secretConfig() {
+    return {
+      SALT_WORK_FACTOR: this.secretEnvironment.SALT_WORK_FACTOR,
     };
   }
 }

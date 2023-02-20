@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { UserDocument } from '../../models/User';
+import { PasswordCheck, UserDocument } from '../../models/User';
 import { AccessResponse, IAccessTokenPayload, LeanUser } from './types/types';
 
 @Injectable()
@@ -17,10 +17,17 @@ export class AuthService {
     username: string,
     password: string,
   ): Promise<LeanUser | undefined> {
-    const user = await this.userService.findOne({ username });
-    if (isNil(user)) {
+    const user = (await this.userService.findOne(
+      {
+        username,
+      },
+      true,
+    )) as UserDocument & PasswordCheck;
+
+    if (isNil(user) || !(await user.isPasswordMatch(password))) {
       throw new UnauthorizedException();
     }
+
     return user.toObject();
   }
 
