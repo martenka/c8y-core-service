@@ -16,13 +16,17 @@ import { GroupDocument } from '../../models/Group';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
 import { SetControllerDTO } from '../../decorators/dto';
 import { OutputGroupDto } from './dto/output-group.dto';
+import { UseRolesGuard } from '../../guards/RoleGuard';
+import { AdminRoute } from '../../decorators/authorization';
 
 @Controller('groups')
 @UseInterceptors(DtoTransformInterceptor)
+@UseRolesGuard()
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
   @Post()
+  @AdminRoute()
   @SetControllerDTO(OutputGroupDto)
   async create(
     @Body(new ParseArrayPipe({ items: CreateGroupDto }))
@@ -49,6 +53,7 @@ export class GroupsController {
   }
 
   @Patch()
+  @AdminRoute()
   @SetControllerDTO(OutputGroupDto)
   /**
    * Updates the underlying group by merging the sensors
@@ -61,6 +66,7 @@ export class GroupsController {
   }
 
   @Delete(':id')
+  @AdminRoute()
   @SetControllerDTO(OutputGroupDto)
   remove(@Param('id') id: string) {
     return this.groupsService.removeGroup(id);

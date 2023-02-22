@@ -4,9 +4,11 @@ import { UserDocument } from '../../models/User';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
 import { SetControllerDTO } from '../../decorators/dto';
 import { UserOutputDTO } from './dto/output-user';
+import { UseRolesGuard } from '../../guards/RoleGuard';
 
 @Controller('users')
 @UseInterceptors(DtoTransformInterceptor)
+@UseRolesGuard()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

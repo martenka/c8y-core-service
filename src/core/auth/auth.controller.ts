@@ -14,7 +14,7 @@ import { NoDTOValidation, SetControllerDTO } from '../../decorators/dto';
 import { UserOutputDTO } from '../users/dto/output-user';
 import { LocalAuthGuard } from './local/local-auth.guard';
 import { UserDocument } from '../../models/User';
-import { IsPublicRoute } from '../../decorators/auth';
+import { NoAuthRoute } from '../../decorators/authentication';
 
 @UseInterceptors(DtoTransformInterceptor)
 @Controller('auth')
@@ -22,7 +22,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @NoDTOValidation()
-  @IsPublicRoute()
+  @NoAuthRoute()
   @UseGuards(LocalAuthGuard)
   @Post('/login')
   async login(@Request() req: ExpressRequest): Promise<unknown> {

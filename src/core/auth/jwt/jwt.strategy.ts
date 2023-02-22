@@ -15,6 +15,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: IAccessTokenPayload): Promise<LeanUser> {
-    return { _id: payload.sub, username: payload.usr };
+    return { _id: payload.sub, username: payload.usr, roles: payload.roles };
   }
 }

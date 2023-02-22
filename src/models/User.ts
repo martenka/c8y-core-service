@@ -3,6 +3,7 @@ import { Base } from './Base';
 import { HydratedDocument, Model } from 'mongoose';
 
 import { CustomAttributes } from './types/types';
+import { Role } from '../global/types/roles.';
 
 export class C8yCredentials {
   @Prop({ required: true })
@@ -38,6 +39,9 @@ export class User extends Base {
 
   @Prop({ select: false })
   password: string;
+
+  @Prop({ type: () => [Role], default: [Role.User] })
+  roles: Role[];
 
   @Prop({ type: C8yCredentialsSchema })
   c8yCredentials?: C8yCredentials;

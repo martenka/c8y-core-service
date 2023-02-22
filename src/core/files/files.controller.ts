@@ -19,13 +19,17 @@ import { FileTask, TaskDocument } from '../../models/FileTask';
 import { FileTaskQuery } from './query/query.file';
 import { DBPagingResult } from '../../global/pagination/types';
 import { PagingQuery } from '../../global/pagination/pagination';
+import { UseRolesGuard } from '../../guards/RoleGuard';
+import { AdminRoute } from '../../decorators/authorization';
 
 @Controller('files')
 @UseInterceptors(DtoTransformInterceptor)
+@UseRolesGuard()
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Post('/downloads')
+  @AdminRoute()
   @SetControllerDTO(OutputFileDto)
   async startDownload(
     @Body() fileDownloadDto: FileDownloadDto,
@@ -49,11 +53,13 @@ export class FilesController {
   }
 
   @Patch(':id')
+  @AdminRoute()
   update(@Param('id') id: string, @Body() updateFileDto: UpdateFileDto) {
     return this.filesService.update(+id, updateFileDto);
   }
 
   @Delete(':id')
+  @AdminRoute()
   remove(@Param('id') id: string) {
     return this.filesService.remove(+id);
   }
