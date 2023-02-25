@@ -1,5 +1,4 @@
 import {
-  IsDefined,
   IsEnum,
   IsOptional,
   IsString,
@@ -7,37 +6,35 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { Role } from '../../../global/types/roles.';
 import { ensureArray } from '../../../utils/validation';
+import { Role } from '../../../global/types/roles.';
 
-export class C8yCredentialsInputDto {
+class PartialC8yCredentialsInputDto {
+  @IsOptional()
   @IsString()
-  username: string;
+  username?: string;
 
+  @IsOptional()
   @IsString()
-  password: string;
+  password?: string;
 
+  @IsOptional()
   @IsString()
-  tenantID: string;
+  tenantID?: string;
 
+  @IsOptional()
   @IsUrl()
-  baseAddress: string;
+  baseAddress?: string;
 }
 
-export class CreateUserDto {
-  @IsString()
-  username: string;
-
-  @IsString()
-  password: string;
-
+export class UpdateUserDto {
   @IsOptional()
   @Transform(({ value }) => ensureArray(value))
   @IsEnum(Role, { each: true, message: 'Invalid Role value provided!' })
   role?: Role[];
 
-  @Type(() => C8yCredentialsInputDto)
-  @IsDefined()
+  @IsOptional()
+  @Type(() => PartialC8yCredentialsInputDto)
   @ValidateNested()
-  c8yCredentials: C8yCredentialsInputDto;
+  c8yCredentials?: PartialC8yCredentialsInputDto;
 }

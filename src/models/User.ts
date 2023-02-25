@@ -5,6 +5,7 @@ import { HydratedDocument, Model } from 'mongoose';
 import { CustomAttributes } from './types/types';
 import { Role } from '../global/types/roles.';
 
+@Schema({ _id: false })
 export class C8yCredentials {
   @Prop({ required: true })
   username: string;
@@ -18,8 +19,6 @@ export class C8yCredentials {
   @Prop({ required: true })
   baseAddress: string;
 }
-
-const C8yCredentialsSchema = SchemaFactory.createForClass(C8yCredentials);
 
 @Schema({
   toJSON: {
@@ -37,13 +36,13 @@ export class User extends Base {
   @Prop({ required: true, unique: true })
   username: string;
 
-  @Prop({ select: false })
+  @Prop({ required: true, select: false })
   password: string;
 
   @Prop({ type: () => [Role], default: [Role.User] })
   roles: Role[];
 
-  @Prop({ type: C8yCredentialsSchema })
+  @Prop({ type: C8yCredentials })
   c8yCredentials?: C8yCredentials;
 
   @Prop({
@@ -67,3 +66,7 @@ export interface PasswordCheck {
 
 export type UserDocument = HydratedDocument<User>;
 export type UserModel = Model<User>;
+
+export type IC8yCredentials = {
+  [key in keyof C8yCredentials]: C8yCredentials[key];
+};
