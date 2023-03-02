@@ -1,6 +1,6 @@
 import { Exclude, Expose } from 'class-transformer';
 import { BaseDeleteResponse } from '../../../global/dto/BaseDeleteResponse';
-import { IC8yCredentials } from '../../../models/User';
+import { C8yCredentialsType } from '../../../models/User';
 
 @Exclude()
 export class UserOutputDto {
@@ -14,7 +14,7 @@ export class UserOutputDto {
   roles: string[];
 
   @Expose()
-  c8yCredentials: IC8yCredentials;
+  c8yCredentials: C8yCredentialsType;
 }
 @Exclude()
 export class DeleteUserOutputDto extends BaseDeleteResponse {}

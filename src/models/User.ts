@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Base } from './Base';
 import { HydratedDocument, Model } from 'mongoose';
 
-import { CustomAttributes } from './types/types';
+import { CustomAttributes, Properties } from './types/types';
 import { Role } from '../global/types/roles.';
 
 @Schema({ _id: false })
@@ -67,6 +67,4 @@ export interface PasswordCheck {
 export type UserDocument = HydratedDocument<User>;
 export type UserModel = Model<User>;
 
-export type IC8yCredentials = {
-  [key in keyof C8yCredentials]: C8yCredentials[key];
-};
+export type C8yCredentialsType = Properties<C8yCredentials>;

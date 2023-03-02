@@ -134,6 +134,6 @@ export class FileTask extends Base {
   failReason: string;
 }
 
-export const TaskSchema = SchemaFactory.createForClass(FileTask);
-export type TaskDocument = HydratedDocument<FileTask>;
-export type TaskModel = Model<FileTask>;
+export const FileTaskSchema = SchemaFactory.createForClass(FileTask);
+export type FileTaskDocument = HydratedDocument<FileTask>;
+export type FileTaskModel = Model<FileTask>;

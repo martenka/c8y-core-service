@@ -3,7 +3,7 @@ import { FilesService } from './files.service';
 import { FilesController } from './files.controller';
 import { MessagesModule } from '../messages/messages.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { FileTask, TaskSchema } from '../../models/FileTask';
+import { FileTask, FileTaskSchema } from '../../models/FileTask';
 import { GroupsModule } from '../groups/groups.module';
 import { PagingModule } from '../paging/paging.module';
 
@@ -11,7 +11,9 @@ import { PagingModule } from '../paging/paging.module';
   imports: [
     forwardRef(() => MessagesModule),
     PagingModule,
-    MongooseModule.forFeature([{ name: FileTask.name, schema: TaskSchema }]),
+    MongooseModule.forFeature([
+      { name: FileTask.name, schema: FileTaskSchema },
+    ]),
     GroupsModule,
   ],
   controllers: [FilesController],

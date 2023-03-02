@@ -8,8 +8,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import {
   FileTask,
-  TaskDocument,
-  TaskModel,
+  FileTaskDocument,
+  FileTaskModel,
   TaskSteps,
 } from '../../models/FileTask';
 import { idToObjectID, remapIDAndRemoveNil } from '../../utils/helpers';
@@ -26,7 +26,7 @@ export class FilesService {
   constructor(
     private readonly messagesService: MessagesProducerService,
     private readonly skipPagingService: SkipPagingService,
-    @InjectModel(FileTask.name) private readonly fileTaskModel: TaskModel,
+    @InjectModel(FileTask.name) private readonly fileTaskModel: FileTaskModel,
     @InjectModel(Group.name) private readonly groupModel: GroupModel,
   ) {}
 
@@ -77,7 +77,7 @@ export class FilesService {
     );
   }
 
-  async findOne(id: string): Promise<TaskDocument | undefined> {
+  async findOne(id: string): Promise<FileTaskDocument | undefined> {
     const objectId = idToObjectID(id);
     if (isNil(objectId)) {
       return undefined;
@@ -97,7 +97,7 @@ export class FilesService {
     fileDownloadDTO: Omit<FileDownloadDto, 'entities'> & {
       entities: (Omit<FileDownloadEntityDto, 'id'> & { id: Types.ObjectId })[];
     },
-  ): Promise<TaskDocument | undefined> {
+  ): Promise<FileTaskDocument | undefined> {
     switch (fileDownloadDTO.type) {
       case 'GROUP': {
         const groupSensorIds = (

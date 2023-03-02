@@ -15,7 +15,7 @@ import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interc
 import { FileDownloadDto } from './dto/file-download.dto';
 import { SetControllerDTO } from '../../decorators/dto';
 import { OutputFileDto, PaginatedOutputFileDto } from './dto/output-file.dto';
-import { FileTask, TaskDocument } from '../../models/FileTask';
+import { FileTask, FileTaskDocument } from '../../models/FileTask';
 import { FileTaskQuery } from './query/query.file';
 import { DBPagingResult } from '../../global/pagination/types';
 import { PagingQuery } from '../../global/pagination/pagination';
@@ -33,7 +33,7 @@ export class FilesController {
   @SetControllerDTO(OutputFileDto)
   async startDownload(
     @Body() fileDownloadDto: FileDownloadDto,
-  ): Promise<TaskDocument | undefined> {
+  ): Promise<FileTaskDocument | undefined> {
     return await this.filesService.startDownload(fileDownloadDto);
   }
 
@@ -48,7 +48,9 @@ export class FilesController {
 
   @Get('/downloads/:id')
   @SetControllerDTO(OutputFileDto)
-  async findOne(@Param('id') id: string): Promise<TaskDocument | undefined> {
+  async findOne(
+    @Param('id') id: string,
+  ): Promise<FileTaskDocument | undefined> {
     return await this.filesService.findOne(id);
   }
 

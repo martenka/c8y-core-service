@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FileTask, TaskModel, TaskSteps } from '../../models/FileTask';
+import { FileTask, FileTaskModel, TaskSteps } from '../../models/FileTask';
 import { BaseMessage, MessageTypes } from './types/messageTypes';
 import { idToObjectID, removeNilProperties } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
@@ -9,7 +9,9 @@ import { ensureArray } from '../../utils/validation';
 
 @Injectable()
 export class MessagesHandlerService {
-  constructor(@InjectModel(FileTask.name) private fileTaskModel: TaskModel) {}
+  constructor(
+    @InjectModel(FileTask.name) private fileTaskModel: FileTaskModel,
+  ) {}
 
   async handleFileDownloadStatusMessage(
     message: BaseMessage<MessageTypes['File.DownloadStatus']>,
