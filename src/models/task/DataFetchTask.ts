@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { notNil } from '../../utils/validation';
 import { Sensor } from '../Sensor';
-import { Properties } from '../types/types';
+import { Properties, TaskTypes } from '../types/types';
 import { Group } from '../Group';
 
 @Schema({
@@ -57,7 +57,7 @@ export class DataFetchPayload {
 
 @Schema()
 export class DataFetchTask extends Task {
-  taskType: 'DataFetchTask';
+  taskType: TaskTypes.DATA_FETCH;
 
   @Prop({ type: DataFetchPayload })
   payload: DataFetchPayload;

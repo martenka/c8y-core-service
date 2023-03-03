@@ -1,11 +1,14 @@
 import { Task } from './Task';
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
-import { Properties } from '../types/types';
+import { Properties, TaskTypes } from '../types/types';
 
 @Schema()
 export class ObjectSyncTask extends Task {
-  taskType: 'ObjectSyncTask';
+  taskType: TaskTypes.OBJECT_SYNC;
+
+  @Prop({ default: `ObjectSync-${new Date().getTime()}`, index: true })
+  name: string;
 }
 
 export const ObjectSyncTaskSchema =

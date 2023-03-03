@@ -8,8 +8,12 @@ export enum TaskSteps {
   FAILED = 'FAILED',
 }
 
+export enum TaskTypes {
+  DATA_FETCH = 'DATA_FETCH',
+  OBJECT_SYNC = 'OBJECT_SYNC',
+}
+
 export type TaskStatus = keyof typeof TaskSteps;
-export const taskTypes = ['DataFetchTask', 'ObjectSyncTask'] as const;
 
 export type Properties<T> = {
   [Key in keyof T]: T[Key];
