@@ -10,6 +10,7 @@ import { ApplicationConfigModule } from './core/application-config/application-c
 import { AuthModule } from './core/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './core/auth/jwt/jwt-auth.guard';
+import { TasksModule } from './core/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { JwtAuthGuard } from './core/auth/jwt/jwt-auth.guard';
     GroupsModule,
     FilesModule,
     AuthModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }, AppService],

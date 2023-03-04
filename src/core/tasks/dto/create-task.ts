@@ -1,10 +1,25 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsISO8601,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { TaskTypes } from '../../../models';
-import { OverrideValidationOptions } from '../../../decorators/validation';
+import { Type } from 'class-transformer';
 
-@OverrideValidationOptions({
-  whitelist: false,
-})
+export class PeriodicData {
+  @IsString()
+  pattern: string;
+
+  @IsISO8601({ strict: true })
+  firstRunAt = new Date().toISOString();
+
+  @IsNumber()
+  fetchDuration: number;
+}
+
 export class CreateTaskDto {
   @IsEnum(TaskTypes)
   taskType: TaskTypes;
@@ -12,4 +27,9 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @IsOptional()
+  @Type(() => PeriodicData)
+  @ValidateNested()
+  periodicData?: PeriodicData;
 }

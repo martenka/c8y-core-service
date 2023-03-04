@@ -1,9 +1,21 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Base } from '../Base';
 import { notNil } from '../../utils/validation';
-import { Properties, TaskStatus, TaskSteps } from '../types/types';
+import { TaskStatus, TaskSteps, TaskTypes } from '../types/types';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { User } from '../User';
+import { Properties } from '../../global/types/types';
+@Schema({ _id: false })
+export class PeriodicData {
+  @Prop({ required: true })
+  pattern: string;
+
+  @Prop({ required: true })
+  fetchDuration: number;
+
+  @Prop({ type: Date })
+  firstRunAt: Date;
+}
 
 @Schema({ _id: false })
 export class TaskMetadata {
@@ -21,6 +33,9 @@ export class TaskMetadata {
 
   @Prop()
   lastFailReason?: Date;
+
+  @Prop({ type: PeriodicData })
+  periodicData?: PeriodicData;
 }
 
 @Schema({
@@ -37,6 +52,8 @@ export class TaskMetadata {
   },
 })
 export class Task extends Base {
+  taskType: keyof typeof TaskTypes;
+
   name: string;
 
   @Prop({

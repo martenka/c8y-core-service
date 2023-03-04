@@ -14,7 +14,3 @@ export enum TaskTypes {
 }
 
 export type TaskStatus = keyof typeof TaskSteps;
-
-export type Properties<T> = {
-  [Key in keyof T]: T[Key];
-};

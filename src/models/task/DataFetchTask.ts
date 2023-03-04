@@ -3,8 +3,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { notNil } from '../../utils/validation';
 import { Sensor } from '../Sensor';
-import { Properties, TaskTypes } from '../types/types';
+import { TaskTypes } from '../types/types';
 import { Group } from '../Group';
+import { Properties } from '../../global/types/types';
 
 @Schema({
   _id: false,
