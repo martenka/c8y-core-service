@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { TasksController } from './tasks.controller';
-import { PagingModule } from '../paging/paging.module';
 import { MessagesModule } from '../messages/messages.module';
 import { GroupsModule } from '../groups/groups.module';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -12,10 +11,10 @@ import {
   TaskSchema,
   TaskTypes,
 } from '../../models';
+import { TaskCreationService } from './task-creation.service';
 
 @Module({
   imports: [
-    PagingModule,
     MessagesModule,
     GroupsModule,
     MongooseModule.forFeature([
@@ -30,7 +29,7 @@ import {
     ]),
   ],
   controllers: [TasksController],
-  providers: [TasksService],
+  providers: [TaskCreationService, TasksService],
   exports: [TasksService],
 })
 export class TasksModule {}

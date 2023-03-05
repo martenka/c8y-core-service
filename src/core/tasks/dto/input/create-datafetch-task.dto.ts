@@ -3,23 +3,32 @@ import {
   IsDate,
   IsDefined,
   IsIn,
-  IsMongoId,
+  isMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { Types } from 'mongoose';
+
 import { CreateTaskDto } from './create-task';
+import { IsMongoIdInstance } from '../../../../decorators/custom-validators/mongo-id.validator';
 
 const DownloadInputValues = ['GROUP', 'SENSOR'] as const;
 
 export type DownloadInputType = (typeof DownloadInputValues)[number];
 
 export class DataFetchEntityDto {
+  @IsMongoIdInstance({ message: 'Invalid id value provided!' })
+  @Transform(({ value }) => {
+    if (isMongoId(value)) {
+      return new Types.ObjectId(value);
+    }
+    return value;
+  })
   @IsNotEmpty()
-  @IsMongoId({ message: 'Invalid ID provided!' })
-  id: string;
+  id: Types.ObjectId;
 
   @IsOptional()
   @IsString()
@@ -30,10 +39,6 @@ export class DataFetchPayloadDto {
   @IsNotEmpty()
   @IsIn(DownloadInputValues)
   entityType: DownloadInputType;
-
-  @IsOptional()
-  @IsString()
-  taskName?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

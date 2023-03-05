@@ -23,7 +23,7 @@ import { Properties } from '../../global/types/types';
 })
 class SensorData {
   @Prop({ type: Types.ObjectId, ref: () => Sensor })
-  sensor: Sensor;
+  sensor: Sensor | Types.ObjectId;
 
   @Prop()
   fileName?: string;
@@ -38,12 +38,13 @@ class SensorData {
   fileURL?: string;
 }
 
-@Schema({ _id: false })
-export class DataFetchPayload {
-  @Prop({ default: `DataFetch-${new Date().getTime()}`, index: true })
-  name: string;
+const SensorDataSchema = SchemaFactory.createForClass(SensorData);
 
-  @Prop({ type: () => [SensorData], default: [] })
+@Schema({
+  _id: false,
+})
+export class DataFetchPayload {
+  @Prop({ type: [SensorDataSchema], default: [] })
   data: SensorData[];
 
   @Prop({ required: true, type: Date })
@@ -53,14 +54,17 @@ export class DataFetchPayload {
   dateTo: Date;
 
   @Prop({ type: Types.ObjectId, ref: () => Group })
-  group?: Types.ObjectId;
+  group?: Group | Types.ObjectId;
 }
 
 @Schema()
 export class DataFetchTask extends Task {
   taskType: TaskTypes.DATA_FETCH;
 
-  @Prop({ type: DataFetchPayload })
+  @Prop({ default: `DataFetch-${new Date().getTime()}`, index: true })
+  name: string;
+
+  @Prop({ type: DataFetchPayload, required: true })
   payload: DataFetchPayload;
 }
 

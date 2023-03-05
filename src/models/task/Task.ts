@@ -5,6 +5,7 @@ import { TaskStatus, TaskSteps, TaskTypes } from '../types/types';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { User } from '../User';
 import { Properties } from '../../global/types/types';
+
 @Schema({ _id: false })
 export class PeriodicData {
   @Prop({ required: true })
@@ -69,11 +70,13 @@ export class Task extends Base {
   })
   status: TaskStatus;
 
-  @Prop({ type: TaskMetadata })
+  @Prop({ type: TaskMetadata, default: {} })
   metadata: TaskMetadata;
 
   @Prop({ type: Types.ObjectId, ref: () => User })
   initiatedByUser?: string;
+
+  payload?: object;
 
   @Prop({
     type: Object,

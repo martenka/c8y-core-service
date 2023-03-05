@@ -1,20 +1,28 @@
 import {
+  IsDate,
   IsEnum,
-  IsISO8601,
+  isISO8601,
   IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { TaskTypes } from '../../../models';
-import { Type } from 'class-transformer';
+import { TaskTypes } from '../../../../models';
+import { Transform, Type } from 'class-transformer';
 
 export class PeriodicData {
   @IsString()
   pattern: string;
 
-  @IsISO8601({ strict: true })
-  firstRunAt = new Date().toISOString();
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (isISO8601(value, { strict: true })) {
+      return new Date(value);
+    }
+    return value;
+  })
+  @IsDate()
+  firstRunAt = new Date();
 
   @IsNumber()
   fetchDuration: number;

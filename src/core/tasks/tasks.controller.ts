@@ -4,12 +4,13 @@ import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interc
 import { UseRolesGuard } from '../../guards/RoleGuard';
 
 import { TaskTransformPipe } from '../../pipes/task-transform.pipe';
-import { CreateTaskDto } from './dto/create-task';
+import { CreateTaskDto } from './dto/input/create-task';
 
 import { TaskCreationDtos } from './dto/dto-map';
 import { TasksService } from './tasks.service';
 import { AdminRoute } from '../../decorators/authorization';
-import { NoDTOValidation } from '../../decorators/dto';
+import { SetControllerDTO } from '../../decorators/dto';
+import { OutputTaskDto } from './dto/output/output-task.dto';
 
 @Controller('tasks')
 @UseInterceptors(DtoTransformInterceptor)
@@ -19,7 +20,7 @@ export class TasksController {
 
   @Post()
   @AdminRoute()
-  @NoDTOValidation()
+  @SetControllerDTO(OutputTaskDto)
   async createTask<T extends CreateTaskDto>(
     @Body(new TaskTransformPipe(TaskCreationDtos))
     task: T,

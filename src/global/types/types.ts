@@ -1,3 +1,5 @@
+import { Type } from '@nestjs/common';
+
 export type Properties<T> = {
-  [Key in keyof T]: T[Key];
+  [Key in keyof T]: T extends Type ? Properties<T[Key]> : T[Key];
 };
