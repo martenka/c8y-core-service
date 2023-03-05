@@ -1,8 +1,8 @@
 import { Task } from './Task';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
-import { TaskTypes } from '../types/types';
 import { Properties } from '../../global/types/types';
+import { TaskTypes } from './types';
 
 @Schema()
 export class ObjectSyncTask extends Task {

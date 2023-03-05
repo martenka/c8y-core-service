@@ -2,19 +2,19 @@ import {
   BadRequestException,
   Injectable,
   PipeTransform,
-  Type,
   ValidationPipe,
 } from '@nestjs/common';
-import { Task, TaskTypes } from '../models';
+import { Task } from '../models';
 import { plainToInstance } from 'class-transformer';
 import { isNil, isString } from '@nestjs/common/utils/shared.utils';
 import { validate } from 'class-validator';
+import { TaskTypesMap } from '../models';
 
 @Injectable()
 export class TaskTransformPipe
   implements PipeTransform<Pick<Task, 'taskType'>>
 {
-  constructor(private readonly dtoMap: Record<keyof typeof TaskTypes, Type>) {}
+  constructor(private readonly dtoMap: TaskTypesMap) {}
   async transform(value: Pick<Task, 'taskType'>): Promise<object> {
     const taskTypeKey = value?.taskType;
     const taskDto = this.dtoMap[taskTypeKey];

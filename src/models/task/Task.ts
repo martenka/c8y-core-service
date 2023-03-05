@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Base } from '../Base';
 import { notNil } from '../../utils/validation';
-import { TaskStatus, TaskSteps, TaskTypes } from '../types/types';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { User } from '../User';
 import { Properties } from '../../global/types/types';
+import { TaskStatus, TaskSteps, TaskTypes } from './types';
 
 @Schema({ _id: false })
 export class PeriodicData {

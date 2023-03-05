@@ -1,4 +1,6 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
+import { BaseDBPagination } from '../../../../global/pagination/pagination';
+import { ValidateNested } from 'class-validator';
 
 @Exclude()
 export class OutputTaskDto {
@@ -13,4 +15,15 @@ export class OutputTaskDto {
 
   @Expose()
   status: string;
+
+  @Expose()
+  payload: object;
+}
+
+@Exclude()
+export class PaginatedOutputTaskDto extends BaseDBPagination<OutputTaskDto> {
+  @Expose()
+  @Type(() => OutputTaskDto)
+  @ValidateNested({ each: true })
+  data: OutputTaskDto[];
 }

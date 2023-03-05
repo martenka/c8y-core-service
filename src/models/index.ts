@@ -6,3 +6,4 @@ export * from './task/Task';
 export * from './task/DataFetchTask';
 export * from './task/ObjectSyncTask';
 export * from './types/types';
+export * from './task/types';
