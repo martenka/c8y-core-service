@@ -19,6 +19,9 @@ export class OutputTaskDto {
 
   @Expose({ groups: [Groups.ALL] })
   payload?: object;
+
+  @Expose()
+  createdAt?: string;
 }
 
 @Exclude()

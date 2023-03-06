@@ -12,11 +12,13 @@ import {
   TaskTypes,
 } from '../../models';
 import { TaskCreationService } from './task-creation.service';
+import { PagingModule } from '../paging/paging.module';
 
 @Module({
   imports: [
     MessagesModule,
     GroupsModule,
+    PagingModule,
     MongooseModule.forFeature([
       {
         name: Task.name,

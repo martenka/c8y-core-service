@@ -1,4 +1,6 @@
 import { HydratedDocument } from 'mongoose';
+import { Properties } from '../types/types';
+import { PageInfo, PagingQuery } from './pagination';
 
 export interface IPageInfo {
   pageSize: number;
@@ -18,3 +20,6 @@ export interface IPagingOptions {
   withTotalElements?: boolean;
   withTotalPages?: boolean;
 }
+
+export type PagingOptionsType = Properties<PagingQuery>;
+export type PageInfoType = Properties<PageInfo>;
