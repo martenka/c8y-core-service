@@ -8,12 +8,12 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { map, Observable } from 'rxjs';
+import { ClassConstructor, plainToInstance } from 'class-transformer';
 import {
-  ClassConstructor,
-  instanceToPlain,
-  plainToClass,
-} from 'class-transformer';
-import { CONTROLLER_DTO, NO_DTO_VALIDATION } from '../decorators/dto';
+  CONTROLLER_DTO,
+  NO_DTO_VALIDATION,
+  EXPOSE_GROUPS,
+} from '../decorators/dto';
 import { isArray } from 'class-validator';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 
@@ -34,14 +34,23 @@ export class DtoTransformInterceptor implements NestInterceptor {
       ClassConstructor<unknown> | typeof NO_DTO_VALIDATION
     >(CONTROLLER_DTO, [context.getClass(), context.getHandler()]);
 
+    const exposeGroups = this.reflector.getAllAndOverride<string[]>(
+      EXPOSE_GROUPS,
+      [context.getClass(), context.getHandler()],
+    );
+
     return next.handle().pipe(
       map((data: { toObject: () => object }) => {
         if (isArray(data)) {
           return data.map((value) =>
-            toOutputDTO(dto, value, () => noDtoHandler(dto, this.logger)),
+            toOutputDTO(dto, value, exposeGroups, () =>
+              noDtoHandler(dto, this.logger),
+            ),
           );
         }
-        return toOutputDTO(dto, data, () => noDtoHandler(dto, this.logger));
+        return toOutputDTO(dto, data, exposeGroups, () =>
+          noDtoHandler(dto, this.logger),
+        );
       }),
     );
   }
@@ -59,6 +68,7 @@ function noDtoHandler(dto, logger: Logger) {
 function toOutputDTO(
   dto: ClassConstructor<unknown> | typeof NO_DTO_VALIDATION,
   input: { toObject: () => object },
+  exposeGroups?: string[],
   noDtoProvidedHandler?: () => void,
 ) {
   if (isNil(input)) {
@@ -73,7 +83,8 @@ function toOutputDTO(
     noDtoProvidedHandler();
   }
 
-  return plainToClass(dto, instanceToPlain(input.toObject()), {
+  return plainToInstance(dto, input.toObject(), {
+    groups: exposeGroups,
     excludeExtraneousValues: true,
   });
 }
