@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FileTask, FileTaskModel, TaskSteps } from '../../models/FileTask';
-import { BaseMessage, MessageTypes } from './types/messageTypes';
+import { BaseMessage, MessageTypes } from './types/message-types/messageTypes';
 import { idToObjectID, removeNilProperties } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Types } from 'mongoose';

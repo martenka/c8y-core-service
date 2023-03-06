@@ -90,6 +90,9 @@ export class Task extends Base {
 }
 
 export const TaskSchema = SchemaFactory.createForClass(Task);
-export type TaskType = Properties<Task>;
 export type TaskModel = Model<Task>;
 export type TaskDocument = HydratedDocument<Task>;
+
+export type TaskType = Properties<Task>;
+export type TaskPeriodicDataType = Properties<PeriodicData>;
+export type TaskMetadataType = Properties<TaskMetadata>;

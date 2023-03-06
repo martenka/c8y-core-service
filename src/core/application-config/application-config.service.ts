@@ -36,6 +36,11 @@ export class ApplicationConfigService {
           type: 'direct',
           createExchangeIfNotExists: true,
         },
+        {
+          name: ExchangeTypes.GENERAL,
+          type: 'topic',
+          createExchangeIfNotExists: true,
+        },
       ],
       uri: `amqp://${this.rabbitEnvironment.USER}:${this.rabbitEnvironment.PASS}@localhost:5672`,
       prefetchCount: 1,

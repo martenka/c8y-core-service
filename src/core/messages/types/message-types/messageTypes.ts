@@ -1,4 +1,5 @@
-import { TaskStatus } from '../../../models/FileTask';
+import { TaskStatus } from '../../../../models/FileTask';
+import { TaskScheduledMessage } from './task/types';
 
 export interface BaseMessage<T> {
   scheduledAt: string;
@@ -39,4 +40,5 @@ export interface FileDownloadStatusMessage {
 export interface MessageTypes {
   'File.DownloadScheduled': FileDownloadScheduledMessage;
   'File.DownloadStatus': FileDownloadStatusMessage;
+  'task.scheduled': TaskScheduledMessage;
 }

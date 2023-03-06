@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { MessagesProducerService } from './messages-producer.service';
 import { ExchangeTypes } from './types/exchanges';
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
-import { BaseMessage, MessageTypes } from './types/messageTypes';
+import { BaseMessage, MessageTypes } from './types/message-types/messageTypes';
 import { MessagesHandlerService } from './messages-handler.service';
 
 @Controller()

@@ -2,6 +2,7 @@ import { Base } from './Base';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { CustomAttributes } from './types/types';
+import { Properties } from '../global/types/types';
 
 @Schema({
   toJSON: {
@@ -48,3 +49,4 @@ export const SensorSchema = SchemaFactory.createForClass(Sensor);
 
 export type SensorDocument = HydratedDocument<Sensor>;
 export type SensorModel = Model<SensorDocument>;
+export type SensorType = Properties<Sensor>;

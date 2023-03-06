@@ -72,4 +72,7 @@ export const DataFetchTaskSchema = SchemaFactory.createForClass(DataFetchTask);
 
 export type DataFetchTaskDocument = HydratedDocument<DataFetchTask>;
 export type DataFetchTaskModel = Model<DataFetchTask>;
+
 export type DataFetchTaskType = Properties<DataFetchTask>;
+export type DataFetchPayloadType = Properties<DataFetchPayload>;
+export type SensorDataType = Properties<SensorData>;
