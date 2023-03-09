@@ -5,9 +5,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserDocument, UserSchema } from '../../models/User';
 import * as bcrypt from 'bcrypt';
 import { ApplicationConfigService } from '../application-config/application-config.service';
+import { MessagesModule } from '../messages/messages.module';
 
 @Module({
   imports: [
+    MessagesModule,
     MongooseModule.forFeatureAsync([
       {
         name: User.name,

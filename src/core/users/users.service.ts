@@ -7,12 +7,14 @@ import { hasNoOwnKeys, notNil } from '../../utils/validation';
 import { CreateUserDto } from './dto/create-user.dto';
 import { IDeleteUsers, IDeleteUsersResponse, IUpdateUser } from './dto/types';
 import { Role } from '../../global/types/roles.';
+import { MessagesProducerService } from '../messages/messages-producer.service';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(
+    private readonly messagesProducerService: MessagesProducerService,
     @InjectModel(User.name)
     private userModel: UserModel,
   ) {}
@@ -42,20 +44,44 @@ export class UsersService {
     }
 
     const user = await this.userModel.create({ roles, ...other });
-    this.logger.log(`Created user with username of ${user?.username ?? 'N/A'}`);
+    this.logger.log(`Created user with username: ${user?.username ?? 'N/A'}`);
     return user;
   }
 
-  async delete(input: IDeleteUsers): Promise<IDeleteUsersResponse> {
+  async deleteAndSendMessages(
+    input: IDeleteUsers,
+  ): Promise<IDeleteUsersResponse> {
     const idsToDelete = idToObjectID(input.items);
-    const result = await this.userModel
+
+    const deletionTime = new Date().toISOString();
+
+    const deleteResult = await this.userModel
       .deleteMany({
         _id: { $in: idsToDelete },
       })
       .exec();
 
+    const deleteCheck = await this.userModel.find(
+      {
+        _id: { $in: idsToDelete },
+      },
+      { _id: 1 },
+    );
+    const existingIds = new Set(
+      deleteCheck.map((user) => user.toObject()._id.toString()),
+    );
+
+    const deletedIds = input.items.filter((id) => !existingIds.has(id));
+    deletedIds.forEach((id) =>
+      this.messagesProducerService.sendUserMessage({
+        id,
+        deletedAt: deletionTime,
+      }),
+    );
+    this.logger.log(`Deleted users with ids: ${deletedIds}`);
+
     return {
-      deletedCount: result.deletedCount,
+      deletedCount: deleteResult.deletedCount,
     };
   }
 

@@ -41,7 +41,7 @@ export class UsersController {
   async deleteUsers(
     @Body() deleteEntityDto: DeleteUserInputDto,
   ): Promise<IDeleteUsersResponse> {
-    return await this.usersService.delete(deleteEntityDto);
+    return await this.usersService.deleteAndSendMessages(deleteEntityDto);
   }
 
   @Patch(':id')
