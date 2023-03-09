@@ -28,7 +28,9 @@ export class TasksService {
     private skipPagingService: SkipPagingService,
     @InjectModel(Task.name) private readonly taskModel: TaskModel,
   ) {}
-  async createTask<T extends CreateTaskDto>(task: T): Promise<TaskDocument> {
+  async createAndScheduleTask<T extends CreateTaskDto>(
+    task: T,
+  ): Promise<TaskDocument> {
     const createdTask = await this.taskCreationService.createTask(task);
     await createdTask.populate('payload.data.sensor');
 

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { MessageTypes } from './types/message-types/messageTypes';
 import { ExchangeTypes } from './types/exchanges';
+import { Options } from 'amqplib';
 
 @Injectable()
 export class MessagesProducerService {
@@ -11,10 +12,14 @@ export class MessagesProducerService {
     exchange: ExchangeTypes,
     routingKey: K,
     message: MessageTypes[K],
+    options?: Options.Publish,
   ) {
-    this.amqpConnection.publish(ExchangeTypes[exchange], routingKey, message, {
+    const amqpOptions: Options.Publish = {
       timestamp: new Date().getTime(),
-    });
+      ...options,
+    };
+
+    this.amqpConnection.publish(exchange, routingKey, message, amqpOptions);
   }
 
   sendFileDownloadScheduledMessage(
@@ -25,5 +30,9 @@ export class MessagesProducerService {
 
   sendTaskScheduledMessage(message: MessageTypes['task.scheduled']) {
     this.sendMessage(ExchangeTypes.GENERAL, 'task.scheduled', message);
+  }
+
+  sendUserMessage(message: MessageTypes['user.user']) {
+    this.sendMessage(ExchangeTypes.GENERAL, 'user.user', message);
   }
 }

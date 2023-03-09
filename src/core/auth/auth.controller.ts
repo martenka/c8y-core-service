@@ -13,13 +13,17 @@ import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interc
 import { NoDTOValidation, SetControllerDTO } from '../../decorators/dto';
 import { UserOutputDto } from '../users/dto/output-user';
 import { LocalAuthGuard } from './local/local-auth.guard';
-import { UserDocument } from '../../models/User';
+import { UserDocument, UserType } from '../../models/User';
 import { NoAuthRoute } from '../../decorators/authentication';
+import { MessagesProducerService } from '../messages/messages-producer.service';
 
 @UseInterceptors(DtoTransformInterceptor)
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly messagesProducerService: MessagesProducerService,
+  ) {}
 
   @NoDTOValidation()
   @NoAuthRoute()
@@ -32,6 +36,13 @@ export class AuthController {
   @SetControllerDTO(UserOutputDto)
   @Post('/register')
   async register(@Body() userCreateDto: CreateUserDto): Promise<UserDocument> {
-    return await this.authService.register(userCreateDto);
+    const createdUser = await this.authService.register(userCreateDto);
+    const leanUser: UserType = createdUser.toObject();
+    this.messagesProducerService.sendUserMessage({
+      id: leanUser._id.toString(),
+      c8yCredentials: leanUser.c8yCredentials,
+    });
+
+    return createdUser;
   }
 }

@@ -69,3 +69,4 @@ export type UserDocument = HydratedDocument<User>;
 export type UserModel = Model<User>;
 
 export type C8yCredentialsType = Properties<C8yCredentials>;
+export type UserType = Properties<User>;

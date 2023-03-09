@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@golevelup/nestjs-modules": "^0.6.1",
-    "@golevelup/nestjs-rabbitmq": "^3.4.0",
+    "@golevelup/nestjs-rabbitmq": "^3.5.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.0.0",

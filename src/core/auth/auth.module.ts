@@ -7,11 +7,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { ApplicationConfigService } from '../application-config/application-config.service';
 import { JwtStrategy } from './jwt/jwt.strategy';
 import { LocalStrategy } from './local/local.strategy';
+import { MessagesModule } from '../messages/messages.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    MessagesModule,
     JwtModule.registerAsync({
       useFactory: (config: ApplicationConfigService) => config.jwtConfig,
       inject: [ApplicationConfigService],

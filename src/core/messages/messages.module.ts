@@ -16,6 +16,6 @@ import { ApplicationConfigService } from '../application-config/application-conf
   ],
   controllers: [MessagesController],
   providers: [MessagesProducerService, MessagesHandlerService],
-  exports: [MessagesProducerService],
+  exports: [MessagesProducerService, RabbitMQModule],
 })
 export class MessagesModule {}

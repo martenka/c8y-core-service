@@ -44,7 +44,7 @@ export class TasksController {
     @Body(new TaskTransformPipe(TaskCreationDtos))
     task: T,
   ): Promise<object | undefined> {
-    return await this.tasksService.createTask(task);
+    return await this.tasksService.createAndScheduleTask(task);
   }
 
   @Get('/search')
