@@ -13,6 +13,7 @@ import {
 } from '../../models';
 import { TaskCreationService } from './task-creation.service';
 import { PagingModule } from '../paging/paging.module';
+import { TaskMessageMapperService } from './task-message-mapper.service';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { PagingModule } from '../paging/paging.module';
     ]),
   ],
   controllers: [TasksController],
-  providers: [TaskCreationService, TasksService],
+  providers: [TaskCreationService, TaskMessageMapperService, TasksService],
   exports: [TasksService],
 })
 export class TasksModule {}

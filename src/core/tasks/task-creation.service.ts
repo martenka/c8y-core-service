@@ -95,9 +95,11 @@ export class TaskCreationService implements OnModuleInit {
           group: taskDetails.taskPayload.entities[0].id,
         };
 
-        return await this.dataFetchModel.create(
+        const task = await this.dataFetchModel.create(
           this.createTaskData(taskDetails, payload),
         );
+        await task.populate('payload.data.sensor');
+        return task;
       }
       case 'SENSOR': {
         const sensorsWithFilenames = taskDetails.taskPayload.entities.map(
@@ -113,9 +115,11 @@ export class TaskCreationService implements OnModuleInit {
           data: sensorsWithFilenames,
         };
 
-        return await this.dataFetchModel.create(
+        const task = await this.dataFetchModel.create(
           this.createTaskData(taskDetails, payload),
         );
+        await task.populate('payload.data.sensor');
+        return task;
       }
       default:
         throw new Error(

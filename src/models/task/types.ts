@@ -1,4 +1,6 @@
 import { Type } from '@nestjs/common';
+import { DataFetchTaskType } from './DataFetchTask';
+import { ObjectSyncTaskType } from './ObjectSyncTask';
 
 export enum TaskSteps {
   NOT_STARTED = 'NOT_STARTED',
@@ -11,6 +13,11 @@ export enum TaskSteps {
 export enum TaskTypes {
   DATA_FETCH = 'DATA_FETCH',
   OBJECT_SYNC = 'OBJECT_SYNC',
+}
+
+export interface TaskMap {
+  [TaskTypes.DATA_FETCH]: DataFetchTaskType;
+  [TaskTypes.OBJECT_SYNC]: ObjectSyncTaskType;
 }
 
 export type TaskStatus = keyof typeof TaskSteps;
