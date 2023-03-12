@@ -13,9 +13,6 @@ export class PeriodicData {
 
   @Prop({ required: true })
   fetchDuration: number;
-
-  @Prop({ type: Date })
-  firstRunAt: Date;
 }
 
 @Schema({ _id: false })
@@ -34,6 +31,9 @@ export class TaskMetadata {
 
   @Prop()
   lastFailReason?: Date;
+
+  @Prop({ type: Date })
+  firstRunAt?: Date;
 
   @Prop({ type: PeriodicData })
   periodicData?: PeriodicData;

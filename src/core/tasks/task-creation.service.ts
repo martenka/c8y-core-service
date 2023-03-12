@@ -52,6 +52,7 @@ export class TaskCreationService implements OnModuleInit {
     return await this.objectSyncModel.create({
       name: taskDetails.name,
       metadata: {
+        firstRunAt: taskDetails.firstRunAt,
         periodicData: taskDetails.periodicData,
       },
     });
@@ -130,6 +131,7 @@ export class TaskCreationService implements OnModuleInit {
     return {
       name: taskDetails.name,
       metadata: {
+        firstRunAt: taskDetails.firstRunAt,
         periodicData: taskDetails.periodicData,
       },
       payload: taskPayload,

@@ -47,11 +47,11 @@ export class DataFetchPayload {
   @Prop({ type: [SensorDataSchema], default: [] })
   data: SensorData[];
 
-  @Prop({ required: true, type: Date })
-  dateFrom: Date;
+  @Prop({ type: Date })
+  dateFrom?: Date;
 
-  @Prop({ required: true, type: Date })
-  dateTo: Date;
+  @Prop({ type: Date })
+  dateTo?: Date;
 
   @Prop({ type: Types.ObjectId, ref: () => Group })
   group?: Group | Types.ObjectId;

@@ -21,9 +21,6 @@ export class PeriodicData {
     }
     return value;
   })
-  @IsDate()
-  firstRunAt = new Date();
-
   @IsNumber()
   fetchDuration: number;
 }
@@ -40,4 +37,9 @@ export class CreateTaskDto {
   @Type(() => PeriodicData)
   @ValidateNested()
   periodicData?: PeriodicData;
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  firstRunAt = new Date();
 }

@@ -45,13 +45,15 @@ export class DataFetchPayloadDto {
   @Type(() => DataFetchEntityDto)
   entities: DataFetchEntityDto[];
 
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
-  dateFrom: Date;
+  dateFrom?: Date;
 
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
-  dateTo: Date;
+  dateTo?: Date;
 }
 
 export class CreateDataFetchDto extends CreateTaskDto {

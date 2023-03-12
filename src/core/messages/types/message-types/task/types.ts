@@ -20,10 +20,9 @@ export interface DataFetchTaskMessagePayload
 export interface TaskScheduledMessage<P extends object = object>
   extends Pick<TaskType, 'taskType' | 'initiatedByUser' | 'customAttributes'> {
   taskId: string;
-  periodicData?: Pick<
-    TaskPeriodicDataType,
-    'pattern' | 'fetchDuration' | 'firstRunAt'
-  >;
+  taskName: string;
+  firstRunAt?: string;
+  periodicData?: Pick<TaskPeriodicDataType, 'pattern' | 'fetchDuration'>;
   payload: P;
 }
 

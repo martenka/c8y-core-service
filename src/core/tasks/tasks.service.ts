@@ -56,16 +56,16 @@ export class TasksService {
       .filter(notNil);
 
     let periodicData;
-    if (notNil(leanTask.metadata.periodicData)) {
+    if (notNil(leanTask.metadata?.periodicData)) {
       periodicData = {
         pattern: leanTask.metadata.periodicData.pattern,
-        firstRunAt: leanTask.metadata.periodicData.firstRunAt,
         fetchDuration: leanTask.metadata.periodicData.fetchDuration,
       };
     }
 
     const message: TaskScheduledMessage<DataFetchTaskMessagePayload> = {
       taskType: leanTask.taskType,
+      taskName: leanTask.name,
       taskId: leanTask._id.toString(),
       payload: {
         dateFrom: leanTask.payload.dateFrom,
@@ -73,6 +73,7 @@ export class TasksService {
         data: mappedSensorData,
       },
       periodicData: periodicData,
+      firstRunAt: leanTask.metadata.firstRunAt?.toISOString(),
       customAttributes: leanTask.customAttributes,
     };
 
