@@ -27,9 +27,13 @@ export class TasksService {
     @InjectModel(Task.name) private readonly taskModel: TaskModel,
   ) {}
   async createAndScheduleTask<T extends CreateTaskDto>(
+    loggedInUserId: string,
     task: T,
   ): Promise<TaskDocument> {
-    const createdTask = await this.taskCreationService.createTask(task);
+    const createdTask = await this.taskCreationService.createTask({
+      ...task,
+      initiatedByUser: new Types.ObjectId(loggedInUserId),
+    });
 
     const mappedPayload =
       this.taskMessageMapperService.mapTaskToMessage(createdTask);
@@ -45,6 +49,7 @@ export class TasksService {
     const message: TaskScheduledMessage = {
       taskType: createdTask.taskType,
       taskName: createdTask.name,
+      initiatedByUser: loggedInUserId,
       taskId: createdTask._id.toString(),
       payload: mappedPayload,
       periodicData: periodicData,

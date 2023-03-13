@@ -1,6 +1,6 @@
-import { LeanDocument } from 'mongoose';
-import { UserDocument } from '../../../models/User';
+import { UserType } from '../../../models/User';
 import { Role } from '../../../global/types/roles.';
+import { TaskType } from '../../../models';
 
 export interface IAccessTokenPayload {
   sub: string;
@@ -12,6 +12,8 @@ export interface AccessResponse {
   access_token: string;
 }
 
-export type LeanUser = {
-  [P in keyof Pick<LeanDocument<UserDocument>, 'username' | '_id'>]: string;
-} & Pick<LeanDocument<UserDocument>, 'roles'>;
+export type LoggedInUserType = {
+  [P in keyof Pick<UserType, 'username' | '_id'>]: string;
+} & Pick<UserType, 'roles'>;
+
+export type WithInitiatedByUser<T> = T & Pick<TaskType, 'initiatedByUser'>;

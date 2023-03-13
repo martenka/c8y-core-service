@@ -74,7 +74,7 @@ export class Task extends Base {
   metadata: TaskMetadata;
 
   @Prop({ type: Types.ObjectId, ref: () => User })
-  initiatedByUser?: string;
+  initiatedByUser: Types.ObjectId;
 
   payload?: object;
 

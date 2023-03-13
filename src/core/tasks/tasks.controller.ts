@@ -29,6 +29,8 @@ import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Task, TaskDocument } from '../../models';
 import { DBPagingResult } from '../../global/pagination/types';
 import { PagingQuery } from '../../global/pagination/pagination';
+import { LoggedInUser } from '../../decorators/user';
+import { LoggedInUserType } from '../auth/types/types';
 
 @Controller('tasks')
 @UseInterceptors(DtoTransformInterceptor)
@@ -41,10 +43,11 @@ export class TasksController {
   @SetControllerDTO(OutputTaskDto)
   @SetExposeGroups(Groups.ALL)
   async createTask<T extends CreateTaskDto>(
+    @LoggedInUser() user: LoggedInUserType,
     @Body(new TaskTransformPipe(TaskCreationDtos))
     task: T,
   ): Promise<object | undefined> {
-    return await this.tasksService.createAndScheduleTask(task);
+    return await this.tasksService.createAndScheduleTask(user._id, task);
   }
 
   @Get('/search')

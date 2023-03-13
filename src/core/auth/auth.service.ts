@@ -8,7 +8,11 @@ import { UsersService } from '../users/users.service';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { PasswordCheck, UserDocument } from '../../models/User';
-import { AccessResponse, IAccessTokenPayload, LeanUser } from './types/types';
+import {
+  AccessResponse,
+  IAccessTokenPayload,
+  LoggedInUserType,
+} from './types/types';
 import { MongoServerError } from 'mongodb';
 
 @Injectable()
@@ -21,7 +25,7 @@ export class AuthService {
   async validateUser(
     username: string,
     password: string,
-  ): Promise<LeanUser | undefined> {
+  ): Promise<LoggedInUserType | undefined> {
     const user = (await this.userService.findOne(
       {
         username,
@@ -36,7 +40,7 @@ export class AuthService {
     return user.toObject();
   }
 
-  login(user: LeanUser): AccessResponse {
+  login(user: LoggedInUserType): AccessResponse {
     const payload: IAccessTokenPayload = {
       usr: user.username,
       sub: user._id,

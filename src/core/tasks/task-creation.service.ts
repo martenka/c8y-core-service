@@ -24,6 +24,7 @@ import { TaskCreationDtosType, TaskHandlersType } from './dto/dto-map';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Types } from 'mongoose';
 import { GroupModel } from '../../models/Group';
+import { WithInitiatedByUser } from '../auth/types/types';
 
 @Injectable()
 export class TaskCreationService implements OnModuleInit {
@@ -31,7 +32,7 @@ export class TaskCreationService implements OnModuleInit {
 
   private taskCreationHandlers: TaskHandlersType<
     TaskCreationDtosType,
-    CreateTaskDto
+    WithInitiatedByUser<CreateTaskDto>
   >;
   constructor(
     @InjectModel(TaskTypes.DATA_FETCH)
@@ -42,23 +43,19 @@ export class TaskCreationService implements OnModuleInit {
   ) {}
 
   private async createDataFetchTask(
-    taskDetails: CreateDataFetchDto,
+    taskDetails: WithInitiatedByUser<CreateDataFetchDto>,
   ): Promise<DataFetchTaskDocument> {
     return await this.createDataFetchTaskEntity(taskDetails);
   }
   private async createObjectSyncTask(
-    taskDetails: CreateObjectSyncDto,
+    taskDetails: WithInitiatedByUser<CreateObjectSyncDto>,
   ): Promise<ObjectSyncTaskDocument> {
-    return await this.objectSyncModel.create({
-      name: taskDetails.name,
-      metadata: {
-        firstRunAt: taskDetails.firstRunAt,
-        periodicData: taskDetails.periodicData,
-      },
-    });
+    return await this.objectSyncModel.create(
+      this.createTaskData(taskDetails, {}),
+    );
   }
 
-  async createTask<T extends Properties<CreateTaskDto>>(
+  async createTask<T extends WithInitiatedByUser<Properties<CreateTaskDto>>>(
     taskDetails: T,
   ): Promise<TaskDocument> {
     const handler = this.taskCreationHandlers[taskDetails.taskType];
@@ -72,7 +69,7 @@ export class TaskCreationService implements OnModuleInit {
   }
 
   private async createDataFetchTaskEntity(
-    taskDetails: CreateDataFetchDto,
+    taskDetails: WithInitiatedByUser<CreateDataFetchDto>,
   ): Promise<DataFetchTaskDocument> {
     switch (taskDetails.taskPayload.entityType) {
       case 'GROUP': {
@@ -128,12 +125,13 @@ export class TaskCreationService implements OnModuleInit {
     }
   }
 
-  private createTaskData<T extends Properties<CreateTaskDto>, P extends object>(
-    taskDetails: T,
-    taskPayload: P,
-  ): Partial<Task> {
+  private createTaskData<
+    T extends WithInitiatedByUser<Properties<CreateTaskDto>>,
+    P extends object,
+  >(taskDetails: T, taskPayload: P): Partial<Task> {
     return {
       name: taskDetails.name,
+      initiatedByUser: taskDetails.initiatedByUser,
       metadata: {
         firstRunAt: taskDetails.firstRunAt,
         periodicData: taskDetails.periodicData,
@@ -145,9 +143,13 @@ export class TaskCreationService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     this.taskCreationHandlers = {
       [TaskTypes.DATA_FETCH]: (taskDetails) =>
-        this.createDataFetchTask(taskDetails as CreateDataFetchDto),
+        this.createDataFetchTask(
+          taskDetails as WithInitiatedByUser<CreateDataFetchDto>,
+        ),
       [TaskTypes.OBJECT_SYNC]: (taskDetails) =>
-        this.createObjectSyncTask(taskDetails as CreateObjectSyncDto),
+        this.createObjectSyncTask(
+          taskDetails as WithInitiatedByUser<CreateObjectSyncDto>,
+        ),
     };
   }
 }
