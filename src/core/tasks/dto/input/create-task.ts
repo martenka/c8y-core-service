@@ -9,9 +9,13 @@ import {
 } from 'class-validator';
 import { TaskTypes } from '../../../../models';
 import { Transform, Type } from 'class-transformer';
+import { IsValidTaskPeriodicPattern } from '../../../../decorators/custom-validators/task-periodic-pattern';
 
 export class PeriodicData {
-  @IsString()
+  @IsValidTaskPeriodicPattern({
+    message:
+      'Pattern must be a valid numeric string, human-interval or cron pattern. 0 is not allowed',
+  })
   pattern: string;
 
   @IsOptional()
