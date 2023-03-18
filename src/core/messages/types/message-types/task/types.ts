@@ -11,6 +11,7 @@ export interface DataFetchTaskMessagePayload
   extends Pick<DataFetchPayloadType, 'dateFrom' | 'dateTo'> {
   data: (Pick<SensorDataType, 'fileName'> & {
     sensor: {
+      id: string;
       managedObjectId: number;
       fragmentType: string;
     };
@@ -28,11 +29,17 @@ export interface TaskScheduledMessage<P extends object = object>
 }
 
 export interface DataFetchTaskMessageStatusPayload {
-  sensorId: string;
-  bucket: string;
-  filePath?: string;
-  fileURL?: string;
-  fileName: string;
+  sensors: {
+    sensorId: string;
+    bucket: string;
+    filePath?: string;
+    fileURL?: string;
+    fileName: string;
+  }[];
+}
+
+export interface TaskFailedMessagePayload {
+  reason: string;
 }
 
 export interface TaskStatusMessage<P extends object = object> {

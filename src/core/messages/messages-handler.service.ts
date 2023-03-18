@@ -6,6 +6,7 @@ import { idToObjectID, removeNilProperties } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Types } from 'mongoose';
 import { ensureArray } from '../../utils/validation';
+import { TaskStatusMessage } from './types/message-types/task/types';
 
 @Injectable()
 export class MessagesHandlerService {
@@ -39,5 +40,9 @@ export class MessagesHandlerService {
         }),
       )
       .exec();
+  }
+
+  async handleTaskStatusMessage(message: TaskStatusMessage) {
+    console.dir(message);
   }
 }
