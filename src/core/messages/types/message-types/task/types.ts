@@ -23,7 +23,7 @@ export interface TaskScheduledMessage<P extends object = object>
   taskName: string;
   initiatedByUser: string;
   firstRunAt?: string;
-  periodicData?: Pick<TaskPeriodicDataType, 'pattern' | 'fetchDuration'>;
+  periodicData?: Pick<TaskPeriodicDataType, 'pattern' | 'fetchDurationSeconds'>;
   payload: P;
 }
 

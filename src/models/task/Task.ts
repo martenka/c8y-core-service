@@ -12,7 +12,7 @@ export class PeriodicData {
   pattern: string;
 
   @Prop({ required: true })
-  fetchDuration: number;
+  fetchDurationSeconds: number;
 }
 
 @Schema({ _id: false })

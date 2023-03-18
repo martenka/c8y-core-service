@@ -42,7 +42,8 @@ export class TasksService {
     if (notNil(createdTask.metadata?.periodicData)) {
       periodicData = {
         pattern: createdTask.metadata.periodicData.pattern,
-        fetchDuration: createdTask.metadata.periodicData.fetchDuration,
+        fetchDurationSeconds:
+          createdTask.metadata.periodicData.fetchDurationSeconds,
       };
     }
 
