@@ -1,7 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateTaskDto } from './dto/input/create-task';
 import { TaskCreationService } from './task-creation.service';
-import { Task, TaskDocument, TaskModel } from '../../models';
+import {
+  DataFetchTaskModel,
+  SensorDataType,
+  Task,
+  TaskDocument,
+  TaskModel,
+  TaskStatus,
+  TaskTypes,
+} from '../../models';
 import { Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -10,10 +18,16 @@ import {
 } from '../../global/pagination/types';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { MessagesProducerService } from '../messages/messages-producer.service';
-import { TaskScheduledMessage } from '../messages/types/message-types/task/types';
+import {
+  DataFetchTaskResultStatusPayload,
+  TaskScheduledMessage,
+  TaskStatusMessage,
+} from '../messages/types/message-types/task/types';
 
-import { notNil } from '../../utils/validation';
+import { hasNoOwnKeys, notNil } from '../../utils/validation';
 import { TaskMessageMapperService } from './task-message-mapper.service';
+import { isNil } from '@nestjs/common/utils/shared.utils';
+import { TaskFailedMessage } from '../messages/types/message-types/messageTypes';
 
 @Injectable()
 export class TasksService {
@@ -25,6 +39,8 @@ export class TasksService {
     private readonly taskMessageMapperService: TaskMessageMapperService,
     private skipPagingService: SkipPagingService,
     @InjectModel(Task.name) private readonly taskModel: TaskModel,
+    @InjectModel(TaskTypes.DATA_FETCH)
+    private readonly dataFetchTaskModel: DataFetchTaskModel,
   ) {}
   async createAndScheduleTask<T extends CreateTaskDto>(
     loggedInUserId: string,
@@ -76,5 +92,55 @@ export class TasksService {
       { _id: 1 },
       pagingOptions,
     );
+  }
+
+  async setFailedTaskInfo(id: Types.ObjectId, message: TaskFailedMessage) {
+    return await this.taskModel
+      .findByIdAndUpdate(id, {
+        status: message.status,
+        'metadata.lastFailReason': message.payload.reason,
+      })
+      .exec();
+  }
+
+  async updateTaskStatus(id: Types.ObjectId, status: TaskStatus) {
+    return await this.taskModel
+      .findByIdAndUpdate(id, { status: status })
+      .exec();
+  }
+
+  async updateDataFetchTaskResult(
+    id: Types.ObjectId,
+    result: TaskStatusMessage<DataFetchTaskResultStatusPayload>,
+  ) {
+    if (isNil(result.payload) || hasNoOwnKeys(result.payload)) {
+      return;
+    }
+
+    const task = await this.dataFetchTaskModel.findById(id).exec();
+    if (isNil(task)) {
+      return;
+    }
+
+    task.payload.data = task.payload.data.map(
+      (existingSensor): SensorDataType => {
+        const sensorUpdateData = result.payload.sensors?.find(
+          (sensorUpdate) =>
+            sensorUpdate.sensorId === existingSensor.sensor.toString(),
+        );
+        if (isNil(sensorUpdateData)) {
+          return existingSensor;
+        }
+        return {
+          sensor: existingSensor.sensor,
+          fileName: sensorUpdateData.fileName,
+          filePath: sensorUpdateData.filePath,
+          fileURL: sensorUpdateData.fileURL,
+          bucket: sensorUpdateData.bucket,
+        };
+      },
+    );
+    task.status = result.status;
+    await task.save();
   }
 }

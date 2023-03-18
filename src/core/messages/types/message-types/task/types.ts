@@ -28,7 +28,7 @@ export interface TaskScheduledMessage<P extends object = object>
   payload: P;
 }
 
-export interface DataFetchTaskMessageStatusPayload {
+export interface DataFetchTaskResultStatusPayload {
   sensors: {
     sensorId: string;
     bucket: string;

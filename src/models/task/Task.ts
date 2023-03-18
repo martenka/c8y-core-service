@@ -30,7 +30,7 @@ export class TaskMetadata {
   lastFailedAt?: Date;
 
   @Prop()
-  lastFailReason?: Date;
+  lastFailReason?: string;
 
   @Prop({ type: Date })
   firstRunAt?: Date;

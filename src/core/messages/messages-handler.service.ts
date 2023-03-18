@@ -1,16 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FileTask, FileTaskModel, TaskSteps } from '../../models/FileTask';
-import { BaseMessage, MessageTypes } from './types/message-types/messageTypes';
+import {
+  BaseMessage,
+  MessageTypes,
+  TaskFailedMessage,
+} from './types/message-types/messageTypes';
 import { idToObjectID, removeNilProperties } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Types } from 'mongoose';
 import { ensureArray } from '../../utils/validation';
-import { TaskStatusMessage } from './types/message-types/task/types';
+import {
+  DataFetchTaskResultStatusPayload,
+  TaskStatusMessage,
+} from './types/message-types/task/types';
+import { TasksService } from '../tasks/tasks.service';
 
 @Injectable()
 export class MessagesHandlerService {
   constructor(
+    private readonly tasksService: TasksService,
     @InjectModel(FileTask.name) private fileTaskModel: FileTaskModel,
   ) {}
 
@@ -43,6 +52,25 @@ export class MessagesHandlerService {
   }
 
   async handleTaskStatusMessage(message: TaskStatusMessage) {
-    console.dir(message);
+    const taskId = new Types.ObjectId(message.taskId);
+
+    if (message.status === TaskSteps.FAILED) {
+      return await this.tasksService.setFailedTaskInfo(
+        taskId,
+        message as TaskFailedMessage,
+      );
+    }
+
+    switch (message.taskType) {
+      case 'DATA_FETCH':
+        if (message.status === TaskSteps.DONE) {
+          return await this.tasksService.updateDataFetchTaskResult(
+            taskId,
+            message as TaskStatusMessage<DataFetchTaskResultStatusPayload>,
+          );
+        }
+    }
+
+    return await this.tasksService.updateTaskStatus(taskId, message.status);
   }
 }

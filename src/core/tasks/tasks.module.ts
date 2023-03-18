@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { TasksController } from './tasks.controller';
 import { MessagesModule } from '../messages/messages.module';
@@ -17,7 +17,7 @@ import { TaskMessageMapperService } from './task-message-mapper.service';
 
 @Module({
   imports: [
-    MessagesModule,
+    forwardRef(() => MessagesModule),
     GroupsModule,
     PagingModule,
     MongooseModule.forFeature([
