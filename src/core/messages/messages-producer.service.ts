@@ -22,12 +22,6 @@ export class MessagesProducerService {
     this.amqpConnection.publish(exchange, routingKey, message, amqpOptions);
   }
 
-  sendFileDownloadScheduledMessage(
-    message: MessageTypes['File.DownloadScheduled'],
-  ) {
-    this.sendMessage(ExchangeTypes.FILE, 'File.DownloadScheduled', message);
-  }
-
   sendTaskScheduledMessage(message: MessageTypes['task.scheduled']) {
     this.sendMessage(ExchangeTypes.GENERAL, 'task.scheduled', message);
   }

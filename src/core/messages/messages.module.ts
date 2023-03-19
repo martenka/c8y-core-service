@@ -3,7 +3,6 @@ import { MessagesProducerService } from './messages-producer.service';
 import { MessagesController } from './messages-consumer.controller';
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { MessagesHandlerService } from './messages-handler.service';
-import { FilesModule } from '../files/files.module';
 import { ApplicationConfigService } from '../application-config/application-config.service';
 import { TasksModule } from '../tasks/tasks.module';
 
@@ -13,7 +12,6 @@ import { TasksModule } from '../tasks/tasks.module';
       useFactory: (config: ApplicationConfigService) => config.messagingConfig,
       inject: [ApplicationConfigService],
     }),
-    forwardRef(() => FilesModule),
     forwardRef(() => TasksModule),
   ],
   controllers: [MessagesController],

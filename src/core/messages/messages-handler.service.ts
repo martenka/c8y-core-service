@@ -1,15 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FileTask, FileTaskModel, TaskSteps } from '../../models/FileTask';
-import {
-  BaseMessage,
-  MessageTypes,
-  TaskFailedMessage,
-} from './types/message-types/messageTypes';
-import { idToObjectID, removeNilProperties } from '../../utils/helpers';
-import { isNil } from '@nestjs/common/utils/shared.utils';
+
+import { TaskSteps } from '../../models/FileTask';
+import { TaskFailedMessage } from './types/message-types/messageTypes';
+
 import { Types } from 'mongoose';
-import { ensureArray } from '../../utils/validation';
+
 import {
   DataFetchTaskResultStatusPayload,
   TaskStatusMessage,
@@ -18,38 +13,7 @@ import { TasksService } from '../tasks/tasks.service';
 
 @Injectable()
 export class MessagesHandlerService {
-  constructor(
-    private readonly tasksService: TasksService,
-    @InjectModel(FileTask.name) private fileTaskModel: FileTaskModel,
-  ) {}
-
-  async handleFileDownloadStatusMessage(
-    message: BaseMessage<MessageTypes['File.DownloadStatus']>,
-  ) {
-    const objectId = idToObjectID(message.content.taskId);
-    if (isNil(objectId)) {
-      return;
-    }
-
-    const sensorData = ensureArray(message.content.data).map((value) => ({
-      fileName: value.fileName,
-      filePath: value.filePath,
-      bucket: value.bucket,
-      fileURL: value.fileURL,
-      sensor: new Types.ObjectId(value.sensorId),
-    }));
-
-    await this.fileTaskModel
-      .findByIdAndUpdate(
-        objectId,
-        removeNilProperties({
-          status: message.content.status,
-          'data.sensorData':
-            message.content.status === TaskSteps.DONE ? sensorData : undefined,
-        }),
-      )
-      .exec();
-  }
+  constructor(private readonly tasksService: TasksService) {}
 
   async handleTaskStatusMessage(message: TaskStatusMessage) {
     const taskId = new Types.ObjectId(message.taskId);

@@ -43,7 +43,7 @@ export class FileMetadata {
   @Prop()
   managedObjectName?: string;
 
-  @Prop({ type: [FileValueFragment], default: [] })
+  @Prop({ type: () => [FileValueFragment], default: [] })
   valueFragments?: FileValueFragment[];
 }
 

@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SensorsModule } from './core/sensors/sensors.module';
 import { GroupsModule } from './core/groups/groups.module';
-import { FilesModule } from './core/files/files.module';
 import { ApplicationConfigService } from './core/application-config/application-config.service';
 import { ApplicationConfigModule } from './core/application-config/application-config.module';
 import { AuthModule } from './core/auth/auth.module';
@@ -23,7 +22,6 @@ import { TasksModule } from './core/tasks/tasks.module';
     }),
     SensorsModule,
     GroupsModule,
-    FilesModule,
     AuthModule,
     TasksModule,
   ],
