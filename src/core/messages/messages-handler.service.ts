@@ -6,14 +6,18 @@ import { TaskFailedMessage } from './types/message-types/messageTypes';
 import { Types } from 'mongoose';
 
 import {
-  DataFetchTaskResultStatusPayload,
+  DataFetchTaskResult,
   TaskStatusMessage,
 } from './types/message-types/task/types';
 import { TasksService } from '../tasks/tasks.service';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class MessagesHandlerService {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(
+    private readonly tasksService: TasksService,
+    private readonly filesService: FilesService,
+  ) {}
 
   async handleTaskStatusMessage(message: TaskStatusMessage) {
     const taskId = new Types.ObjectId(message.taskId);
@@ -28,9 +32,12 @@ export class MessagesHandlerService {
     switch (message.taskType) {
       case 'DATA_FETCH':
         if (message.status === TaskSteps.DONE) {
-          return await this.tasksService.updateDataFetchTaskResult(
+          await this.tasksService.updateDataFetchTaskResult(
             taskId,
-            message as TaskStatusMessage<DataFetchTaskResultStatusPayload>,
+            message as DataFetchTaskResult,
+          );
+          await this.filesService.createFilesFromMessage(
+            message as DataFetchTaskResult,
           );
         }
     }

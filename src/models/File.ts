@@ -4,6 +4,7 @@ import { HydratedDocument, Model, Types } from 'mongoose';
 import { Properties } from '../global/types/types';
 import { Sensor } from './Sensor';
 import { CustomAttributes } from './types/types';
+import { DataFetchTask, DataFetchTaskType } from './task/DataFetchTask';
 
 @Schema({ _id: false })
 export class FileStorageInfo {
@@ -52,13 +53,16 @@ export class File extends Base {
   @Prop({ required: true })
   name: string;
 
+  @Prop({ type: Types.ObjectId, ref: () => DataFetchTask })
+  createdByTask: Types.ObjectId | DataFetchTaskType | undefined;
+
   @Prop()
   description?: string;
 
   @Prop({ type: FileStorageInfo, required: true })
   storage: FileStorageInfo;
 
-  @Prop({ type: FileMetadata })
+  @Prop({ type: FileMetadata, default: {} })
   metadata?: FileMetadata;
 
   @Prop({
@@ -79,3 +83,6 @@ export type FileDocument = HydratedDocument<File>;
 export type FileModel = Model<File>;
 
 export type FileProperties = Properties<File>;
+export type FileStorageProperties = Properties<FileStorageInfo>;
+export type FileMetadataProperties = Properties<FileMetadata>;
+export type FileValueFragmentProperties = Properties<FileValueFragment>;

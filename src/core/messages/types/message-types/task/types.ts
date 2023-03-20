@@ -48,3 +48,6 @@ export interface TaskStatusMessage<P extends object = object> {
   status: TaskStatus;
   payload: P;
 }
+
+export type DataFetchTaskResult =
+  TaskStatusMessage<DataFetchTaskResultStatusPayload>;
