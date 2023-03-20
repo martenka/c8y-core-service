@@ -63,10 +63,9 @@ export class TasksController {
   @SetExposeGroups(Groups.ALL)
   async getTaskDetails(@Param('id') id: string): Promise<TaskDocument> {
     const objectId = idToObjectID(id);
-    const result = await this.tasksService.findById(objectId);
     if (isNil(objectId)) {
       throw new NotFoundException();
     }
-    return result;
+    return await this.tasksService.findById(objectId);
   }
 }

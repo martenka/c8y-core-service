@@ -13,12 +13,19 @@ import { DataFetchTaskResult } from '../messages/types/message-types/task/types'
 import { SensorsService } from '../sensors/sensors.service';
 import { notNil } from '../../utils/validation';
 import { idToObjectID } from '../../utils/helpers';
+import {
+  DBPagingResult,
+  PagingOptionsType,
+} from '../../global/pagination/types';
+import { SkipPagingService } from '../paging/skip-paging.service';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class FilesService {
   constructor(
     @InjectModel(File.name) private readonly fileModel: FileModel,
     private readonly sensorsService: SensorsService,
+    private skipPagingService: SkipPagingService,
   ) {}
 
   async createFilesFromMessage(
@@ -63,11 +70,18 @@ export class FilesService {
     return await this.fileModel.insertMany(files);
   }
 
-  findAll() {
-    return `This action returns all files`;
+  async findMany(
+    pagingOptions: PagingOptionsType,
+  ): Promise<DBPagingResult<File>> {
+    return await this.skipPagingService.findWithPagination(
+      this.fileModel,
+      {},
+      { _id: 1 },
+      pagingOptions,
+    );
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} file`;
+  async findById(id: Types.ObjectId): Promise<FileDocument | undefined> {
+    return await this.fileModel.findById(id).exec();
   }
 }

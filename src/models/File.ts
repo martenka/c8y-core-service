@@ -5,6 +5,7 @@ import { Properties } from '../global/types/types';
 import { Sensor } from './Sensor';
 import { CustomAttributes } from './types/types';
 import { DataFetchTask, DataFetchTaskType } from './task/DataFetchTask';
+import { isEmpty } from '@nestjs/common/utils/shared.utils';
 
 @Schema({ _id: false })
 export class FileStorageInfo {
@@ -27,7 +28,33 @@ export class FileValueFragment {
   description?: string;
 }
 
-@Schema({ _id: false })
+@Schema({
+  _id: false,
+  toJSON: {
+    transform: (doc, ret) => {
+      try {
+        if (
+          Array.isArray(ret?.sensors) &&
+          (isEmpty(ret.sensors) || ret[0] instanceof Types.ObjectId)
+        ) {
+          ret.sensors = ret.sensors.map((sensor) => sensor.toString());
+        }
+      } catch (e) {}
+    },
+  },
+  toObject: {
+    transform: (doc, ret) => {
+      try {
+        if (
+          Array.isArray(ret?.sensors) &&
+          (isEmpty(ret.sensors) || ret[0] instanceof Types.ObjectId)
+        ) {
+          ret.sensors = ret.sensors.map((sensor) => sensor.toString());
+        }
+      } catch (e) {}
+    },
+  },
+})
 export class FileMetadata {
   @Prop({ type: [Types.ObjectId], ref: () => Sensor, default: [] })
   sensors?: Types.DocumentArray<Sensor> | Types.ObjectId[];
@@ -48,7 +75,24 @@ export class FileMetadata {
   valueFragments?: FileValueFragment[];
 }
 
-@Schema()
+@Schema({
+  toJSON: {
+    transform: (doc, ret) => {
+      ret._id = ret._id.toString();
+      if (ret?.createdByTask instanceof Types.ObjectId) {
+        ret.createdByTask = ret.createdByTask.toString();
+      }
+    },
+  },
+  toObject: {
+    transform: (doc, ret) => {
+      ret._id = ret._id.toString();
+      if (ret?.createdByTask instanceof Types.ObjectId) {
+        ret.createdByTask = ret.createdByTask.toString();
+      }
+    },
+  },
+})
 export class File extends Base {
   @Prop({ required: true })
   name: string;
