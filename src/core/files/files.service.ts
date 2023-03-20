@@ -12,13 +12,14 @@ import {
 import { DataFetchTaskResult } from '../messages/types/message-types/task/types';
 import { SensorsService } from '../sensors/sensors.service';
 import { notNil } from '../../utils/validation';
-import { idToObjectID } from '../../utils/helpers';
+import { idToObjectID, removeNilProperties } from '../../utils/helpers';
 import {
   DBPagingResult,
   PagingOptionsType,
 } from '../../global/pagination/types';
 import { SkipPagingService } from '../paging/skip-paging.service';
-import { Types } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
+import { FileQueryOptions } from './query/file.query';
 
 @Injectable()
 export class FilesService {
@@ -71,11 +72,37 @@ export class FilesService {
   }
 
   async findMany(
+    searchOptions: FileQueryOptions,
     pagingOptions: PagingOptionsType,
   ): Promise<DBPagingResult<File>> {
+    const filter: FilterQuery<File> = {
+      _id: searchOptions.id,
+      createdByTask: searchOptions.createdByTask,
+      $expr: notNil(searchOptions.sensors)
+        ? {
+            $gt: [
+              {
+                $size: {
+                  $setIntersection: [
+                    searchOptions.sensors,
+                    '$metadata.sensors',
+                  ],
+                },
+              },
+              0,
+            ],
+          }
+        : undefined,
+      'metadata.fromDate': notNil(searchOptions.fromDate)
+        ? { $gte: new Date(searchOptions.fromDate) }
+        : undefined,
+      'metadata.toDate': notNil(searchOptions.toDate)
+        ? { $lte: new Date(searchOptions.toDate) }
+        : undefined,
+    };
     return await this.skipPagingService.findWithPagination(
       this.fileModel,
-      {},
+      removeNilProperties(filter),
       { _id: 1 },
       pagingOptions,
     );

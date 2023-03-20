@@ -11,7 +11,10 @@ export function IsMongoIdInstance(validationOptions?: ValidationOptions) {
       name: 'IsMongoIdInstance',
       target: object.constructor,
       propertyName: propertyName,
-      options: validationOptions,
+      options: {
+        message: `Invalid ${propertyName} value(s) provided!`,
+        ...validationOptions,
+      },
       validator: {
         validate(value: unknown, _args: ValidationArguments) {
           return value instanceof Types.ObjectId;

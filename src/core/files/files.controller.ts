@@ -16,6 +16,7 @@ import { Groups } from '../../global/tokens';
 import { idToObjectID } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { OutputFileDto, PaginatedOutputFileDto } from './dto/output-file.dto';
+import { FileQuery } from './query/file.query';
 
 @Controller('files')
 @UseInterceptors(DtoTransformInterceptor)
@@ -25,9 +26,10 @@ export class FilesController {
   @Get('/search')
   @SetControllerDTO(PaginatedOutputFileDto)
   async searchFiles(
+    @Query() searchQuery: FileQuery,
     @Query() pagingQuery: PagingQuery,
   ): Promise<DBPagingResult<File>> {
-    return await this.filesService.findMany(pagingQuery);
+    return await this.filesService.findMany(searchQuery, pagingQuery);
   }
 
   @Get(':id')
