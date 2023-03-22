@@ -24,6 +24,7 @@
   "dependencies": {
     "@golevelup/nestjs-modules": "^0.6.1",
     "@golevelup/nestjs-rabbitmq": "^3.5.0",
+    "@juicyllama/nestjs-redoc": "^2.3.10",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.0.0",
@@ -31,6 +32,7 @@
     "@nestjs/mongoose": "^9.2.1",
     "@nestjs/passport": "^9.0.3",
     "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/swagger": "^6.2.1",
     "bcrypt": "^5.1.0",
     "cron-parser": "^4.8.1",
     "human-interval": "^2.0.1",

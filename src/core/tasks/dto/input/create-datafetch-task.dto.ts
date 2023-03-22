@@ -12,7 +12,7 @@ import {
 import { Transform, Type } from 'class-transformer';
 import { Types } from 'mongoose';
 
-import { CreateTaskDto } from './create-task';
+import { CreateTaskDto } from './create-task.dto';
 import { IsMongoIdInstance } from '../../../../decorators/custom-validators/mongo-id.validator';
 
 const DownloadInputValues = ['GROUP', 'SENSOR'] as const;

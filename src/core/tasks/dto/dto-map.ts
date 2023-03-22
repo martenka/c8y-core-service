@@ -1,6 +1,6 @@
 import { Task, TaskTypes } from '../../../models';
 import { CreateDataFetchDto } from './input/create-datafetch-task.dto';
-import { CreateObjectSyncDto } from './input/create-objectsync-task';
+import { CreateObjectSyncDto } from './input/create-objectsync-task.dto';
 import { Properties } from '../../../global/types/types';
 import { HydratedDocument } from 'mongoose';
 import { TaskTypesMap } from '../../../models';

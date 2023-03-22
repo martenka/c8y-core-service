@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CreateTaskDto } from './dto/input/create-task';
+import { CreateTaskDto } from './dto/input/create-task.dto';
 import { TaskCreationService } from './task-creation.service';
 import {
   DataFetchTaskModel,

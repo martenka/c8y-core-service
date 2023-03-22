@@ -18,8 +18,8 @@ import {
   TaskTypes,
 } from '../../models';
 import { Properties } from '../../global/types/types';
-import { CreateTaskDto } from './dto/input/create-task';
-import { CreateObjectSyncDto } from './dto/input/create-objectsync-task';
+import { CreateTaskDto } from './dto/input/create-task.dto';
+import { CreateObjectSyncDto } from './dto/input/create-objectsync-task.dto';
 import { TaskCreationDtosType, TaskHandlersType } from './dto/dto-map';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Types } from 'mongoose';

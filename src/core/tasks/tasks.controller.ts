@@ -13,7 +13,7 @@ import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interc
 import { UseRolesGuard } from '../../guards/RoleGuard';
 
 import { TaskTransformPipe } from '../../pipes/task-transform.pipe';
-import { CreateTaskDto } from './dto/input/create-task';
+import { CreateTaskDto } from './dto/input/create-task.dto';
 
 import { TaskCreationDtos } from './dto/dto-map';
 import { TasksService } from './tasks.service';
