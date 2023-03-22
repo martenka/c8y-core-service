@@ -3,7 +3,7 @@ import { Base } from './Base';
 import { HydratedDocument, Model } from 'mongoose';
 
 import { CustomAttributes } from './types/types';
-import { Role } from '../global/types/roles.';
+import { Role } from '../global/types/roles';
 import { Properties } from '../global/types/types';
 
 @Schema({ _id: false })

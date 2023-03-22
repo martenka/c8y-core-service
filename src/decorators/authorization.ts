@@ -1,4 +1,4 @@
-import { Role } from '../global/types/roles.';
+import { Role } from '../global/types/roles';
 import { SetMetadata } from '@nestjs/common';
 
 export const ROLES_KEY = 'roles';

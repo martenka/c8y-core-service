@@ -1,5 +1,5 @@
 import { UserType } from '../../../models/User';
-import { Role } from '../../../global/types/roles.';
+import { Role } from '../../../global/types/roles';
 import { TaskType } from '../../../models';
 
 export interface IAccessTokenPayload {

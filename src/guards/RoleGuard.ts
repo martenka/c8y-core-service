@@ -11,7 +11,7 @@ import { Reflector } from '@nestjs/core';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Request } from 'express';
 import { ensureArray } from '../utils/validation';
-import { Role } from '../global/types/roles.';
+import { Role } from '../global/types/roles';
 import { ROLES_KEY } from '../decorators/authorization';
 
 @Injectable()

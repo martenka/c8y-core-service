@@ -1,5 +1,5 @@
 import { IDeleteResponse } from '../../../global/dto/types';
-import { Role } from '../../../global/types/roles.';
+import { Role } from '../../../global/types/roles';
 import { C8yCredentialsType } from '../../../models/User';
 
 export interface IDeleteUsers {
