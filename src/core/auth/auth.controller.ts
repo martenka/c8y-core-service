@@ -8,14 +8,18 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request as ExpressRequest } from 'express';
-import { CreateUserDto } from '../users/dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/input/create-user.dto';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
 import { NoDTOValidation, SetControllerDTO } from '../../decorators/dto';
-import { UserOutputDto } from '../users/dto/output-user';
+import { UserOutputDto } from '../users/dto/output/output-user.dto';
 import { LocalAuthGuard } from './local/local-auth.guard';
 import { UserDocument, UserType } from '../../models/User';
 import { NoAuthRoute } from '../../decorators/authentication';
 import { MessagesProducerService } from '../messages/messages-producer.service';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { LoginDto } from './dto/input/login.dto';
+import { AccessResponse } from './types/types';
+import { LoginResponseDto } from './dto/output/login-response.dto';
 
 @UseInterceptors(DtoTransformInterceptor)
 @Controller('auth')
@@ -25,16 +29,29 @@ export class AuthController {
     private readonly messagesProducerService: MessagesProducerService,
   ) {}
 
+  @Post('/login')
   @NoDTOValidation()
   @NoAuthRoute()
   @UseGuards(LocalAuthGuard)
-  @Post('/login')
-  async login(@Request() req: ExpressRequest): Promise<unknown> {
+  @ApiOperation({ operationId: 'Login' })
+  @ApiTags('auth')
+  @ApiBody({
+    required: true,
+    type: LoginDto,
+  })
+  @ApiResponse({
+    status: 201,
+    type: LoginResponseDto,
+    description: 'Access token was created',
+  })
+  async login(@Request() req: ExpressRequest): Promise<AccessResponse> {
     return this.authService.login(req.user);
   }
 
-  @SetControllerDTO(UserOutputDto)
   @Post('/register')
+  @SetControllerDTO(UserOutputDto, { description: 'User registered' })
+  @ApiOperation({ operationId: 'Register a new user' })
+  @ApiTags('auth')
   async register(@Body() userCreateDto: CreateUserDto): Promise<UserDocument> {
     const createdUser = await this.authService.register(userCreateDto);
     const leanUser: UserType = createdUser.toObject();

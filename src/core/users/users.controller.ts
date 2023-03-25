@@ -14,13 +14,14 @@ import { UsersService } from './users.service';
 import { UserDocument } from '../../models/User';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
 import { NoDTOValidation, SetControllerDTO } from '../../decorators/dto';
-import { UserOutputDto } from './dto/output-user';
+import { UserOutputDto } from './dto/output/output-user.dto';
 import { UseRolesGuard } from '../../guards/RoleGuard';
-import { DeleteUserInputDto } from './dto/delete-user.dto';
+import { DeleteUserInputDto } from './dto/input/delete-user.dto';
 import { IDeleteUsersResponse } from './dto/types';
 import { AdminRoute } from '../../decorators/authorization';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from './dto/input/update-user.dto';
 import { isNil } from '@nestjs/common/utils/shared.utils';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @Controller('users')
 @UseInterceptors(DtoTransformInterceptor)
@@ -30,6 +31,8 @@ export class UsersController {
 
   @Get(':id')
   @SetControllerDTO(UserOutputDto)
+  @ApiTags('users')
+  @ApiOperation({ operationId: 'Get one user' })
   async findOne(@Param('id') id: string): Promise<UserDocument | undefined> {
     return await this.usersService.findOne({ id });
   }
@@ -38,6 +41,8 @@ export class UsersController {
   @AdminRoute()
   @HttpCode(HttpStatus.OK)
   @NoDTOValidation()
+  @ApiTags('users')
+  @ApiOperation({ operationId: 'Remove users' })
   async deleteUsers(
     @Body() deleteEntityDto: DeleteUserInputDto,
   ): Promise<IDeleteUsersResponse> {
@@ -47,6 +52,8 @@ export class UsersController {
   @Patch(':id')
   @AdminRoute()
   @SetControllerDTO(UserOutputDto)
+  @ApiTags('users')
+  @ApiOperation({ operationId: 'Update user' })
   async updateUser(
     @Param() id: string,
     @Body() updateUserDto: UpdateUserDto,

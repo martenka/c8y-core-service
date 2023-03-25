@@ -18,6 +18,7 @@ import { SetControllerDTO } from '../../decorators/dto';
 import { OutputGroupDto } from './dto/output-group.dto';
 import { UseRolesGuard } from '../../guards/RoleGuard';
 import { AdminRoute } from '../../decorators/authorization';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller('groups')
 @UseInterceptors(DtoTransformInterceptor)
@@ -28,6 +29,12 @@ export class GroupsController {
   @Post()
   @AdminRoute()
   @SetControllerDTO(OutputGroupDto)
+  @ApiTags('groups')
+  @ApiOperation({ operationId: 'Create a new group' })
+  @ApiBody({ type: [CreateGroupDto] })
+  @ApiResponse({
+    type: [OutputGroupDto],
+  })
   async create(
     @Body(new ParseArrayPipe({ items: CreateGroupDto }))
     createGroupDto: CreateGroupDto[],
@@ -42,12 +49,22 @@ export class GroupsController {
 
   @Get(':id')
   @SetControllerDTO(OutputGroupDto)
+  @ApiTags('groups')
+  @ApiOperation({ operationId: 'Get one group' })
+  @ApiResponse({
+    type: OutputGroupDto,
+  })
   findOne(@Param('id') id: string) {
     return this.groupsService.findOne({ id });
   }
 
   @Get()
   @SetControllerDTO(OutputGroupDto)
+  @ApiTags('groups')
+  @ApiOperation({ operationId: 'Get all groups' })
+  @ApiResponse({
+    type: [OutputGroupDto],
+  })
   findAll() {
     return this.groupsService.findAllGroups();
   }
@@ -55,6 +72,11 @@ export class GroupsController {
   @Patch()
   @AdminRoute()
   @SetControllerDTO(OutputGroupDto)
+  @ApiTags('groups')
+  @ApiOperation({ operationId: 'Update groups' })
+  @ApiResponse({
+    type: [OutputGroupDto],
+  })
   /**
    * Updates the underlying group by merging the sensors
    */
@@ -68,6 +90,8 @@ export class GroupsController {
   @Delete(':id')
   @AdminRoute()
   @SetControllerDTO(OutputGroupDto)
+  @ApiTags('groups')
+  @ApiOperation({ operationId: 'Delete group' })
   remove(@Param('id') id: string) {
     return this.groupsService.removeGroup(id);
   }

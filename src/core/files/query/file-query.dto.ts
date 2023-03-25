@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import { TransformMongoId } from '../../../decorators/transformers/object-id-transformer';
 import { Properties } from '../../../global/types/types';
 
-export class FileQuery {
+export class FileQueryDto {
   @IsOptional()
   @IsMongoIdInstance()
   @TransformMongoId()
@@ -29,4 +29,4 @@ export class FileQuery {
   toDate?: string;
 }
 
-export type FileQueryOptions = Properties<FileQuery>;
+export type FileQueryOptions = Properties<FileQueryDto>;

@@ -6,24 +6,10 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { Exclude, Expose, Transform, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { notNil } from '../../utils/validation';
 import { HydratedDocument } from 'mongoose';
-
-@Exclude()
-export class PageInfo implements IPageInfo {
-  @Expose()
-  pageSize: number;
-
-  @Expose()
-  currentPage?: number;
-
-  @Expose()
-  totalElements?: number;
-
-  @Expose()
-  totalPages?: number;
-}
+import { PageInfo } from './page-info.dto';
 
 export class BaseDBPagination<T> implements DBPagingResult<T> {
   constructor(input?: DBPagingResult<T>) {

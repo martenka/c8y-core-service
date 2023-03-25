@@ -20,12 +20,12 @@ import {
   PaginatedOutputSensorDto,
 } from './dto/output-sensor.dto';
 import { Sensor, SensorDocument } from '../../models/Sensor';
-import { UpdateGroupDto } from '../groups/dto/update-group.dto';
 import { DBPagingResult } from '../../global/pagination/types';
-import { SensorQuery } from './query/sensor.query';
-import { PagingQuery } from '../../global/pagination/pagination';
+import { SensorQuery } from './query/sensor-query.dto';
+import { PagingQuery } from '../../global/pagination/pagination.dto';
 import { UseRolesGuard } from '../../guards/RoleGuard';
 import { AdminRoute } from '../../decorators/authorization';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @Controller('sensors')
 @UseInterceptors(DtoTransformInterceptor)
@@ -36,6 +36,9 @@ export class SensorsController {
   @Post()
   @AdminRoute()
   @SetControllerDTO(OutputSensorDto)
+  @ApiTags('sensors')
+  @ApiOperation({ operationId: 'Create a new sensor' })
+  @ApiBody({ type: [CreateSensorDto] })
   async createSensor(
     @Body(new ParseArrayPipe({ items: CreateSensorDto }))
     createSensorDtos: CreateSensorDto[],
@@ -45,6 +48,8 @@ export class SensorsController {
 
   @Get('/search')
   @SetControllerDTO(PaginatedOutputSensorDto)
+  @ApiTags('sensors')
+  @ApiOperation({ operationId: 'Search sensors' })
   async searchSensors(
     @Query() searchQuery: SensorQuery,
     @Query() pagingQuery: PagingQuery,
@@ -54,6 +59,8 @@ export class SensorsController {
 
   @Get(':id')
   @SetControllerDTO(OutputSensorDto)
+  @ApiTags('sensors')
+  @ApiOperation({ operationId: 'Get one sensor' })
   async findOne(@Param('id') id: string): Promise<SensorDocument | undefined> {
     return this.sensorsService.findOne({ id });
   }
@@ -61,8 +68,10 @@ export class SensorsController {
   @Patch()
   @AdminRoute()
   @SetControllerDTO(OutputSensorDto)
+  @ApiTags('sensors')
+  @ApiOperation({ operationId: 'Update sensors' })
   async update(
-    @Body(new ParseArrayPipe({ items: UpdateGroupDto }))
+    @Body(new ParseArrayPipe({ items: UpdateSensorDto }))
     updateSensorDtos: UpdateSensorDto[],
   ) {
     return this.sensorsService.updateSensors(updateSensorDtos);
@@ -71,6 +80,8 @@ export class SensorsController {
   @Delete(':id')
   @AdminRoute()
   @SetControllerDTO(OutputSensorDto)
+  @ApiTags('sensors')
+  @ApiOperation({ operationId: 'Delete sensor' })
   async remove(@Param('id') id: string) {
     return await this.sensorsService.removeSensor(id);
   }

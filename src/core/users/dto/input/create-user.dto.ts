@@ -7,8 +7,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { Role } from '../../../global/types/roles';
-import { ensureArray } from '../../../utils/validation';
+import { Role } from '../../../../global/types/roles';
+import { ensureArray } from '../../../../utils/validation';
 
 export class C8yCredentialsInputDto {
   @IsString()

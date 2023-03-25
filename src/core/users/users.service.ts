@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument, UserModel } from '../../models/User';
 import { idToObjectID, removeNilProperties } from '../../utils/helpers';
 import { hasNoOwnKeys, notNil } from '../../utils/validation';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from './dto/input/create-user.dto';
 import { IDeleteUsers, IDeleteUsersResponse, IUpdateUser } from './dto/types';
 import { Role } from '../../global/types/roles';
 import { MessagesProducerService } from '../messages/messages-producer.service';

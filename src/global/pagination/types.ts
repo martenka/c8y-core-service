@@ -1,6 +1,7 @@
 import { HydratedDocument } from 'mongoose';
 import { Properties } from '../types/types';
-import { PageInfo, PagingQuery } from './pagination';
+import { PagingQuery } from './pagination.dto';
+import { PageInfo } from './page-info.dto';
 
 export interface IPageInfo {
   pageSize: number;

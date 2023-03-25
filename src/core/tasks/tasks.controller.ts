@@ -28,9 +28,10 @@ import { idToObjectID } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Task, TaskDocument } from '../../models';
 import { DBPagingResult } from '../../global/pagination/types';
-import { PagingQuery } from '../../global/pagination/pagination';
+import { PagingQuery } from '../../global/pagination/pagination.dto';
 import { LoggedInUser } from '../../decorators/user';
 import { LoggedInUserType } from '../auth/types/types';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @Controller('tasks')
 @UseInterceptors(DtoTransformInterceptor)
@@ -42,6 +43,8 @@ export class TasksController {
   @AdminRoute()
   @SetControllerDTO(OutputTaskDto)
   @SetExposeGroups(Groups.ALL)
+  @ApiTags('tasks')
+  @ApiOperation({ operationId: 'Create a new task' })
   async createTask<T extends CreateTaskDto>(
     @LoggedInUser() user: LoggedInUserType,
     @Body(new TaskTransformPipe(TaskCreationDtos))
@@ -52,6 +55,8 @@ export class TasksController {
 
   @Get('/search')
   @SetControllerDTO(PaginatedOutputTaskDto)
+  @ApiTags('tasks')
+  @ApiOperation({ operationId: 'Search tasks' })
   async searchTasks(
     @Query() pagingQuery: PagingQuery,
   ): Promise<DBPagingResult<Task> | undefined> {
@@ -61,6 +66,8 @@ export class TasksController {
   @Get(':id')
   @SetControllerDTO(OutputTaskDto)
   @SetExposeGroups(Groups.ALL)
+  @ApiTags('tasks')
+  @ApiOperation({ operationId: 'Get one task' })
   async getTaskDetails(@Param('id') id: string): Promise<TaskDocument> {
     const objectId = idToObjectID(id);
     if (isNil(objectId)) {

@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { isNil } from '@nestjs/common/utils/shared.utils';
-import { CreateUserDto } from '../users/dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/input/create-user.dto';
 import { PasswordCheck, UserDocument } from '../../models/User';
 import {
   AccessResponse,

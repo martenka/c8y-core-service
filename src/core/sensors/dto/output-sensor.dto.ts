@@ -1,6 +1,6 @@
-import { CustomAttributes } from '../../../models/types/types';
+import { CustomAttributes } from '../../../models';
 import { Exclude, Expose, Type } from 'class-transformer';
-import { BaseDBPagination } from '../../../global/pagination/pagination';
+import { BaseDBPagination } from '../../../global/pagination/pagination.dto';
 import { ValidateNested } from 'class-validator';
 
 @Exclude()

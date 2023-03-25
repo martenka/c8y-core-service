@@ -1,6 +1,8 @@
 import { UserType } from '../../../models/User';
 import { Role } from '../../../global/types/roles';
 import { TaskType } from '../../../models';
+import { Properties } from '../../../global/types/types';
+import { LoginResponseDto } from '../dto/output/login-response.dto';
 
 export interface IAccessTokenPayload {
   sub: string;
@@ -8,9 +10,7 @@ export interface IAccessTokenPayload {
   roles: Role[];
 }
 
-export interface AccessResponse {
-  access_token: string;
-}
+export type AccessResponse = Properties<LoginResponseDto>;
 
 export type LoggedInUserType = {
   [P in keyof Pick<UserType, 'username' | '_id'>]: string;

@@ -6,8 +6,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { ensureArray } from '../../../utils/validation';
-import { Role } from '../../../global/types/roles';
+import { ensureArray } from '../../../../utils/validation';
+import { Role } from '../../../../global/types/roles';
 
 class PartialC8yCredentialsInputDto {
   @IsOptional()

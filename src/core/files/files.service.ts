@@ -19,7 +19,7 @@ import {
 } from '../../global/pagination/types';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { FilterQuery, Types } from 'mongoose';
-import { FileQueryOptions } from './query/file.query';
+import { FileQueryOptions } from './query/file-query.dto';
 
 @Injectable()
 export class FilesService {

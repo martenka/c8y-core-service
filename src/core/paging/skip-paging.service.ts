@@ -3,7 +3,7 @@ import { Sort } from './types/types';
 import { Injectable } from '@nestjs/common';
 import { ensureArray, notNil } from '../../utils/validation';
 import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
-import { BaseDBPagination } from '../../global/pagination/pagination';
+import { BaseDBPagination } from '../../global/pagination/pagination.dto';
 
 @Injectable()
 export class SkipPagingService {
