@@ -49,7 +49,9 @@ export class AuthController {
   }
 
   @Post('/register')
-  @SetControllerDTO(UserOutputDto, { description: 'User registered' })
+  @SetControllerDTO(UserOutputDto, {
+    apiResponseOptions: { description: 'User registered' },
+  })
   @ApiOperation({ operationId: 'Register a new user' })
   @ApiTags('auth')
   async register(@Body() userCreateDto: CreateUserDto): Promise<UserDocument> {

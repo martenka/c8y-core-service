@@ -67,13 +67,14 @@ export class SensorsController {
 
   @Patch()
   @AdminRoute()
-  @SetControllerDTO(OutputSensorDto)
+  @SetControllerDTO(OutputSensorDto, { isArray: true })
   @ApiTags('sensors')
   @ApiOperation({ operationId: 'Update sensors' })
+  @ApiBody({ type: [UpdateSensorDto] })
   async update(
     @Body(new ParseArrayPipe({ items: UpdateSensorDto }))
     updateSensorDtos: UpdateSensorDto[],
-  ) {
+  ): Promise<SensorDocument[]> {
     return this.sensorsService.updateSensors(updateSensorDtos);
   }
 

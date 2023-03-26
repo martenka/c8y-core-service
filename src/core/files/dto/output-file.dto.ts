@@ -71,7 +71,7 @@ export class OutputFileDto {
   storage?: OutputFileStorageDto;
 
   @Expose({ groups: [Groups.ALL] })
-  customAttributes: CustomAttributes;
+  customAttributes?: CustomAttributes;
 }
 
 @Exclude()

@@ -3,16 +3,19 @@ import { IsMongoIdInstance } from '../../../decorators/custom-validators/mongo-i
 import { Types } from 'mongoose';
 import { TransformMongoId } from '../../../decorators/transformers/object-id-transformer';
 import { Properties } from '../../../global/types/types';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class FileQueryDto {
+export class FileQuery {
   @IsOptional()
   @IsMongoIdInstance()
   @TransformMongoId()
+  @ApiProperty({ type: 'string' })
   id?: Types.ObjectId;
 
   @IsOptional()
   @IsMongoIdInstance()
   @TransformMongoId()
+  @ApiProperty({ type: 'string' })
   createdByTask?: Types.ObjectId;
 
   @IsOptional()
@@ -22,11 +25,21 @@ export class FileQueryDto {
 
   @IsOptional()
   @IsISO8601({ strict: true })
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    description: 'ISO8601 string',
+  })
   fromDate?: string;
 
   @IsOptional()
   @IsISO8601({ strict: true })
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    description: 'ISO8601 string',
+  })
   toDate?: string;
 }
 
-export type FileQueryOptions = Properties<FileQueryDto>;
+export type FileQueryOptions = Properties<FileQuery>;

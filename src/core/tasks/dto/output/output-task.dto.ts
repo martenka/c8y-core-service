@@ -2,6 +2,7 @@ import { Exclude, Expose, Type } from 'class-transformer';
 import { BaseDBPagination } from '../../../../global/pagination/pagination.dto';
 import { ValidateNested } from 'class-validator';
 import { Groups } from '../../../../global/tokens';
+import { TaskSteps, TaskTypes } from '../../../../models';
 
 @Exclude()
 export class OutputTaskDto {
@@ -9,13 +10,13 @@ export class OutputTaskDto {
   id: string;
 
   @Expose()
-  taskType: string;
+  taskType: TaskTypes;
 
   @Expose()
   name: string;
 
   @Expose()
-  status: string;
+  status: TaskSteps;
 
   @Expose({ groups: [Groups.ALL] })
   payload?: object;

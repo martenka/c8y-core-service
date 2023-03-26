@@ -10,6 +10,7 @@ import { Expose, Transform, Type } from 'class-transformer';
 import { notNil } from '../../utils/validation';
 import { HydratedDocument } from 'mongoose';
 import { PageInfo } from './page-info.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class BaseDBPagination<T> implements DBPagingResult<T> {
   constructor(input?: DBPagingResult<T>) {
@@ -24,6 +25,7 @@ export class BaseDBPagination<T> implements DBPagingResult<T> {
   @Expose()
   @Type(() => PageInfo)
   @ValidateNested()
+  @ApiProperty({ type: PageInfo })
   pageInfo: IPageInfo;
 
   toObject(): Omit<DBPagingResult<T>, 'data'> & { data: T[] } {

@@ -9,14 +9,17 @@ export const EXPOSE_GROUPS = 'VALIDATION_GROUPS';
 
 export const SetControllerDTO = (
   dto: ClassConstructor<unknown> | string,
-  apiResponseOptions: ApiResponseOptions = {},
+  options: { apiResponseOptions?: ApiResponseOptions; isArray?: boolean } = {
+    apiResponseOptions: {},
+    isArray: false,
+  },
 ) =>
   applyDecorators(
     SetMetadata(CONTROLLER_DTO, dto),
     ApiResponse({
-      type: dto,
-      ...apiResponseOptions,
-      status: apiResponseOptions.status ?? '2XX',
+      type: options.isArray && typeof dto !== 'string' ? [dto] : dto,
+      ...(options.apiResponseOptions ?? {}),
+      status: options?.apiResponseOptions?.status ?? '2XX',
     }),
   );
 

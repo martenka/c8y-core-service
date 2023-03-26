@@ -2,6 +2,12 @@ import { Transform } from 'class-transformer';
 import { Types } from 'mongoose';
 import { isEmpty } from '@nestjs/common/utils/shared.utils';
 
+/**
+ * Converts stringified ObjectIds / MongoIds to Types.ObjectId. If delimiter is given then tries to return an array.
+ *
+ * Returns the original value if parsing fails.
+ * @param delimiter The delimiter to use if an array of IDs is given as a string
+ */
 export function TransformMongoId(delimiter?: string) {
   return Transform(({ value }) => {
     if (typeof value !== 'string') {

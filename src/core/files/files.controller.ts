@@ -16,7 +16,7 @@ import { Groups } from '../../global/tokens';
 import { idToObjectID } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { OutputFileDto, PaginatedOutputFileDto } from './dto/output-file.dto';
-import { FileQueryDto } from './query/file-query.dto';
+import { FileQuery } from './query/file-query.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @Controller('files')
@@ -29,7 +29,7 @@ export class FilesController {
   @ApiTags('files')
   @ApiOperation({ operationId: 'Search files' })
   async searchFiles(
-    @Query() searchQuery: FileQueryDto,
+    @Query() searchQuery: FileQuery,
     @Query() pagingQuery: PagingQuery,
   ): Promise<DBPagingResult<File>> {
     return await this.filesService.findMany(searchQuery, pagingQuery);
