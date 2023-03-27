@@ -5,7 +5,8 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { CustomAttributes } from '../../../models/types/types';
+import { CustomAttributes } from '../../../models';
+import { OmitType } from '@nestjs/swagger';
 
 export class UpdateSensorDto {
   @IsString()
@@ -40,3 +41,7 @@ export class UpdateSensorDto {
   @IsObject()
   customAttributes?: CustomAttributes;
 }
+
+export class UpdateOneSensorDto extends OmitType(UpdateSensorDto, [
+  'id',
+] as const) {}

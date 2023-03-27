@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { SensorsService } from './sensors.service';
 import { CreateSensorDto } from './dto/create-sensor.dto';
-import { UpdateSensorDto } from './dto/update-sensor.dto';
+import { UpdateOneSensorDto, UpdateSensorDto } from './dto/update-sensor.dto';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
 import { SetControllerDTO } from '../../decorators/dto';
 import {
@@ -63,6 +63,22 @@ export class SensorsController {
   @ApiOperation({ operationId: 'Get one sensor' })
   async findOne(@Param('id') id: string): Promise<SensorDocument | undefined> {
     return this.sensorsService.findOne({ id });
+  }
+
+  @Patch(':id')
+  @AdminRoute()
+  @SetControllerDTO(OutputSensorDto)
+  @ApiTags('sensors')
+  @ApiOperation({ operationId: 'Update one sensor' })
+  async updateOne(
+    @Body()
+    updateSensorDto: UpdateOneSensorDto,
+    @Param('id') id: string,
+  ): Promise<SensorDocument | undefined> {
+    const updatedSensors = await this.sensorsService.updateSensors([
+      { ...updateSensorDto, id },
+    ]);
+    return updatedSensors[0];
   }
 
   @Patch()
