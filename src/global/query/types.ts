@@ -1,3 +1,5 @@
+import { KeyValueProperties } from './key-value';
+
 export interface BaseSearchOptions {
   id?: string;
 }
@@ -7,6 +9,7 @@ export interface SensorSearchOptions extends BaseSearchOptions {
   managedObjectName?: string;
   valueFragmentType?: string;
   valueFragmentDisplayName?: string;
+  customAttributes?: KeyValueProperties[];
 }
 
 export interface GroupSearchOptions extends BaseSearchOptions {

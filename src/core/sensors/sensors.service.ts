@@ -10,6 +10,7 @@ import {
   pickBy,
   remapIDAndRemoveNil,
   awaitAllPromises,
+  remapCustomAttributes,
 } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { SkipPagingService } from '../paging/skip-paging.service';
@@ -33,10 +34,13 @@ export class SensorsService {
     searchOptions: SensorSearchOptions,
     pagingOptions: IPagingOptions,
   ): Promise<DBPagingResult<Sensor>> {
+    const { customAttributesQuery, ...rest } =
+      remapCustomAttributes(searchOptions);
     return await this.skipPagingService.findWithPagination(
       this.sensorModel,
       {
-        ...remapIDAndRemoveNil(searchOptions),
+        ...remapIDAndRemoveNil(rest),
+        ...customAttributesQuery,
       },
       { _id: 1 },
       pagingOptions,

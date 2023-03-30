@@ -1,8 +1,9 @@
 import { Types } from 'mongoose';
 import { notNil } from './validation';
-import { ObjectIdLike, BSONTypeError } from 'bson';
+import { BSONTypeError, ObjectIdLike } from 'bson';
 import { isArray } from 'class-validator';
 import { Buffer } from 'buffer';
+import { KeyValue } from '../global/query/key-value';
 
 export type ParsedPromisesResult<T> = { fulfilled: T[]; rejected: unknown[] };
 
@@ -83,4 +84,28 @@ export async function awaitAllPromises<T>(
   });
 
   return result;
+}
+
+export function getCustomAttributesQuery(
+  name: string,
+  values: KeyValue[] = [],
+) {
+  const query = {};
+
+  values.forEach(
+    (keyValue) => (query[`${name}.${keyValue.key}`] = keyValue.value),
+  );
+
+  return query;
+}
+
+export function remapCustomAttributes<
+  T extends { customAttributes?: KeyValue[] },
+>(query: T) {
+  const customAttributesQuery = getCustomAttributesQuery(
+    'customAttributes',
+    query.customAttributes,
+  );
+  const { customAttributes: _, ...rest } = query;
+  return { customAttributesQuery, ...rest };
 }
