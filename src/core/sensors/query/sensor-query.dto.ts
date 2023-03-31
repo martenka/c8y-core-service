@@ -1,9 +1,4 @@
-import {
-  IsMongoId,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { IsOptional, IsString, ValidateNested } from 'class-validator';
 
 import { SensorSearchOptions } from '../../../global/query/types';
 import { Type } from 'class-transformer';
@@ -12,7 +7,7 @@ import { KeyValue } from '../../../global/query/key-value';
 
 export class SensorQuery implements SensorSearchOptions {
   @IsOptional()
-  @IsMongoId()
+  @IsString()
   id?: string;
 
   @IsOptional()

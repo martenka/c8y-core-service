@@ -2,7 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { UserSearchOptions } from '../../global/query/types';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument, UserModel } from '../../models/User';
-import { idToObjectID, removeNilProperties } from '../../utils/helpers';
+import {
+  idToObjectIDOrUndefined,
+  removeNilProperties,
+} from '../../utils/helpers';
 import { hasNoOwnKeys, notNil } from '../../utils/validation';
 import { CreateUserDto } from './dto/input/create-user.dto';
 import { IDeleteUsers, IDeleteUsersResponse, IUpdateUser } from './dto/types';
@@ -51,7 +54,7 @@ export class UsersService {
   async deleteAndSendMessages(
     input: IDeleteUsers,
   ): Promise<IDeleteUsersResponse> {
-    const idsToDelete = idToObjectID(input.items);
+    const idsToDelete = idToObjectIDOrUndefined(input.items);
 
     const deletionTime = new Date().toISOString();
 
@@ -89,7 +92,7 @@ export class UsersService {
     id: string,
     input: IUpdateUser,
   ): Promise<UserDocument | undefined> {
-    const objectId = idToObjectID(id);
+    const objectId = idToObjectIDOrUndefined(id);
 
     const updateData = removeNilProperties(input);
     updateData.c8yCredentials = removeNilProperties(

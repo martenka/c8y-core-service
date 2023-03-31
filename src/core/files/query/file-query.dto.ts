@@ -1,4 +1,4 @@
-import { IsISO8601, IsOptional } from 'class-validator';
+import { IsISO8601, IsOptional, IsString } from 'class-validator';
 import { IsMongoIdInstance } from '../../../decorators/custom-validators/mongo-id.validator';
 import { Types } from 'mongoose';
 import { TransformMongoId } from '../../../decorators/transformers/object-id-transformer';
@@ -7,10 +7,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class FileQuery {
   @IsOptional()
-  @IsMongoIdInstance()
-  @TransformMongoId()
+  @IsString()
   @ApiProperty({ type: 'string' })
-  id?: Types.ObjectId;
+  id?: string;
 
   @IsOptional()
   @IsMongoIdInstance()

@@ -13,7 +13,7 @@ import { File, FileDocument } from '../../models';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
 import { SetControllerDTO, SetExposeGroups } from '../../decorators/dto';
 import { Groups } from '../../global/tokens';
-import { idToObjectID } from '../../utils/helpers';
+import { idToObjectIDOrUndefined } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { OutputFileDto, PaginatedOutputFileDto } from './dto/output-file.dto';
 import { FileQuery } from './query/file-query.dto';
@@ -43,7 +43,7 @@ export class FilesController {
   async getFileDetails(
     @Param('id') id: string,
   ): Promise<FileDocument | undefined> {
-    const fileId = idToObjectID(id);
+    const fileId = idToObjectIDOrUndefined(id);
     if (isNil(fileId)) {
       throw new NotFoundException();
     }

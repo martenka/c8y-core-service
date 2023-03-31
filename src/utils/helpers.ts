@@ -18,7 +18,7 @@ export function remapIDAndRemoveNil<T extends { id?: string }>(
   const mappedObj: Partial<T> = { ...value };
 
   if (notNil(value.id)) {
-    mappedObj['_id'] = newID ?? idToObjectID(value.id);
+    mappedObj['_id'] = newID ?? idToObjectIDOrOriginal(value.id);
   }
 
   const { id: _, ...result } = removeNilProperties(mappedObj);
@@ -32,10 +32,10 @@ type TestType =
   | Buffer
   | Uint8Array;
 
-export function idToObjectID<T extends TestType | TestType[]>(
+export function idToObjectIDOrUndefined<T extends TestType | TestType[]>(
   id: T,
 ): T extends TestType[] ? Types.ObjectId[] : Types.ObjectId;
-export function idToObjectID(
+export function idToObjectIDOrUndefined(
   id: TestType | TestType[],
 ): Types.ObjectId[] | Types.ObjectId {
   try {
@@ -46,6 +46,20 @@ export function idToObjectID(
   } catch (e) {
     if (e instanceof BSONTypeError) {
       return undefined;
+    }
+    throw e;
+  }
+}
+
+export function idToObjectIDOrOriginal<T extends TestType>(id: T) {
+  try {
+    if (isArray(id)) {
+      return id.map((value) => new Types.ObjectId(value));
+    }
+    return new Types.ObjectId(id);
+  } catch (e) {
+    if (e instanceof BSONTypeError) {
+      return id;
     }
     throw e;
   }

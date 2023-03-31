@@ -6,7 +6,7 @@ import { SensorDocument, SensorModel } from '../../models/Sensor';
 import { InjectModel } from '@nestjs/mongoose';
 import { hasNoOwnKeys, notNil } from '../../utils/validation';
 import {
-  idToObjectID,
+  idToObjectIDOrUndefined,
   pickBy,
   remapIDAndRemoveNil,
   awaitAllPromises,
@@ -64,7 +64,7 @@ export class SensorsService {
     const updatesInProgress: Promise<SensorDocument>[] = [];
 
     updates.forEach((update) => {
-      const objectId = idToObjectID(update.id);
+      const objectId = idToObjectIDOrUndefined(update.id);
 
       if (isNil(objectId)) {
         return undefined;
@@ -85,7 +85,7 @@ export class SensorsService {
   }
 
   async removeSensor(id: string): Promise<SensorDocument | undefined> {
-    const objectId = idToObjectID(id);
+    const objectId = idToObjectIDOrUndefined(id);
 
     if (isNil(objectId)) {
       return undefined;

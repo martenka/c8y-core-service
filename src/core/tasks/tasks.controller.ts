@@ -24,7 +24,7 @@ import {
   PaginatedOutputTaskDto,
 } from './dto/output/output-task.dto';
 import { Groups } from '../../global/tokens';
-import { idToObjectID } from '../../utils/helpers';
+import { idToObjectIDOrUndefined } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Task, TaskDocument } from '../../models';
 import { DBPagingResult } from '../../global/pagination/types';
@@ -69,7 +69,7 @@ export class TasksController {
   @ApiTags('tasks')
   @ApiOperation({ operationId: 'Get one task' })
   async getTaskDetails(@Param('id') id: string): Promise<TaskDocument> {
-    const objectId = idToObjectID(id);
+    const objectId = idToObjectIDOrUndefined(id);
     if (isNil(objectId)) {
       throw new NotFoundException();
     }

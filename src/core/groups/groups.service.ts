@@ -6,7 +6,7 @@ import { ensureArray, hasNoOwnKeys, notNil } from '../../utils/validation';
 
 import {
   awaitAllPromises,
-  idToObjectID,
+  idToObjectIDOrUndefined,
   pickBy,
   remapIDAndRemoveNil,
 } from '../../utils/helpers';
@@ -58,7 +58,7 @@ export class GroupsService {
     const updatesInProgress: Promise<GroupDocument>[] = [];
 
     updates.forEach((update) => {
-      const objectId = idToObjectID(update.id);
+      const objectId = idToObjectIDOrUndefined(update.id);
 
       if (isNil(objectId)) {
         return undefined;
@@ -86,7 +86,7 @@ export class GroupsService {
   }
 
   async removeGroup(id: string): Promise<GroupDocument | undefined> {
-    const objectId = idToObjectID(id);
+    const objectId = idToObjectIDOrUndefined(id);
 
     if (isNil(objectId)) {
       return undefined;

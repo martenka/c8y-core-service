@@ -12,7 +12,10 @@ import {
 import { DataFetchTaskResult } from '../messages/types/message-types/task/types';
 import { SensorsService } from '../sensors/sensors.service';
 import { notNil } from '../../utils/validation';
-import { idToObjectID, removeNilProperties } from '../../utils/helpers';
+import {
+  idToObjectIDOrUndefined,
+  removeNilProperties,
+} from '../../utils/helpers';
 import {
   DBPagingResult,
   PagingOptionsType,
@@ -33,7 +36,7 @@ export class FilesService {
     message: DataFetchTaskResult,
   ): Promise<FileDocument[]> {
     const files: FileProperties[] = [];
-    const taskId = idToObjectID(message.taskId);
+    const taskId = idToObjectIDOrUndefined(message.taskId);
     for (const sensor of message.payload.sensors) {
       const existingSensor = await this.sensorsService.findOne({
         id: sensor.sensorId,
