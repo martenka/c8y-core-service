@@ -18,7 +18,7 @@ import { Properties } from '../global/types/types';
 })
 export class Sensor extends Base {
   @Prop({ required: true })
-  managedObjectId: number;
+  managedObjectId: string;
 
   @Prop({ required: true })
   managedObjectName: string;
@@ -28,6 +28,12 @@ export class Sensor extends Base {
 
   @Prop()
   valueFragmentDisplayName: string;
+
+  @Prop()
+  owner?: string;
+
+  @Prop()
+  type?: string;
 
   @Prop()
   description?: string;

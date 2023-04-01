@@ -21,6 +21,12 @@ export class OutputSensorDto {
   valueFragmentDisplayName: string;
 
   @Expose()
+  type?: string;
+
+  @Expose()
+  owner?: string;
+
+  @Expose()
   description?: string;
 
   @Expose()

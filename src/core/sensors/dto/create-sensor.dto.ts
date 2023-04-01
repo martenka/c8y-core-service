@@ -1,15 +1,10 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsObject,
-  IsOptional,
-  IsString,
-} from 'class-validator';
-import { CustomAttributes } from '../../../models/types/types';
+import { IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { CustomAttributes } from '../../../models';
+import { Properties } from '../../../global/types/types';
 
 export class CreateSensorDto {
-  @IsNumber({ allowInfinity: false, allowNaN: false })
-  managedObjectId: number;
+  @IsString()
+  managedObjectId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -25,9 +20,19 @@ export class CreateSensorDto {
 
   @IsString()
   @IsOptional()
+  owner?: string;
+
+  @IsString()
+  @IsOptional()
+  type?: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
 
   @IsObject()
   @IsOptional()
   customAttributes?: CustomAttributes;
 }
+
+export type CreateSensorDtoProperties = Properties<CreateSensorDto>;

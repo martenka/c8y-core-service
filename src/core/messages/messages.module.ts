@@ -6,10 +6,13 @@ import { MessagesHandlerService } from './messages-handler.service';
 import { ApplicationConfigService } from '../application-config/application-config.service';
 import { TasksModule } from '../tasks/tasks.module';
 import { FilesModule } from '../files/files.module';
+import { SensorsModule } from '../sensors/sensors.module';
+import { ObjectSyncTaskMessageHandler } from './handlers/object-sync-task-message.handler';
 
 @Module({
   imports: [
     FilesModule,
+    SensorsModule,
     RabbitMQModule.forRootAsync(RabbitMQModule, {
       useFactory: (config: ApplicationConfigService) => config.messagingConfig,
       inject: [ApplicationConfigService],
@@ -17,7 +20,11 @@ import { FilesModule } from '../files/files.module';
     forwardRef(() => TasksModule),
   ],
   controllers: [MessagesController],
-  providers: [MessagesProducerService, MessagesHandlerService],
+  providers: [
+    ObjectSyncTaskMessageHandler,
+    MessagesProducerService,
+    MessagesHandlerService,
+  ],
   exports: [MessagesProducerService, RabbitMQModule],
 })
 export class MessagesModule {}

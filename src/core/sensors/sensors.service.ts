@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSensorDto } from './dto/create-sensor.dto';
+import { CreateSensorDtoProperties } from './dto/create-sensor.dto';
 import { UpdateSensorDto } from './dto/update-sensor.dto';
 import { Sensor } from '../../models';
 import { SensorDocument, SensorModel } from '../../models/Sensor';
@@ -25,7 +25,7 @@ export class SensorsService {
     private skipPagingService: SkipPagingService,
   ) {}
   async createSensors(
-    createSensorDtos: CreateSensorDto[],
+    createSensorDtos: CreateSensorDtoProperties[],
   ): Promise<SensorDocument[] | undefined> {
     return await this.sensorModel.create(createSensorDtos);
   }

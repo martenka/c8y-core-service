@@ -2,7 +2,7 @@ import {
   DataFetchPayloadType,
   SensorDataType,
   TaskPeriodicDataType,
-  TaskStatus,
+  TaskSteps,
   TaskType,
   TaskTypes,
 } from '../../../../../models';
@@ -12,7 +12,7 @@ export interface DataFetchTaskMessagePayload
   data: (Pick<SensorDataType, 'fileName'> & {
     sensor: {
       id: string;
-      managedObjectId: number;
+      managedObjectId: string;
       fragmentType: string;
     };
   })[];
@@ -42,10 +42,13 @@ export interface TaskFailedMessagePayload {
   reason: string;
 }
 
-export interface TaskStatusMessage<P extends object = object> {
+export interface TaskStatusMessage<
+  P extends object = object,
+  S extends TaskSteps = TaskSteps,
+> {
   taskId: string;
   taskType: keyof typeof TaskTypes;
-  status: TaskStatus;
+  status: S;
   payload: P;
 }
 

@@ -4,6 +4,11 @@ import {
   TaskStatusMessage,
 } from './task/types';
 import { UserMessage } from './user/types';
+import {
+  ObjectSyncTaskResultPayload,
+  ObjectSyncTaskStatusPayload,
+} from './task/object-sync';
+import { TaskSteps } from '../../../../models';
 
 export interface BaseMessage<T> {
   scheduledAt: string;
@@ -11,6 +16,15 @@ export interface BaseMessage<T> {
 }
 
 export type TaskFailedMessage = TaskStatusMessage<TaskFailedMessagePayload>;
+
+export type ObjectSyncTaskStatusMessage = TaskStatusMessage<
+  ObjectSyncTaskStatusPayload,
+  TaskSteps.PROCESSING
+>;
+export type ObjectSyncTaskResultMessage = TaskStatusMessage<
+  ObjectSyncTaskResultPayload,
+  TaskSteps.DONE
+>;
 
 export interface MessageTypes {
   'task.scheduled': TaskScheduledMessage;

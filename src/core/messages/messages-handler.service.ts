@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { TaskSteps } from '../../models/FileTask';
 import { TaskFailedMessage } from './types/message-types/messageTypes';
@@ -11,12 +11,20 @@ import {
 } from './types/message-types/task/types';
 import { TasksService } from '../tasks/tasks.service';
 import { FilesService } from '../files/files.service';
+import {
+  isObjectSyncTaskResultMessage,
+  isObjectSyncTaskStatusMessage,
+} from './guards/object-sync';
+import { ObjectSyncTaskMessageHandler } from './handlers/object-sync-task-message.handler';
 
 @Injectable()
 export class MessagesHandlerService {
+  private readonly logger = new Logger(MessagesHandlerService.name);
+
   constructor(
     private readonly tasksService: TasksService,
     private readonly filesService: FilesService,
+    private readonly objectSyncTaskHandler: ObjectSyncTaskMessageHandler,
   ) {}
 
   async handleTaskStatusMessage(message: TaskStatusMessage) {
@@ -40,6 +48,16 @@ export class MessagesHandlerService {
             message as DataFetchTaskResult,
           );
         }
+        return;
+      case 'OBJECT_SYNC':
+        if (isObjectSyncTaskStatusMessage(message)) {
+          await this.objectSyncTaskHandler.handleStatusMessage(message);
+        } else if (isObjectSyncTaskResultMessage(message)) {
+          this.logger.log(
+            `${message.taskType} synced ${message.payload.objectAmount} objects`,
+          );
+        }
+        return;
     }
 
     return await this.tasksService.updateTaskStatus(taskId, message.status);
