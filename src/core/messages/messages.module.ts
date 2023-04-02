@@ -8,11 +8,13 @@ import { TasksModule } from '../tasks/tasks.module';
 import { FilesModule } from '../files/files.module';
 import { SensorsModule } from '../sensors/sensors.module';
 import { ObjectSyncTaskMessageHandler } from './handlers/object-sync-task-message.handler';
+import { GroupsModule } from '../groups/groups.module';
 
 @Module({
   imports: [
     FilesModule,
     SensorsModule,
+    GroupsModule,
     RabbitMQModule.forRootAsync(RabbitMQModule, {
       useFactory: (config: ApplicationConfigService) => config.messagingConfig,
       inject: [ApplicationConfigService],

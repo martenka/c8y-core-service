@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateGroupDto } from './dto/create-group.dto';
+import { CreateGroupDtoProperties } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 
 import { ensureArray, hasNoOwnKeys, notNil } from '../../utils/validation';
@@ -21,9 +21,21 @@ export class GroupsService {
   constructor(@InjectModel(Group.name) private groupModel: GroupModel) {}
 
   async createGroups(
-    createGroupDto: CreateGroupDto[],
+    createGroupDto: CreateGroupDtoProperties[],
   ): Promise<GroupDocument[] | undefined> {
-    return await this.groupModel.create(createGroupDto, {});
+    const mappedGroupDtos = [];
+    for (const dto of createGroupDto) {
+      const groups = idToObjectIDOrUndefined(dto.groups);
+      const sensors = idToObjectIDOrUndefined(dto.sensors);
+
+      if (isNil(groups) || isNil(sensors)) {
+        return undefined;
+      }
+
+      mappedGroupDtos.push({ ...dto, sensors, groups });
+    }
+
+    return await this.groupModel.create(mappedGroupDtos, {});
   }
 
   async findAllGroups(): Promise<GroupDocument[]> {
@@ -63,7 +75,7 @@ export class GroupsService {
       if (isNil(objectId)) {
         return undefined;
       }
-      const { sensors, ...otherItems } = pickBy(update, (value) =>
+      const { sensors, groups, ...otherItems } = pickBy(update, (value) =>
         notNil(value),
       );
 
@@ -73,7 +85,14 @@ export class GroupsService {
             objectId,
             {
               ...otherItems,
-              $addToSet: { sensors: { $each: ensureArray(sensors) } },
+              $addToSet: {
+                sensors: {
+                  $each: ensureArray(idToObjectIDOrUndefined(sensors)),
+                  groups: {
+                    $each: ensureArray(idToObjectIDOrUndefined(groups)),
+                  },
+                },
+              },
             },
             { returnDocument: 'after' },
           )

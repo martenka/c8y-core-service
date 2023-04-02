@@ -16,6 +16,7 @@ import { isNil } from '@nestjs/common/utils/shared.utils';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
 import { SensorSearchOptions } from '../../global/query/types';
+import { FilterQuery, QueryOptions } from 'mongoose';
 
 @Injectable()
 export class SensorsService {
@@ -45,6 +46,19 @@ export class SensorsService {
       { _id: 1 },
       pagingOptions,
     );
+  }
+
+  async findManyByFilterQuery(
+    query: FilterQuery<Sensor>,
+    queryOptions?: QueryOptions<Sensor>,
+  ): Promise<SensorDocument[]> {
+    const result = await this.sensorModel
+      .find(query, undefined, queryOptions)
+      .exec();
+    if (isNil(result)) {
+      return [];
+    }
+    return result;
   }
 
   async findOne(

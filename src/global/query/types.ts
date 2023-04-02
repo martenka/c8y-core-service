@@ -14,6 +14,7 @@ export interface SensorSearchOptions extends BaseSearchOptions {
 
 export interface GroupSearchOptions extends BaseSearchOptions {
   name?: string;
+  managedObjectId?: string;
   sensors?: string[];
 }
 

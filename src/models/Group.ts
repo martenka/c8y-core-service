@@ -19,8 +19,20 @@ export class Group extends Base {
   @Prop({ required: true })
   name: string;
 
+  @Prop()
+  managedObjectId?: string;
+
+  @Prop()
+  owner?: string;
+
+  @Prop({ type: [Types.ObjectId], ref: () => Sensor, default: [] })
+  groups: Types.DocumentArray<Group>;
+
   @Prop({ type: [Types.ObjectId], ref: () => Sensor })
   sensors: Types.DocumentArray<Sensor>;
+
+  @Prop()
+  description?: string;
 
   @Prop({
     type: Object,
