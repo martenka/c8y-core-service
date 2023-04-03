@@ -1,10 +1,4 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsObject,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
 import { CustomAttributes } from '../../../models';
 import { OmitType } from '@nestjs/swagger';
 
@@ -14,8 +8,8 @@ export class UpdateSensorDto {
   id: string;
 
   @IsOptional()
-  @IsNumber({ allowInfinity: false, allowNaN: false })
-  managedObjectId?: number;
+  @IsString()
+  managedObjectId?: string;
 
   @IsOptional()
   @IsString()
