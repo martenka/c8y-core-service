@@ -89,7 +89,7 @@ export class TasksService {
     return await this.skipPagingService.findWithPagination(
       this.taskModel,
       {},
-      { _id: 1 },
+      { _id: -1 },
       pagingOptions,
     );
   }

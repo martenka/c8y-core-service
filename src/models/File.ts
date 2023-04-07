@@ -101,6 +101,9 @@ export class File extends Base {
   createdByTask: Types.ObjectId | DataFetchTaskType | undefined;
 
   @Prop()
+  url?: string;
+
+  @Prop()
   description?: string;
 
   @Prop({ type: FileStorageInfo, required: true })

@@ -57,6 +57,9 @@ export class OutputFileDto {
   name: string;
 
   @Expose()
+  url?: string;
+
+  @Expose()
   createdByTask?: string;
 
   @Expose()
