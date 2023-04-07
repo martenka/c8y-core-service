@@ -123,3 +123,15 @@ export function remapCustomAttributes<
   const { customAttributes: _, ...rest } = query;
   return { customAttributesQuery, ...rest };
 }
+
+export function convertBooleanOrOriginal(value: unknown): boolean | unknown {
+  if (typeof value === 'string') {
+    switch (value.toLowerCase()) {
+      case 'true':
+        return true;
+      case 'false':
+        return false;
+    }
+  }
+  return value;
+}

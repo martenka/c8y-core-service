@@ -32,6 +32,7 @@ import { PagingQuery } from '../../global/pagination/pagination.dto';
 import { LoggedInUser } from '../../decorators/user';
 import { LoggedInUserType } from '../auth/types/types';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { TaskQuery } from './query/task-query.dto';
 
 @Controller('tasks')
 @UseInterceptors(DtoTransformInterceptor)
@@ -58,9 +59,10 @@ export class TasksController {
   @ApiTags('tasks')
   @ApiOperation({ operationId: 'Search tasks' })
   async searchTasks(
+    @Query() searchQuery: TaskQuery,
     @Query() pagingQuery: PagingQuery,
   ): Promise<DBPagingResult<Task> | undefined> {
-    return await this.tasksService.findMany(pagingQuery);
+    return await this.tasksService.findMany(searchQuery, pagingQuery);
   }
 
   @Get(':id')

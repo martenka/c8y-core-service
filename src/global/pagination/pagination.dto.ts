@@ -11,6 +11,7 @@ import { notNil } from '../../utils/validation';
 import { HydratedDocument } from 'mongoose';
 import { PageInfo } from './page-info.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { convertBooleanOrOriginal } from '../../utils/helpers';
 
 export class BaseDBPagination<T> implements DBPagingResult<T> {
   constructor(input?: DBPagingResult<T>) {
@@ -63,30 +64,14 @@ export class PagingQuery implements IPagingOptions {
 
   @IsOptional()
   @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      switch (value.toLowerCase()) {
-        case 'true':
-          return true;
-        case 'false':
-          return false;
-      }
-    }
-    return value;
+    return convertBooleanOrOriginal(value);
   })
   @IsBoolean()
   withTotalElements?: boolean;
 
   @IsOptional()
   @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      switch (value.toLowerCase()) {
-        case 'true':
-          return true;
-        case 'false':
-          return false;
-      }
-    }
-    return value;
+    return convertBooleanOrOriginal(value);
   })
   @IsBoolean()
   withTotalPages?: boolean;

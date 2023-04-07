@@ -10,7 +10,7 @@ import {
   TaskStatus,
   TaskTypes,
 } from '../../models';
-import { Types } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   DBPagingResult,
@@ -28,6 +28,8 @@ import { hasNoOwnKeys, notNil } from '../../utils/validation';
 import { TaskMessageMapperService } from './task-message-mapper.service';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { TaskFailedMessage } from '../messages/types/message-types/messageTypes';
+import { TaskQueryProperties } from './query/task-query.dto';
+import { removeNilProperties } from '../../utils/helpers';
 
 @Injectable()
 export class TasksService {
@@ -84,13 +86,30 @@ export class TasksService {
   }
 
   async findMany(
+    searchQuery: TaskQueryProperties,
     pagingOptions: PagingOptionsType,
   ): Promise<DBPagingResult<Task>> {
+    const filter: FilterQuery<Task> = {
+      taskType: searchQuery.taskType,
+      _id: searchQuery.id,
+      name: searchQuery.name,
+      status: searchQuery.taskStatus,
+      'metadata.periodicData': notNil(searchQuery.isPeriodic)
+        ? { $exists: searchQuery.isPeriodic }
+        : undefined,
+      'metadata.firstRunAt': notNil(searchQuery.firstRunAt)
+        ? { $gte: new Date(searchQuery.firstRunAt) }
+        : undefined,
+    };
+
     return await this.skipPagingService.findWithPagination(
       this.taskModel,
-      {},
+      removeNilProperties(filter),
       { _id: -1 },
       pagingOptions,
+      {
+        strictQuery: false,
+      },
     );
   }
 
