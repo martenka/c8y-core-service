@@ -23,11 +23,15 @@ import {
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { FilterQuery, Types } from 'mongoose';
 import { FileQueryOptions } from './query/file-query.dto';
+import { FileLink } from './types/types';
+import { isNil } from '@nestjs/common/utils/shared.utils';
+import { ApplicationConfigService } from '../application-config/application-config.service';
 
 @Injectable()
 export class FilesService {
   constructor(
     @InjectModel(File.name) private readonly fileModel: FileModel,
+    private readonly configService: ApplicationConfigService,
     private readonly sensorsService: SensorsService,
     private skipPagingService: SkipPagingService,
   ) {}
@@ -43,7 +47,7 @@ export class FilesService {
       });
       const fileStorageInfo: FileStorageProperties = {
         bucket: sensor.bucket,
-        url: sensor.fileURL,
+        url: `${this.configService.minioConfig.url}/${sensor.bucket}/${sensor.filePath}`,
         path: sensor.filePath,
       };
 
@@ -113,5 +117,18 @@ export class FilesService {
 
   async findById(id: Types.ObjectId): Promise<FileDocument | undefined> {
     return await this.fileModel.findById(id).exec();
+  }
+
+  async getFileLink(id: Types.ObjectId): Promise<FileLink | undefined> {
+    const file = await this.fileModel.findById(id).exec();
+    if (isNil(file)) {
+      return undefined;
+    }
+
+    return {
+      id: file._id.toString(),
+      url: `${this.configService.minioConfig.url}/${file.storage.bucket}/${file.storage.path}`,
+      fileName: file.name,
+    };
   }
 }

@@ -1,4 +1,5 @@
 import {
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -37,6 +38,12 @@ export class JwtConfig {
   EXPIRES_IN: string;
 }
 
+export class MinioConfig {
+  @IsString()
+  @IsNotEmpty()
+  URL: string;
+}
+
 export class SecretConfig {
   @Transform(({ value }) => parseInt(value, 10))
   @IsNumber({ allowInfinity: false, allowNaN: false })
@@ -60,4 +67,8 @@ export class RootConfig {
   @Type(() => SecretConfig)
   @ValidateNested()
   SECRET: SecretConfig = new SecretConfig();
+
+  @Type(() => MinioConfig)
+  @ValidateNested()
+  MINIO: MinioConfig;
 }

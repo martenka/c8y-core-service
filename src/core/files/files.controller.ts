@@ -11,13 +11,18 @@ import { PagingQuery } from '../../global/pagination/pagination.dto';
 import { DBPagingResult } from '../../global/pagination/types';
 import { File, FileDocument } from '../../models';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
-import { SetControllerDTO, SetExposeGroups } from '../../decorators/dto';
+import {
+  NoDTOValidation,
+  SetControllerDTO,
+  SetExposeGroups,
+} from '../../decorators/dto';
 import { Groups } from '../../global/tokens';
 import { idToObjectIDOrUndefined } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { OutputFileDto, PaginatedOutputFileDto } from './dto/output-file.dto';
 import { FileQuery } from './query/file-query.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileLink } from './types/types';
 
 @Controller('files')
 @UseInterceptors(DtoTransformInterceptor)
@@ -48,5 +53,18 @@ export class FilesController {
       throw new NotFoundException();
     }
     return this.filesService.findById(fileId);
+  }
+
+  @Get(':id/link')
+  @SetExposeGroups(Groups.ALL)
+  @NoDTOValidation()
+  @ApiTags('files')
+  @ApiOperation({ operationId: 'Get file download link' })
+  async getFileLink(@Param('id') id: string): Promise<FileLink | undefined> {
+    const fileId = idToObjectIDOrUndefined(id);
+    if (isNil(fileId)) {
+      throw new NotFoundException();
+    }
+    return this.filesService.getFileLink(fileId);
   }
 }

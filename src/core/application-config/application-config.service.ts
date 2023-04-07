@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   JwtConfig,
+  MinioConfig,
   MongoConfig,
   RabbitConfig,
   SecretConfig,
@@ -17,6 +18,7 @@ export class ApplicationConfigService {
     readonly rabbitEnvironment: RabbitConfig,
     readonly jwtEnvironment: JwtConfig,
     readonly secretEnvironment: SecretConfig,
+    readonly minioEnvironment: MinioConfig,
   ) {}
 
   get mongooseModuleOptions(): MongooseModuleOptions {
@@ -67,6 +69,12 @@ export class ApplicationConfigService {
   get secretConfig() {
     return {
       SALT_WORK_FACTOR: this.secretEnvironment.SALT_WORK_FACTOR,
+    };
+  }
+
+  get minioConfig() {
+    return {
+      url: this.minioEnvironment.URL,
     };
   }
 }
