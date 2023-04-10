@@ -27,6 +27,8 @@ import { FileQueryOptions } from './query/file-query.dto';
 import { FileLink } from './types/types';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { ApplicationConfigService } from '../application-config/application-config.service';
+import { DeleteInputProperties } from '../../global/dto/deletion';
+import { IDeleteResponse } from '../../global/dto/types';
 
 @Injectable()
 export class FilesService {
@@ -132,6 +134,22 @@ export class FilesService {
     const file = await this.fileModel.findById(id).exec();
     this.populateUrl(file);
     return file;
+  }
+
+  async removeMany(
+    deleteInput: DeleteInputProperties,
+  ): Promise<IDeleteResponse | undefined> {
+    const deleteResponse = await this.fileModel.deleteMany({
+      _id: { $in: deleteInput.items },
+    });
+
+    const deletedCount = deleteResponse?.deletedCount;
+
+    return notNil(deletedCount) ? { deletedCount } : undefined;
+  }
+
+  async removeFile(id: Types.ObjectId) {
+    return await this.fileModel.findByIdAndDelete(id).exec();
   }
 
   async getFileLink(id: Types.ObjectId): Promise<FileLink | undefined> {

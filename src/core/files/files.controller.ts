@@ -1,8 +1,13 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
+  Post,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
@@ -23,6 +28,11 @@ import { OutputFileDto, PaginatedOutputFileDto } from './dto/output-file.dto';
 import { FileQuery } from './query/file-query.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FileLink } from './types/types';
+import { AdminRoute } from '../../decorators/authorization';
+import { IDeleteResponse } from '../../global/dto/types';
+import { DeleteInputDto } from '../../global/dto/deletion';
+import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
+import { Types } from 'mongoose';
 
 @Controller('files')
 @UseInterceptors(DtoTransformInterceptor)
@@ -66,5 +76,24 @@ export class FilesController {
       throw new NotFoundException();
     }
     return this.filesService.getFileLink(fileId);
+  }
+
+  @Post('/delete')
+  @AdminRoute()
+  @HttpCode(HttpStatus.OK)
+  @NoDTOValidation()
+  @ApiTags('files')
+  @ApiOperation({ operationId: 'Remove files' })
+  async deleteFiles(
+    @Body() deleteEntityDto: DeleteInputDto,
+  ): Promise<IDeleteResponse | undefined> {
+    return await this.filesService.removeMany(deleteEntityDto);
+  }
+
+  @Delete(':id')
+  async deleteFile(
+    @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
+  ): Promise<void> {
+    await this.filesService.removeFile(id);
   }
 }

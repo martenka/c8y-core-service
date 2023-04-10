@@ -1,5 +1,5 @@
 import { Exclude, Expose, Type } from 'class-transformer';
-import { BaseDeleteResponse } from '../../../../global/dto/BaseDeleteResponse';
+import { BaseDeleteResponse } from '../../../../global/dto/deletion';
 
 @Exclude()
 export class C8yCredentialsOutputDto {
