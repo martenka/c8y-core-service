@@ -4,6 +4,7 @@ import { BSONTypeError, ObjectIdLike } from 'bson';
 import { isArray } from 'class-validator';
 import { Buffer } from 'buffer';
 import { KeyValue } from '../global/query/key-value';
+import { isNil } from '@nestjs/common/utils/shared.utils';
 
 export type ParsedPromisesResult<T> = { fulfilled: T[]; rejected: unknown[] };
 
@@ -38,9 +39,12 @@ export function idToObjectIDOrUndefined<T extends TestType | TestType[]>(
 export function idToObjectIDOrUndefined(
   id: TestType | TestType[],
 ): Types.ObjectId[] | Types.ObjectId {
+  if (isNil(id)) {
+    return undefined;
+  }
   try {
     if (isArray(id)) {
-      return id.map((value) => new Types.ObjectId(value));
+      return id.filter(notNil).map((value) => new Types.ObjectId(value));
     }
     return new Types.ObjectId(id);
   } catch (e) {
@@ -52,9 +56,14 @@ export function idToObjectIDOrUndefined(
 }
 
 export function idToObjectIDOrOriginal<T extends TestType>(id: T) {
+  if (isNil(id)) {
+    return id;
+  }
   try {
     if (isArray(id)) {
-      return id.map((value) => new Types.ObjectId(value));
+      return id.map((value) => {
+        return notNil(value) ? new Types.ObjectId(value) : value;
+      });
     }
     return new Types.ObjectId(id);
   } catch (e) {

@@ -1,8 +1,7 @@
-import { FilterQuery, Model, ProjectionType, QueryOptions } from 'mongoose';
-import { Sort } from './types/types';
+import { SkipPagingOptions } from './types/types';
 import { Injectable } from '@nestjs/common';
 import { ensureArray, notNil } from '../../utils/validation';
-import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
+import { DBPagingResult } from '../../global/pagination/types';
 import { BaseDBPagination } from '../../global/pagination/pagination.dto';
 
 @Injectable()
@@ -10,15 +9,19 @@ export class SkipPagingService {
   /**
    * Queries data from given database model using skip/limit paging
    */
-  async findWithPagination<T extends object>(
-    model: Model<T>,
-    filter: FilterQuery<T>,
-    sort: Sort<T>,
-    pagingOptions: IPagingOptions,
-    queryOptions?: QueryOptions<T>,
-    projection?: ProjectionType<T>,
-  ): Promise<DBPagingResult<T>> {
-    const query = model.find(filter, projection, queryOptions).sort(sort);
+  async findWithPagination<T extends object>({
+    model,
+    sort,
+    pagingOptions,
+    queryOptions,
+    projection,
+    filter,
+    populate,
+  }: SkipPagingOptions<T>): Promise<DBPagingResult<T>> {
+    const query = model
+      .find(filter, projection, queryOptions)
+      .populate(ensureArray(populate))
+      .sort(sort);
 
     const currentPage = notNil(pagingOptions.currentPage)
       ? pagingOptions.currentPage - 1

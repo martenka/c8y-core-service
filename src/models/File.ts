@@ -71,6 +71,12 @@ export class FileMetadata {
   @Prop()
   managedObjectName?: string;
 
+  @Prop({ type: () => Date })
+  dateFrom: Date;
+
+  @Prop({ type: () => Date })
+  dateTo: Date;
+
   @Prop({ type: () => [FileValueFragment], default: [] })
   valueFragments?: FileValueFragment[];
 }

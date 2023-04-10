@@ -102,15 +102,15 @@ export class TasksService {
         : undefined,
     };
 
-    return await this.skipPagingService.findWithPagination(
-      this.taskModel,
-      removeNilProperties(filter),
-      { _id: -1 },
-      pagingOptions,
-      {
+    return await this.skipPagingService.findWithPagination({
+      model: this.taskModel,
+      filter: removeNilProperties(filter),
+      sort: { _id: -1 },
+      pagingOptions: pagingOptions,
+      queryOptions: {
         strictQuery: false,
       },
-    );
+    });
   }
 
   async setFailedTaskInfo(id: Types.ObjectId, message: TaskFailedMessage) {

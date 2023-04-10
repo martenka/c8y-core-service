@@ -13,6 +13,7 @@ import { DataFetchTaskResult } from '../messages/types/message-types/task/types'
 import { SensorsService } from '../sensors/sensors.service';
 import { ensureArray, notNil } from '../../utils/validation';
 import {
+  idToObjectIDOrOriginal,
   idToObjectIDOrUndefined,
   removeNilProperties,
 } from '../../utils/helpers';
@@ -64,6 +65,8 @@ export class FilesService {
         managedObjectName: existingSensor?.managedObjectName,
         valueFragments,
         sensors: notNil(existingSensor) ? [existingSensor._id] : [],
+        dateFrom: new Date(sensor.dateFrom),
+        dateTo: new Date(sensor.dateTo),
       };
 
       files.push({
@@ -85,8 +88,14 @@ export class FilesService {
     pagingOptions: PagingOptionsType,
   ): Promise<DBPagingResult<File>> {
     const filter: FilterQuery<File> = {
-      _id: searchOptions.id,
-      createdByTask: searchOptions.createdByTask,
+      _id: idToObjectIDOrOriginal(searchOptions.id),
+      createdByTask: idToObjectIDOrOriginal(searchOptions.createdByTask),
+      name: searchOptions.name,
+      'metadata.managedObjectId': searchOptions.managedObjectId,
+      'metadata.managedObjectName': searchOptions.managedObjectName,
+      'metadata.valueFragments.type': searchOptions.valueFragmentType,
+      'metadata.valueFragments.description':
+        searchOptions.valueFragmentDisplayName,
       $expr: notNil(searchOptions.sensors)
         ? {
             $gt: [
@@ -102,19 +111,19 @@ export class FilesService {
             ],
           }
         : undefined,
-      'metadata.fromDate': notNil(searchOptions.fromDate)
-        ? { $gte: new Date(searchOptions.fromDate) }
+      'metadata.dateFrom': notNil(searchOptions.dateFrom)
+        ? { $gte: new Date(searchOptions.dateFrom) }
         : undefined,
-      'metadata.toDate': notNil(searchOptions.toDate)
-        ? { $lte: new Date(searchOptions.toDate) }
+      'metadata.dateTo': notNil(searchOptions.dateTo)
+        ? { $lte: new Date(searchOptions.dateTo) }
         : undefined,
     };
-    const paginatedResponse = await this.skipPagingService.findWithPagination(
-      this.fileModel,
-      removeNilProperties(filter),
-      { _id: -1 },
-      pagingOptions,
-    );
+    const paginatedResponse = await this.skipPagingService.findWithPagination({
+      model: this.fileModel,
+      filter: removeNilProperties(filter),
+      sort: { _id: -1 },
+      pagingOptions: pagingOptions,
+    });
     this.populateUrl(paginatedResponse.data);
     return paginatedResponse;
   }

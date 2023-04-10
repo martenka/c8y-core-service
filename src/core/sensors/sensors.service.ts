@@ -37,15 +37,15 @@ export class SensorsService {
   ): Promise<DBPagingResult<Sensor>> {
     const { customAttributesQuery, ...rest } =
       remapCustomAttributes(searchOptions);
-    return await this.skipPagingService.findWithPagination(
-      this.sensorModel,
-      {
+    return await this.skipPagingService.findWithPagination({
+      model: this.sensorModel,
+      filter: {
         ...remapIDAndRemoveNil(rest),
         ...customAttributesQuery,
       },
-      { _id: 1 },
-      pagingOptions,
-    );
+      sort: { _id: 1 },
+      pagingOptions: pagingOptions,
+    });
   }
 
   async findManyByFilterQuery(

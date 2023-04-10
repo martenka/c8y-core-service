@@ -12,10 +12,9 @@ export class FileQuery {
   id?: string;
 
   @IsOptional()
-  @IsMongoIdInstance()
-  @TransformMongoId()
+  @IsString()
   @ApiProperty({ type: 'string' })
-  createdByTask?: Types.ObjectId;
+  createdByTask?: string;
 
   @IsOptional()
   @IsMongoIdInstance({ each: true })
@@ -23,13 +22,24 @@ export class FileQuery {
   sensors?: Types.ObjectId[];
 
   @IsOptional()
-  @IsISO8601({ strict: true })
-  @ApiProperty({
-    type: 'string',
-    format: 'date-time',
-    description: 'ISO8601 string',
-  })
-  fromDate?: string;
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  managedObjectId?: string;
+
+  @IsOptional()
+  @IsString()
+  managedObjectName?: string;
+
+  @IsOptional()
+  @IsString()
+  valueFragmentType?: string;
+
+  @IsOptional()
+  @IsString()
+  valueFragmentDisplayName?: string;
 
   @IsOptional()
   @IsISO8601({ strict: true })
@@ -38,7 +48,16 @@ export class FileQuery {
     format: 'date-time',
     description: 'ISO8601 string',
   })
-  toDate?: string;
+  dateFrom?: string;
+
+  @IsOptional()
+  @IsISO8601({ strict: true })
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    description: 'ISO8601 string',
+  })
+  dateTo?: string;
 }
 
 export type FileQueryOptions = Properties<FileQuery>;
