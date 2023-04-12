@@ -9,11 +9,7 @@ import {
   ObjectSyncTaskStatusPayload,
 } from './task/object-sync';
 import { TaskSteps } from '../../../../models';
-
-export interface BaseMessage<T> {
-  scheduledAt: string;
-  content: T;
-}
+import { FileDeletionMessage } from './file/types';
 
 export type TaskFailedMessage = TaskStatusMessage<TaskFailedMessagePayload>;
 
@@ -31,4 +27,5 @@ export interface MessageTypes {
   'task.status.failed': TaskFailedMessage;
   'task.status': TaskStatusMessage;
   'user.user': UserMessage;
+  'file.status.deletion': FileDeletionMessage;
 }

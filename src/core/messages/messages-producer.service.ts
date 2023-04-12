@@ -29,4 +29,8 @@ export class MessagesProducerService {
   sendUserMessage(message: MessageTypes['user.user']) {
     this.sendMessage(ExchangeTypes.GENERAL, 'user.user', message);
   }
+
+  sendFilesDeletionMessage(message: MessageTypes['file.status.deletion']) {
+    this.sendMessage(ExchangeTypes.GENERAL, 'file.status.deletion', message);
+  }
 }

@@ -12,7 +12,7 @@ import { GroupsModule } from '../groups/groups.module';
 
 @Module({
   imports: [
-    FilesModule,
+    forwardRef(() => FilesModule),
     SensorsModule,
     GroupsModule,
     RabbitMQModule.forRootAsync(RabbitMQModule, {

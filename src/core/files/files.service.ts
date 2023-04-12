@@ -29,6 +29,8 @@ import { isNil } from '@nestjs/common/utils/shared.utils';
 import { ApplicationConfigService } from '../application-config/application-config.service';
 import { DeleteInputProperties } from '../../global/dto/deletion';
 import { IDeleteResponse } from '../../global/dto/types';
+import { MessagesProducerService } from '../messages/messages-producer.service';
+import { getDeletedIds } from '../../models/utils/utils';
 
 @Injectable()
 export class FilesService {
@@ -37,6 +39,7 @@ export class FilesService {
     private readonly configService: ApplicationConfigService,
     private readonly sensorsService: SensorsService,
     private skipPagingService: SkipPagingService,
+    private readonly messagesProducerService: MessagesProducerService,
   ) {}
 
   async createFilesFromMessage(
@@ -139,17 +142,51 @@ export class FilesService {
   async removeMany(
     deleteInput: DeleteInputProperties,
   ): Promise<IDeleteResponse | undefined> {
+    const existingFiles = await this.fileModel.find({
+      _id: { $in: deleteInput.items },
+    });
+
+    if (isNil(existingFiles) || existingFiles.length === 0) {
+      return undefined;
+    }
     const deleteResponse = await this.fileModel.deleteMany({
       _id: { $in: deleteInput.items },
     });
 
     const deletedCount = deleteResponse?.deletedCount;
 
+    const deletedIds = await getDeletedIds(
+      this.fileModel,
+      existingFiles.map((file) => file._id),
+    );
+
+    const deletedIdsSet = new Set(deletedIds);
+    const deletedFiles = existingFiles.filter((file) =>
+      deletedIdsSet.has(file._id),
+    );
+
+    if (deletedFiles.length > 0) {
+      this.messagesProducerService.sendFilesDeletionMessage({
+        files: deletedFiles.map((file) => ({
+          bucket: file.storage.bucket,
+          path: file.storage.path,
+        })),
+      });
+    }
+
     return notNil(deletedCount) ? { deletedCount } : undefined;
   }
 
   async removeFile(id: Types.ObjectId) {
-    return await this.fileModel.findByIdAndDelete(id).exec();
+    const result = await this.fileModel.findByIdAndDelete(id).exec();
+    if (isNil(result)) {
+      return result;
+    }
+
+    this.messagesProducerService.sendFilesDeletionMessage({
+      files: [{ bucket: result.storage.bucket, path: result.storage.path }],
+    });
+    return result;
   }
 
   async getFileLink(id: Types.ObjectId): Promise<FileLink | undefined> {

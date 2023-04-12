@@ -11,6 +11,7 @@ import { CreateUserDto } from './dto/input/create-user.dto';
 import { IDeleteUsers, IDeleteUsersResponse, IUpdateUser } from './dto/types';
 import { Role } from '../../global/types/roles';
 import { MessagesProducerService } from '../messages/messages-producer.service';
+import { getDeletedIds } from '../../models/utils/utils';
 
 @Injectable()
 export class UsersService {
@@ -64,20 +65,10 @@ export class UsersService {
       })
       .exec();
 
-    const deleteCheck = await this.userModel.find(
-      {
-        _id: { $in: idsToDelete },
-      },
-      { _id: 1 },
-    );
-    const existingIds = new Set(
-      deleteCheck.map((user) => user.toObject()._id.toString()),
-    );
-
-    const deletedIds = input.items.filter((id) => !existingIds.has(id));
+    const deletedIds = await getDeletedIds(this.userModel, idsToDelete);
     deletedIds.forEach((id) =>
       this.messagesProducerService.sendUserMessage({
-        id,
+        id: id.toString(),
         deletedAt: deletionTime,
       }),
     );

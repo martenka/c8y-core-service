@@ -34,11 +34,6 @@ export class ApplicationConfigService {
     return {
       exchanges: [
         {
-          name: ExchangeTypes.FILE,
-          type: 'direct',
-          createExchangeIfNotExists: true,
-        },
-        {
           name: ExchangeTypes.GENERAL,
           type: 'topic',
           createExchangeIfNotExists: true,
