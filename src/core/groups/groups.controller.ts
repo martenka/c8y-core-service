@@ -1,24 +1,32 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseInterceptors,
+  Get,
+  Param,
   ParseArrayPipe,
+  Patch,
+  Post,
+  Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
-import { GroupDocument } from '../../models/Group';
+import { Group, GroupDocument } from '../../models/Group';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
-import { SetControllerDTO } from '../../decorators/dto';
-import { OutputGroupDto } from './dto/output-group.dto';
+import { SetControllerDTO, SetExposeGroups } from '../../decorators/dto';
+import {
+  OutputGroupDto,
+  PaginatedOutputGroupDto,
+} from './dto/output-group.dto';
 import { UseRolesGuard } from '../../guards/RoleGuard';
 import { AdminRoute } from '../../decorators/authorization';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GroupQuery } from './query/group-query.dto';
+import { PagingQuery } from '../../global/pagination/pagination.dto';
+import { DBPagingResult } from '../../global/pagination/types';
+import { Groups } from '../../global/tokens';
 
 @Controller('groups')
 @UseInterceptors(DtoTransformInterceptor)
@@ -47,8 +55,20 @@ export class GroupsController {
     return newGroups;
   }
 
+  @Get('/search')
+  @SetControllerDTO(PaginatedOutputGroupDto)
+  @ApiTags('groups')
+  @ApiOperation({ operationId: 'Search groups' })
+  async findGroups(
+    @Query() groupsQuery: GroupQuery,
+    @Query() pagingQuery: PagingQuery,
+  ): Promise<DBPagingResult<Group>> {
+    return await this.groupsService.findMany(groupsQuery, pagingQuery);
+  }
+
   @Get(':id')
   @SetControllerDTO(OutputGroupDto)
+  @SetExposeGroups(Groups.ALL)
   @ApiTags('groups')
   @ApiOperation({ operationId: 'Get one group' })
   @ApiResponse({
@@ -56,17 +76,6 @@ export class GroupsController {
   })
   findOne(@Param('id') id: string) {
     return this.groupsService.findOne({ id });
-  }
-
-  @Get()
-  @SetControllerDTO(OutputGroupDto)
-  @ApiTags('groups')
-  @ApiOperation({ operationId: 'Get all groups' })
-  @ApiResponse({
-    type: [OutputGroupDto],
-  })
-  findAll() {
-    return this.groupsService.findAllGroups();
   }
 
   @Patch()

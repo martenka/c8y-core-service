@@ -6,19 +6,31 @@ import { ensureArray, hasNoOwnKeys, notNil } from '../../utils/validation';
 
 import {
   awaitAllPromises,
+  idToObjectIDOrOriginal,
   idToObjectIDOrUndefined,
   pickBy,
   remapIDAndRemoveNil,
+  removeNilProperties,
 } from '../../utils/helpers';
 
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Group, GroupDocument, GroupModel } from '../../models/Group';
 import { InjectModel } from '@nestjs/mongoose';
 import { GroupSearchOptions } from '../../global/query/types';
+import { SkipPagingService } from '../paging/skip-paging.service';
+import {
+  DBPagingResult,
+  PagingOptionsType,
+} from '../../global/pagination/types';
+import { GroupQueryOptions } from './query/group-query.dto';
+import { FilterQuery } from 'mongoose';
 
 @Injectable()
 export class GroupsService {
-  constructor(@InjectModel(Group.name) private groupModel: GroupModel) {}
+  constructor(
+    @InjectModel(Group.name) private groupModel: GroupModel,
+    private readonly pagingService: SkipPagingService,
+  ) {}
 
   async createGroups(
     createGroupDto: CreateGroupDtoProperties[],
@@ -42,13 +54,21 @@ export class GroupsService {
     return ensureArray(await this.groupModel.find().populate('sensors').exec());
   }
 
-  async findMany(options: GroupSearchOptions): Promise<GroupDocument[]> {
-    return ensureArray(
-      await this.groupModel
-        .find({ ...remapIDAndRemoveNil(options) })
-        .populate('sensors')
-        .exec(),
-    );
+  async findMany(
+    searchOptions: GroupQueryOptions,
+    pagingOptions: PagingOptionsType,
+  ): Promise<DBPagingResult<Group>> {
+    const filter: FilterQuery<Group> = {
+      _id: idToObjectIDOrOriginal(searchOptions.id),
+      name: searchOptions.name,
+    };
+
+    return await this.pagingService.findWithPagination({
+      model: this.groupModel,
+      filter: removeNilProperties(filter),
+      sort: { _id: -1 },
+      pagingOptions,
+    });
   }
 
   async findOne(
