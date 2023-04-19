@@ -126,8 +126,10 @@ export class TaskCreationService implements OnModuleInit {
   }
 
   private createTaskData<
-    T extends WithInitiatedByUser<Properties<CreateTaskDto>>,
     P extends object,
+    T extends WithInitiatedByUser<
+      Properties<CreateTaskDto>
+    > = WithInitiatedByUser<Properties<CreateTaskDto>>,
   >(taskDetails: T, taskPayload: P): Partial<Task> {
     return {
       name: taskDetails.name,

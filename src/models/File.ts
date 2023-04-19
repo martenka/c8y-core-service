@@ -4,7 +4,7 @@ import { HydratedDocument, Model, Types } from 'mongoose';
 import { Properties } from '../global/types/types';
 import { Sensor } from './Sensor';
 import { CustomAttributes } from './types/types';
-import { DataFetchTask, DataFetchTaskType } from './task/DataFetchTask';
+import { DataFetchTask, DataFetchTaskType } from './task/data-fetch-task';
 import { isEmpty } from '@nestjs/common/utils/shared.utils';
 
 @Schema({ _id: false })
@@ -17,6 +17,18 @@ export class FileStorageInfo {
 
   @Prop()
   url?: string;
+}
+
+@Schema()
+export class FileVisibilityState {
+  @Prop({ default: false })
+  published: boolean;
+
+  @Prop({ default: false })
+  stateChanging: boolean;
+
+  @Prop()
+  errorMessage?: string;
 }
 
 @Schema({ _id: false })
@@ -117,6 +129,9 @@ export class File extends Base {
 
   @Prop({ type: FileMetadata, default: {} })
   metadata?: FileMetadata;
+
+  @Prop({ type: FileVisibilityState, default: {} })
+  visibilityState: FileVisibilityState;
 
   @Prop({
     type: Object,

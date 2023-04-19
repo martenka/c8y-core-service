@@ -8,9 +8,11 @@ import {
   TaskDocument,
   TaskModel,
   TaskStatus,
+  TaskSteps,
+  TaskType,
   TaskTypes,
 } from '../../models';
-import { FilterQuery, Types } from 'mongoose';
+import { FilterQuery, Types, UpdateQuery } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   DBPagingResult,
@@ -113,13 +115,28 @@ export class TasksService {
     });
   }
 
-  async setFailedTaskInfo(id: Types.ObjectId, message: TaskFailedMessage) {
-    return await this.taskModel
-      .findByIdAndUpdate(id, {
+  async setFailedTaskInfo(
+    id: Types.ObjectId,
+    message: Omit<TaskFailedMessage, 'taskId'> | string,
+  ) {
+    let statusUpdate: UpdateQuery<TaskType> = {};
+
+    if (typeof message === 'string') {
+      statusUpdate = {
+        ...statusUpdate,
+        status: TaskSteps.FAILED,
+        'metadata.lastFailReason': message,
+        'metadata.lastFailedAt': new Date(),
+      };
+    } else {
+      statusUpdate = {
+        ...statusUpdate,
         status: message.status,
         'metadata.lastFailReason': message.payload.reason,
-      })
-      .exec();
+        'metadata.lastFailedAt': new Date(),
+      };
+    }
+    return await this.taskModel.findByIdAndUpdate(id, statusUpdate).exec();
   }
 
   async updateTaskStatus(id: Types.ObjectId, status: TaskStatus) {

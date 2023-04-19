@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   File,
@@ -31,6 +35,7 @@ import { DeleteInputProperties } from '../../global/dto/deletion';
 import { IDeleteResponse } from '../../global/dto/types';
 import { MessagesProducerService } from '../messages/messages-producer.service';
 import { getDeletedIds } from '../../models/utils/utils';
+import { VisibilityStateDtoProperties } from './dto/visibility-state.dto';
 
 @Injectable()
 export class FilesService {
@@ -80,6 +85,7 @@ export class FilesService {
         customAttributes: {},
         storage: fileStorageInfo,
         metadata: fileMetadata,
+        visibilityState: { published: false, stateChanging: false },
       });
     }
 
@@ -202,9 +208,74 @@ export class FilesService {
     };
   }
 
+  async getFileStorageInfo(
+    id: Types.ObjectId,
+  ): Promise<FileStorageProperties | undefined> {
+    const file = await this.fileModel
+      .findById(id, { storage: 1 })
+      .lean()
+      .exec();
+
+    return file?.storage;
+  }
+
+  async setFileVisibilityStateSyncingState(
+    id: Types.ObjectId,
+    isSyncing: boolean,
+    errorMessage?: string,
+  ) {
+    await this.fileModel
+      .findByIdAndUpdate(id, {
+        'visibilityState.stateChanging': false,
+        'visibilityState.errorMessage': errorMessage,
+      })
+      .exec();
+  }
+
+  async handleFileVisibilityChangeRequest(
+    fileId: Types.ObjectId,
+    visibilityState: VisibilityStateDtoProperties,
+  ): Promise<FileDocument> {
+    const file = await this.findById(fileId);
+
+    if (isNil(file)) {
+      throw new NotFoundException();
+    }
+
+    const fileStorage = file.storage;
+    if (
+      isNil(fileStorage) ||
+      isNil(fileStorage.path) ||
+      isNil(fileStorage.bucket)
+    ) {
+      throw new BadRequestException(
+        `Not enough information present on file storage object. Check if path and bucket are present!`,
+      );
+    }
+
+    this.messagesProducerService.sendFileVisibilityStateMessage({
+      newVisibilityState: visibilityState.newVisibilityState,
+      fileId: file._id.toString(),
+      filePath: file.storage.path,
+      bucket: file.storage.bucket,
+    });
+
+    file.visibilityState = {
+      published: file.visibilityState.published,
+      stateChanging: true,
+      errorMessage: undefined,
+    };
+    await file.save();
+    return file;
+  }
+
   private populateUrl(files: File | File[] | undefined | null) {
     ensureArray(files).forEach((file) => {
-      file.url = this.getFileUrl(file.storage.bucket, file.storage.path);
+      if (file.visibilityState.published) {
+        file.url = this.getFileUrl(file.storage.bucket, file.storage.path);
+      } else {
+        file.url = undefined;
+      }
     });
   }
 

@@ -17,6 +17,18 @@ export class OutputFileStorageDto {
 }
 
 @Exclude()
+export class OutputFileVisibilityState {
+  @Expose()
+  published: boolean;
+
+  @Expose()
+  stateChanging: boolean;
+
+  @Expose()
+  errorMessage?: string;
+}
+
+@Exclude()
 export class OutputFileValueFragmentDto {
   @Expose()
   type: string;
@@ -72,6 +84,10 @@ export class OutputFileDto {
   @Expose({ groups: [Groups.ALL] })
   @Type(() => OutputFileStorageDto)
   storage?: OutputFileStorageDto;
+
+  @Expose()
+  @Type(() => OutputFileVisibilityState)
+  visibilityState: OutputFileVisibilityState;
 
   @Expose({ groups: [Groups.ALL] })
   customAttributes?: CustomAttributes;

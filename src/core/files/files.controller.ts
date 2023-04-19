@@ -33,6 +33,7 @@ import { IDeleteResponse } from '../../global/dto/types';
 import { DeleteInputDto } from '../../global/dto/deletion';
 import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
 import { Types } from 'mongoose';
+import { VisibilityStateDto } from './dto/visibility-state.dto';
 
 @Controller('files')
 @UseInterceptors(DtoTransformInterceptor)
@@ -76,6 +77,21 @@ export class FilesController {
       throw new NotFoundException();
     }
     return this.filesService.getFileLink(fileId);
+  }
+
+  @Post(':id/visibility-state')
+  @SetExposeGroups(Groups.ALL)
+  @SetControllerDTO(OutputFileDto)
+  @ApiTags('files')
+  @ApiOperation({ operationId: 'Change file visibility state' })
+  async setFileVisibilityState(
+    @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
+    @Body() visibilityStateDto: VisibilityStateDto,
+  ): Promise<FileDocument | undefined> {
+    return await this.filesService.handleFileVisibilityChangeRequest(
+      id,
+      visibilityStateDto,
+    );
   }
 
   @Post('/delete')

@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
-import { DataFetchTaskType } from './DataFetchTask';
-import { ObjectSyncTaskType } from './ObjectSyncTask';
+import { DataFetchTaskType } from './data-fetch-task';
+import { ObjectSyncTaskType } from './object-sync-task';
 
 export enum TaskSteps {
   NOT_STARTED = 'NOT_STARTED',
@@ -13,6 +13,11 @@ export enum TaskSteps {
 export enum TaskTypes {
   DATA_FETCH = 'DATA_FETCH',
   OBJECT_SYNC = 'OBJECT_SYNC',
+}
+
+export enum VisibilityState {
+  PUBLIC = 'PUBLIC',
+  PRIVATE = 'PRIVATE',
 }
 
 export interface TaskMap {

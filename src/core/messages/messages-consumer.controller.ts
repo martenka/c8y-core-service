@@ -5,6 +5,8 @@ import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { MessagesHandlerService } from './messages-handler.service';
 import { TaskStatusMessage } from './types/message-types/task/types';
 import { NoAuthRoute } from '../../decorators/authentication';
+import { ConsumeMessage } from 'amqplib';
+import { VisibilityStateResultMessage } from './types/message-types/file/types';
 
 @Controller()
 @NoAuthRoute()
@@ -29,5 +31,28 @@ export class MessagesController {
   })
   async consumeTaskStatusMessage(message: TaskStatusMessage) {
     await this.messageHandlerService.handleTaskStatusMessage(message);
+  }
+
+  @RabbitSubscribe({
+    exchange: ExchangeTypes.GENERAL,
+    queue: 'cumuservice.files.result',
+    routingKey: 'file.result.#',
+    createQueueIfNotExists: true,
+    errorHandler: (channel, msg, error) => {
+      console.error(error);
+      console.log('---------');
+      console.error(msg);
+      console.log('----------');
+      console.error(channel);
+    },
+  })
+  async consumeFileResultMessage(message: object, amqpMsg: ConsumeMessage) {
+    switch (amqpMsg.fields.routingKey) {
+      case 'file.result.visibility.state': {
+        await this.messageHandlerService.handleFileVisibilityStateResultMessage(
+          message as VisibilityStateResultMessage,
+        );
+      }
+    }
   }
 }

@@ -33,4 +33,14 @@ export class MessagesProducerService {
   sendFilesDeletionMessage(message: MessageTypes['file.status.deletion']) {
     this.sendMessage(ExchangeTypes.GENERAL, 'file.status.deletion', message);
   }
+
+  sendFileVisibilityStateMessage(
+    message: MessageTypes['file.status.visibility.state'],
+  ) {
+    this.sendMessage(
+      ExchangeTypes.GENERAL,
+      'file.status.visibility.state',
+      message,
+    );
+  }
 }

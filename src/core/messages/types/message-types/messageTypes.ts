@@ -9,7 +9,7 @@ import {
   ObjectSyncTaskStatusPayload,
 } from './task/object-sync';
 import { TaskSteps } from '../../../../models';
-import { FileDeletionMessage } from './file/types';
+import { FileDeletionMessage, FileVisibilityStateMessage } from './file/types';
 
 export type TaskFailedMessage = TaskStatusMessage<TaskFailedMessagePayload>;
 
@@ -28,4 +28,5 @@ export interface MessageTypes {
   'task.status': TaskStatusMessage;
   'user.user': UserMessage;
   'file.status.deletion': FileDeletionMessage;
+  'file.status.visibility.state': FileVisibilityStateMessage;
 }
