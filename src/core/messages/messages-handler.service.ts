@@ -40,17 +40,16 @@ export class MessagesHandlerService {
       );
     }
 
+    await this.tasksService.updateTaskStatus(taskId, message.status);
+
     switch (message.taskType) {
       case 'DATA_FETCH':
         if (message.status === TaskSteps.DONE) {
-          await this.tasksService.updateDataFetchTaskResult(
-            taskId,
-            message as DataFetchTaskResult,
-          );
           await this.filesService.createFilesFromMessage(
             message as DataFetchTaskResult,
           );
         }
+        await this.tasksService.updateTaskStatus(taskId, message.status);
         return;
       case 'OBJECT_SYNC':
         if (isObjectSyncTaskStatusMessage(message)) {
@@ -62,8 +61,6 @@ export class MessagesHandlerService {
         }
         return;
     }
-
-    return await this.tasksService.updateTaskStatus(taskId, message.status);
   }
 
   async handleFileVisibilityStateResultMessage(

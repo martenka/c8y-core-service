@@ -85,7 +85,10 @@ export class FilesService {
         customAttributes: {},
         storage: fileStorageInfo,
         metadata: fileMetadata,
-        visibilityState: { published: false, stateChanging: false },
+        visibilityState: {
+          published: sensor.isPublicBucket,
+          stateChanging: false,
+        },
       });
     }
 

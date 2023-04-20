@@ -32,6 +32,7 @@ export interface DataFetchTaskResultStatusPayload {
   sensors: {
     sensorId: string;
     bucket: string;
+    isPublicBucket: boolean;
     filePath?: string;
     fileURL?: string;
     fileName: string;
