@@ -14,6 +14,7 @@ import { Types } from 'mongoose';
 
 import { CreateTaskDto } from './create-task.dto';
 import { IsMongoIdInstance } from '../../../../decorators/custom-validators/mongo-id.validator';
+import { Properties } from '../../../../global/types/types';
 
 const DownloadInputValues = ['GROUP', 'SENSOR'] as const;
 
@@ -62,3 +63,5 @@ export class CreateDataFetchDto extends CreateTaskDto {
   @ValidateNested()
   taskPayload: DataFetchPayloadDto;
 }
+
+export type CreateDataFetchDtoProperties = Properties<CreateDataFetchDto>;

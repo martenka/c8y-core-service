@@ -14,12 +14,17 @@ import {
 import { TaskCreationService } from './task-creation.service';
 import { PagingModule } from '../paging/paging.module';
 import { TaskMessageMapperService } from './task-message-mapper.service';
+import { DataUploadTaskSchema } from '../../models/task/data-upload-task';
+import { FilesModule } from '../files/files.module';
+import { SensorsModule } from '../sensors/sensors.module';
 
 @Module({
   imports: [
     forwardRef(() => MessagesModule),
     GroupsModule,
     PagingModule,
+    FilesModule,
+    SensorsModule,
     MongooseModule.forFeature([
       {
         name: Task.name,
@@ -27,6 +32,7 @@ import { TaskMessageMapperService } from './task-message-mapper.service';
         discriminators: [
           { name: TaskTypes.DATA_FETCH, schema: DataFetchTaskSchema },
           { name: TaskTypes.OBJECT_SYNC, schema: ObjectSyncTaskSchema },
+          { name: TaskTypes.DATA_UPLOAD, schema: DataUploadTaskSchema },
         ],
       },
     ]),

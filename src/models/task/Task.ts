@@ -11,8 +11,8 @@ export class PeriodicData {
   @Prop({ required: true })
   pattern: string;
 
-  @Prop({ required: true })
-  fetchDurationSeconds: number;
+  @Prop()
+  fetchDurationSeconds?: number;
 }
 
 @Schema({ _id: false })

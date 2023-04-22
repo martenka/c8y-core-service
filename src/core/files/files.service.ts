@@ -13,7 +13,6 @@ import {
   FileStorageProperties,
   FileValueFragmentProperties,
 } from '../../models';
-import { DataFetchTaskResult } from '../messages/types/message-types/task/types';
 import { SensorsService } from '../sensors/sensors.service';
 import { ensureArray, notNil } from '../../utils/validation';
 import {
@@ -26,7 +25,7 @@ import {
   PagingOptionsType,
 } from '../../global/pagination/types';
 import { SkipPagingService } from '../paging/skip-paging.service';
-import { FilterQuery, Types } from 'mongoose';
+import { FilterQuery, Types, UpdateQuery } from 'mongoose';
 import { FileQueryOptions } from './query/file-query.dto';
 import { FileLink } from './types/types';
 import { isNil } from '@nestjs/common/utils/shared.utils';
@@ -36,6 +35,8 @@ import { IDeleteResponse } from '../../global/dto/types';
 import { MessagesProducerService } from '../messages/messages-producer.service';
 import { getDeletedIds } from '../../models/utils/utils';
 import { VisibilityStateDtoProperties } from './dto/visibility-state.dto';
+import { DataFetchTaskResult } from '../messages/types/message-types/task/data-fetch';
+import { Platform } from '../../global/tokens';
 
 @Injectable()
 export class FilesService {
@@ -88,6 +89,7 @@ export class FilesService {
         visibilityState: {
           published: sensor.isPublicBucket,
           stateChanging: false,
+          exposedToPlatforms: [],
         },
       });
     }
@@ -264,6 +266,7 @@ export class FilesService {
     });
 
     file.visibilityState = {
+      ...file.visibilityState,
       published: file.visibilityState.published,
       stateChanging: true,
       errorMessage: undefined,
@@ -284,5 +287,29 @@ export class FilesService {
 
   private getFileUrl(bucket: string, pathInBucket: string): string {
     return `${this.configService.minioConfig.url}/${bucket}/${pathInBucket}`;
+  }
+
+  async setFileExposedToPlatform(
+    fileIds: Types.ObjectId[],
+    platform: Platform,
+    exposed: boolean,
+  ) {
+    let updateQuery: UpdateQuery<File> = {};
+
+    if (exposed) {
+      updateQuery = {
+        $addToSet: { 'visibilityState.exposedToPlatforms': platform },
+      };
+    } else {
+      updateQuery = {
+        $pull: {
+          'visibilityState.exposedToPlatforms': platform,
+        },
+      };
+    }
+
+    return await this.fileModel
+      .updateMany({ _id: { $in: fileIds } }, updateQuery)
+      .exec();
   }
 }

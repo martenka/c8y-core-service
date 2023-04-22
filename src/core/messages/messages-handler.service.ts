@@ -4,10 +4,7 @@ import { TaskFailedMessage } from './types/message-types/messageTypes';
 
 import { Types } from 'mongoose';
 
-import {
-  DataFetchTaskResult,
-  TaskStatusMessage,
-} from './types/message-types/task/types';
+import { TaskStatusMessage } from './types/message-types/task/types';
 import { TasksService } from '../tasks/tasks.service';
 import { FilesService } from '../files/files.service';
 import {
@@ -19,6 +16,8 @@ import { TaskSteps, VisibilityState } from '../../models';
 
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { VisibilityStateResultMessage } from './types/message-types/file/types';
+import { isDataFetchTaskResultMessage } from './guards/data-fetch';
+import { Platform } from '../../global/tokens';
 
 @Injectable()
 export class MessagesHandlerService {
@@ -44,12 +43,11 @@ export class MessagesHandlerService {
 
     switch (message.taskType) {
       case 'DATA_FETCH':
-        if (message.status === TaskSteps.DONE) {
-          await this.filesService.createFilesFromMessage(
-            message as DataFetchTaskResult,
-          );
+        if (isDataFetchTaskResultMessage(message)) {
+          await this.filesService.createFilesFromMessage(message);
+          await this.tasksService.updateDataFetchTaskResult(taskId, message);
         }
-        await this.tasksService.updateTaskStatus(taskId, message.status);
+
         return;
       case 'OBJECT_SYNC':
         if (isObjectSyncTaskStatusMessage(message)) {
@@ -60,6 +58,18 @@ export class MessagesHandlerService {
           );
         }
         return;
+      case 'DATA_UPLOAD':
+        if (message.status === TaskSteps.DONE) {
+          const taskFileIds = await this.tasksService.getDataUploadTaskFileIds(
+            taskId,
+          );
+
+          await this.filesService.setFileExposedToPlatform(
+            taskFileIds,
+            Platform.CKAN,
+            true,
+          );
+        }
     }
   }
 

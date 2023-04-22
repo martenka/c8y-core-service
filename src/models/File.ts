@@ -6,6 +6,8 @@ import { Sensor } from './Sensor';
 import { CustomAttributes } from './types/types';
 import { DataFetchTask, DataFetchTaskType } from './task/data-fetch-task';
 import { isEmpty } from '@nestjs/common/utils/shared.utils';
+import { Platform } from '../global/tokens';
+import { notNil } from '../utils/validation';
 
 @Schema({ _id: false })
 export class FileStorageInfo {
@@ -29,6 +31,19 @@ export class FileVisibilityState {
 
   @Prop()
   errorMessage?: string;
+
+  @Prop({
+    type: [String],
+    enum: [Platform.CKAN],
+    default: [],
+    validate: {
+      validator: (input) =>
+        notNil(input) && Object.values(Platform).includes(input),
+      message: (props) =>
+        `${props?.value ?? 'UNKNOWN'} is not a valid platform!`,
+    },
+  })
+  exposedToPlatforms: Platform[];
 }
 
 @Schema({ _id: false })
@@ -70,12 +85,6 @@ export class FileValueFragment {
 export class FileMetadata {
   @Prop({ type: [Types.ObjectId], ref: () => Sensor, default: [] })
   sensors?: Types.DocumentArray<Sensor> | Types.ObjectId[];
-
-  @Prop({ type: Date })
-  fromDate?: Date;
-
-  @Prop({ type: Date })
-  toDate?: Date;
 
   @Prop()
   managedObjectId?: string;
@@ -128,7 +137,7 @@ export class File extends Base {
   storage: FileStorageInfo;
 
   @Prop({ type: FileMetadata, default: {} })
-  metadata?: FileMetadata;
+  metadata: FileMetadata;
 
   @Prop({ type: FileVisibilityState, default: {} })
   visibilityState: FileVisibilityState;

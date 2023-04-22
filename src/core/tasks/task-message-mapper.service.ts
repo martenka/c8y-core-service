@@ -14,10 +14,15 @@ import {
   TaskTypes,
 } from '../../models';
 import { HandlersType } from '../../global/types/types';
-import { DataFetchTaskMessagePayload } from '../messages/types/message-types/task/types';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { SensorType } from '../../models/Sensor';
 import { notNil } from '../../utils/validation';
+import { DataFetchTaskMessagePayload } from '../messages/types/message-types/task/data-fetch';
+import {
+  DataUploadTask,
+  DataUploadTaskDocument,
+} from '../../models/task/data-upload-task';
+import { DataUploadTaskMessagePayload } from '../messages/types/message-types/task/file-upload';
 
 @Injectable()
 export class TaskMessageMapperService implements OnModuleInit {
@@ -68,6 +73,22 @@ export class TaskMessageMapperService implements OnModuleInit {
     };
   }
 
+  mapDataUploadTaskPayload(task: DataUploadTask): DataUploadTaskMessagePayload {
+    return {
+      platform: task.payload.platform,
+      files: task.payload.files.map((file) => {
+        return {
+          ...file,
+          metadata: {
+            ...file.metadata,
+            dateFrom: file.metadata.dateFrom.toISOString(),
+            dateTo: file.metadata.dateTo.toISOString(),
+          },
+        };
+      }),
+    };
+  }
+
   mapObjectSyncTaskPayload(_task: ObjectSyncTaskDocument): object {
     return {};
   }
@@ -78,6 +99,8 @@ export class TaskMessageMapperService implements OnModuleInit {
         this.mapDataFetchTaskPayload(value as DataFetchTaskDocument),
       [TaskTypes.OBJECT_SYNC]: (value) =>
         this.mapObjectSyncTaskPayload(value as ObjectSyncTaskDocument),
+      [TaskTypes.DATA_UPLOAD]: (value) =>
+        this.mapDataUploadTaskPayload(value as DataUploadTaskDocument),
     };
   }
 }

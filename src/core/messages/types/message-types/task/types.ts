@@ -1,22 +1,9 @@
 import {
-  DataFetchPayloadType,
-  SensorDataType,
   TaskPeriodicDataType,
   TaskSteps,
   TaskType,
   TaskTypes,
 } from '../../../../../models';
-
-export interface DataFetchTaskMessagePayload
-  extends Pick<DataFetchPayloadType, 'dateFrom' | 'dateTo'> {
-  data: (Pick<SensorDataType, 'fileName'> & {
-    sensor: {
-      id: string;
-      managedObjectId: string;
-      fragmentType: string;
-    };
-  })[];
-}
 
 export interface TaskScheduledMessage<P extends object = object>
   extends Pick<TaskType, 'taskType' | 'customAttributes'> {
@@ -26,19 +13,6 @@ export interface TaskScheduledMessage<P extends object = object>
   firstRunAt?: string;
   periodicData?: Pick<TaskPeriodicDataType, 'pattern' | 'fetchDurationSeconds'>;
   payload: P;
-}
-
-export interface DataFetchTaskResultStatusPayload {
-  sensors: {
-    sensorId: string;
-    bucket: string;
-    isPublicBucket: boolean;
-    filePath?: string;
-    fileURL?: string;
-    fileName: string;
-    dateFrom: string;
-    dateTo: string;
-  }[];
 }
 
 export interface TaskFailedMessagePayload {
@@ -54,6 +28,3 @@ export interface TaskStatusMessage<
   status: S;
   payload: P;
 }
-
-export type DataFetchTaskResult =
-  TaskStatusMessage<DataFetchTaskResultStatusPayload>;

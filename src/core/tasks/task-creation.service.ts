@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -7,9 +8,13 @@ import {
 import { CreateDataFetchDto } from './dto/input/create-datafetch-task.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import {
+  CustomAttributes,
   DataFetchPayload,
   DataFetchTaskDocument,
   DataFetchTaskModel,
+  File,
+  FileDocument,
+  FileModel,
   Group,
   ObjectSyncTaskDocument,
   ObjectSyncTaskModel,
@@ -25,6 +30,17 @@ import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Types } from 'mongoose';
 import { GroupModel } from '../../models/Group';
 import { WithInitiatedByUser } from '../auth/types/types';
+import { CreateDataUploadTaskDtoProperties } from './dto/input/create-dataupload-task.dto';
+import {
+  DataUploadTaskDocument,
+  DataUploadTaskFileMetadataProperties,
+  DataUploadTaskFileProperties,
+  DataUploadTaskModel,
+  DataUploadTaskPayloadProperties,
+} from '../../models/task/data-upload-task';
+import { SensorsService } from '../sensors/sensors.service';
+import { SensorType } from '../../models/Sensor';
+import { Platform } from '../../global/tokens';
 
 @Injectable()
 export class TaskCreationService implements OnModuleInit {
@@ -39,7 +55,11 @@ export class TaskCreationService implements OnModuleInit {
     private readonly dataFetchModel: DataFetchTaskModel,
     @InjectModel(TaskTypes.OBJECT_SYNC)
     private readonly objectSyncModel: ObjectSyncTaskModel,
+    @InjectModel(TaskTypes.DATA_UPLOAD)
+    private readonly dataUploadModel: DataUploadTaskModel,
     @InjectModel(Group.name) private readonly groupModel: GroupModel,
+    @InjectModel(File.name) private readonly fileModel: FileModel,
+    private readonly sensorService: SensorsService,
   ) {}
 
   private async createDataFetchTask(
@@ -52,6 +72,98 @@ export class TaskCreationService implements OnModuleInit {
   ): Promise<ObjectSyncTaskDocument> {
     return await this.objectSyncModel.create(
       this.createTaskData(taskDetails, {}),
+    );
+  }
+
+  /**
+   * Creates new DataUploadTask entity. If sensor entity from file cannot be used for the most up to date info, then uses
+   * metadata already present on the file entity.
+   *
+   * @throws BadRequestException if no files are found from the database for given file ids
+   */
+  private async createDataUploadTask(
+    taskDetails: WithInitiatedByUser<CreateDataUploadTaskDtoProperties>,
+  ): Promise<DataUploadTaskDocument> {
+    const taskPayload = taskDetails.taskPayload;
+    const files: FileDocument[] = await this.fileModel
+      .find({
+        _id: { $in: taskPayload.fileIds },
+      })
+      .populate('metadata.sensors')
+      .exec();
+
+    if (isNil(files) || files.length === 0) {
+      throw new BadRequestException('Could not find any files with given ids');
+    }
+
+    const dataUploadTaskFiles: DataUploadTaskFileProperties[] = [];
+
+    for (const file of files) {
+      const fileSensor: SensorType | undefined | Types.ObjectId =
+        file.metadata?.sensors?.[0];
+      const fileMetadata = file.metadata;
+
+      let dataUploadCustomAttributes: CustomAttributes =
+        file.customAttributes ?? {};
+
+      let dataUploadFileMetadata: DataUploadTaskFileMetadataProperties;
+      if (isNil(fileSensor) || fileSensor instanceof Types.ObjectId) {
+        if (
+          isNil(fileMetadata.managedObjectId) ||
+          isNil(fileMetadata.valueFragments) ||
+          fileMetadata.valueFragments.length === 0
+        ) {
+          this.logger.warn(
+            `createDataUploadTask: Could not find managedObjectId or valueFragmentType for taskId ${file._id.toString()}. Skipping this file`,
+          );
+          continue;
+        }
+
+        dataUploadFileMetadata = {
+          dateTo: fileMetadata.dateTo,
+          dateFrom: fileMetadata.dateFrom,
+          managedObjectName: fileMetadata.managedObjectName,
+          valueFragmentType: fileMetadata.valueFragments[0].type,
+          valueFragmentDescription: fileMetadata.valueFragments[0].description,
+          managedObjectId: fileMetadata.managedObjectId,
+        };
+      } else {
+        dataUploadFileMetadata = {
+          dateTo: file.metadata.dateTo,
+          dateFrom: file.metadata.dateFrom,
+          managedObjectId: fileSensor.managedObjectId,
+          managedObjectName: fileSensor.managedObjectName,
+          valueFragmentType: fileSensor.valueFragmentType,
+          valueFragmentDescription: fileSensor.valueFragmentDisplayName,
+          type: fileSensor.type,
+          description: fileSensor.description,
+        };
+        dataUploadCustomAttributes = Object.assign(
+          dataUploadCustomAttributes,
+          fileSensor.customAttributes,
+        );
+      }
+      const dataUploadFile: DataUploadTaskFileProperties = {
+        fileId: file._id,
+        fileName: file.name,
+        customAttributes: file.customAttributes,
+        storage: {
+          path: file.storage.path,
+          bucket: file.storage.bucket,
+        },
+        metadata: dataUploadFileMetadata,
+      };
+
+      dataUploadTaskFiles.push(dataUploadFile);
+    }
+
+    return await this.dataUploadModel.create(
+      this.createTaskData<DataUploadTaskPayloadProperties>(taskDetails, {
+        files: dataUploadTaskFiles,
+        platform: {
+          platformIdentifier: Platform.CKAN,
+        },
+      }),
     );
   }
 
@@ -151,6 +263,10 @@ export class TaskCreationService implements OnModuleInit {
       [TaskTypes.OBJECT_SYNC]: (taskDetails) =>
         this.createObjectSyncTask(
           taskDetails as WithInitiatedByUser<CreateObjectSyncDto>,
+        ),
+      [TaskTypes.DATA_UPLOAD]: (taskDetails) =>
+        this.createDataUploadTask(
+          taskDetails as WithInitiatedByUser<CreateDataUploadTaskDtoProperties>,
         ),
     };
   }

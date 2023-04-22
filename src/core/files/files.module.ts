@@ -16,6 +16,6 @@ import { MessagesModule } from '../messages/messages.module';
   ],
   controllers: [FilesController],
   providers: [FilesService],
-  exports: [FilesService],
+  exports: [FilesService, MongooseModule],
 })
 export class FilesModule {}

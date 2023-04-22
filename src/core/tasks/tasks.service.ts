@@ -21,7 +21,6 @@ import {
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { MessagesProducerService } from '../messages/messages-producer.service';
 import {
-  DataFetchTaskResultStatusPayload,
   TaskScheduledMessage,
   TaskStatusMessage,
 } from '../messages/types/message-types/task/types';
@@ -32,6 +31,12 @@ import { isNil } from '@nestjs/common/utils/shared.utils';
 import { TaskFailedMessage } from '../messages/types/message-types/messageTypes';
 import { TaskQueryProperties } from './query/task-query.dto';
 import { removeNilProperties } from '../../utils/helpers';
+import { DataFetchTaskResultStatusPayload } from '../messages/types/message-types/task/data-fetch';
+
+import {
+  DataUploadTaskDocument,
+  DataUploadTaskModel,
+} from '../../models/task/data-upload-task';
 
 @Injectable()
 export class TasksService {
@@ -45,6 +50,8 @@ export class TasksService {
     @InjectModel(Task.name) private readonly taskModel: TaskModel,
     @InjectModel(TaskTypes.DATA_FETCH)
     private readonly dataFetchTaskModel: DataFetchTaskModel,
+    @InjectModel(TaskTypes.DATA_UPLOAD)
+    private readonly dataUploadTaskModel: DataUploadTaskModel,
   ) {}
   async createAndScheduleTask<T extends CreateTaskDto>(
     loggedInUserId: string,
@@ -176,7 +183,22 @@ export class TasksService {
         };
       },
     );
-    task.status = result.status;
     await task.save();
+  }
+
+  async getDataUploadTaskFileIds(
+    taskId: Types.ObjectId,
+  ): Promise<Types.ObjectId[]> {
+    const task: DataUploadTaskDocument | undefined =
+      await this.dataUploadTaskModel.findById(taskId);
+    if (isNil(task)) {
+      this.logger.log(
+        `Can't update files exposed to platform setting - did not find DataUploadTask for id: ${taskId.toString()}`,
+      );
+      return [];
+    }
+
+    const fileIds = task.payload.files.map((file) => file?.fileId);
+    return fileIds.filter(notNil);
   }
 }

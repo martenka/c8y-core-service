@@ -4,10 +4,12 @@ import { CreateObjectSyncDto } from './input/create-objectsync-task.dto';
 import { Properties } from '../../../global/types/types';
 import { HydratedDocument } from 'mongoose';
 import { TaskTypesMap } from '../../../models';
+import { CreateDataUploadTaskDto } from './input/create-dataupload-task.dto';
 
 export const TaskCreationDtos: TaskTypesMap = {
   [TaskTypes.DATA_FETCH]: CreateDataFetchDto,
   [TaskTypes.OBJECT_SYNC]: CreateObjectSyncDto,
+  [TaskTypes.DATA_UPLOAD]: CreateDataUploadTaskDto,
 };
 
 export type TaskCreationDtosType = Properties<typeof TaskCreationDtos>;

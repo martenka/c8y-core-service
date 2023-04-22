@@ -3,6 +3,38 @@ import { BaseDBPagination } from '../../../../global/pagination/pagination.dto';
 import { ValidateNested } from 'class-validator';
 import { Groups } from '../../../../global/tokens';
 import { TaskSteps, TaskTypes } from '../../../../models';
+@Exclude()
+export class OutputTaskPeriodicData {
+  @Expose()
+  pattern: string;
+
+  @Expose()
+  fetchDurationSeconds?: number;
+}
+
+@Exclude()
+export class OutputTaskMetadata {
+  @Expose()
+  lastRanAt?: string;
+
+  @Expose()
+  lastScheduledAt?: string;
+
+  @Expose()
+  lastCompletedAt?: string;
+
+  @Expose()
+  lastFailedAt?: string;
+
+  @Expose()
+  lastFailReason?: string;
+
+  @Expose()
+  firstRunAt?: string;
+
+  @Expose()
+  periodicData?: OutputTaskPeriodicData;
+}
 
 @Exclude()
 export class OutputTaskDto {
@@ -20,6 +52,9 @@ export class OutputTaskDto {
 
   @Expose({ groups: [Groups.ALL] })
   payload?: object;
+
+  @Expose({ groups: [Groups.ALL] })
+  metadata: OutputTaskMetadata;
 
   @Expose()
   createdAt?: string;
