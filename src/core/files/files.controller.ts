@@ -63,7 +63,7 @@ export class FilesController {
     if (isNil(fileId)) {
       throw new NotFoundException();
     }
-    return this.filesService.findById(fileId);
+    return await this.filesService.findById(fileId);
   }
 
   @Get(':id/link')
@@ -76,7 +76,7 @@ export class FilesController {
     if (isNil(fileId)) {
       throw new NotFoundException();
     }
-    return this.filesService.getFileLink(fileId);
+    return await this.filesService.getFileLink(fileId);
   }
 
   @Post(':id/visibility-state')

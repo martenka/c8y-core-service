@@ -5,7 +5,6 @@ import { Properties } from '../global/types/types';
 import { Sensor } from './Sensor';
 import { CustomAttributes } from './types/types';
 import { DataFetchTask, DataFetchTaskType } from './task/data-fetch-task';
-import { isEmpty } from '@nestjs/common/utils/shared.utils';
 import { Platform } from '../global/tokens';
 import { notNil } from '../utils/validation';
 
@@ -37,8 +36,14 @@ export class FileVisibilityState {
     enum: [Platform.CKAN],
     default: [],
     validate: {
-      validator: (input) =>
-        notNil(input) && Object.values(Platform).includes(input),
+      validator: (input) => {
+        const platformValues = Object.values(Platform);
+        return (
+          notNil(input) &&
+          Array.isArray(input) &&
+          input.every((value) => platformValues.includes(value))
+        );
+      },
       message: (props) =>
         `${props?.value ?? 'UNKNOWN'} is not a valid platform!`,
     },
@@ -60,10 +65,7 @@ export class FileValueFragment {
   toJSON: {
     transform: (doc, ret) => {
       try {
-        if (
-          Array.isArray(ret?.sensors) &&
-          (isEmpty(ret.sensors) || ret[0] instanceof Types.ObjectId)
-        ) {
+        if (Array.isArray(ret?.sensors)) {
           ret.sensors = ret.sensors.map((sensor) => sensor.toString());
         }
       } catch (e) {}
@@ -72,10 +74,7 @@ export class FileValueFragment {
   toObject: {
     transform: (doc, ret) => {
       try {
-        if (
-          Array.isArray(ret?.sensors) &&
-          (isEmpty(ret.sensors) || ret[0] instanceof Types.ObjectId)
-        ) {
+        if (Array.isArray(ret?.sensors)) {
           ret.sensors = ret.sensors.map((sensor) => sensor.toString());
         }
       } catch (e) {}

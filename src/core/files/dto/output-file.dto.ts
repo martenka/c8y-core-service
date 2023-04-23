@@ -43,10 +43,10 @@ export class OutputFileMetadataDto {
   sensors?: string[];
 
   @Expose()
-  fromDate?: string;
+  dateFrom?: string;
 
   @Expose()
-  toDate?: string;
+  dateTo?: string;
 
   @Expose()
   managedObjectId?: string;
@@ -91,6 +91,9 @@ export class OutputFileDto {
 
   @Expose({ groups: [Groups.ALL] })
   customAttributes?: CustomAttributes;
+
+  @Expose({ groups: [Groups.ALL] })
+  createdAt?: string;
 }
 
 @Exclude()
