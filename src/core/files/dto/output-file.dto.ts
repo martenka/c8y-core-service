@@ -2,7 +2,7 @@ import { Exclude, Expose, Type } from 'class-transformer';
 import { BaseDBPagination } from '../../../global/pagination/pagination.dto';
 import { ValidateNested } from 'class-validator';
 import { CustomAttributes } from '../../../models';
-import { Groups } from '../../../global/tokens';
+import { Groups, Platform } from '../../../global/tokens';
 
 @Exclude()
 export class OutputFileStorageDto {
@@ -26,6 +26,9 @@ export class OutputFileVisibilityState {
 
   @Expose()
   errorMessage?: string;
+
+  @Expose()
+  exposedToPlatforms: Platform[];
 }
 
 @Exclude()

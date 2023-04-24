@@ -88,12 +88,17 @@ export class TaskCreationService implements OnModuleInit {
     const files: FileDocument[] = await this.fileModel
       .find({
         _id: { $in: taskPayload.fileIds },
+        'visibilityState.exposedToPlatforms': {
+          $ne: Platform.CKAN,
+        },
       })
       .populate('metadata.sensors')
       .exec();
 
     if (isNil(files) || files.length === 0) {
-      throw new BadRequestException('Could not find any files with given ids');
+      throw new BadRequestException(
+        `Could not find suitable files to upload with given ids - Already present files won't be uploaded`,
+      );
     }
 
     const dataUploadTaskFiles: DataUploadTaskFileProperties[] = [];
