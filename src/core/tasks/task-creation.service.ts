@@ -38,7 +38,6 @@ import {
   DataUploadTaskModel,
   DataUploadTaskPayloadProperties,
 } from '../../models/task/data-upload-task';
-import { SensorsService } from '../sensors/sensors.service';
 import { SensorType } from '../../models/Sensor';
 import { Platform } from '../../global/tokens';
 
@@ -59,7 +58,6 @@ export class TaskCreationService implements OnModuleInit {
     private readonly dataUploadModel: DataUploadTaskModel,
     @InjectModel(Group.name) private readonly groupModel: GroupModel,
     @InjectModel(File.name) private readonly fileModel: FileModel,
-    private readonly sensorService: SensorsService,
   ) {}
 
   private async createDataFetchTask(
