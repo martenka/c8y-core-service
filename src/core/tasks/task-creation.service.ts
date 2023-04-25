@@ -129,6 +129,7 @@ export class TaskCreationService implements OnModuleInit {
           valueFragmentType: fileMetadata.valueFragments[0].type,
           valueFragmentDescription: fileMetadata.valueFragments[0].description,
           managedObjectId: fileMetadata.managedObjectId,
+          fileDescription: file.description,
         };
       } else {
         dataUploadFileMetadata = {
@@ -139,7 +140,8 @@ export class TaskCreationService implements OnModuleInit {
           valueFragmentType: fileSensor.valueFragmentType,
           valueFragmentDescription: fileSensor.valueFragmentDisplayName,
           type: fileSensor.type,
-          description: fileSensor.description,
+          sensorDescription: fileSensor.description,
+          fileDescription: file.description,
         };
         dataUploadCustomAttributes = Object.assign(
           dataUploadCustomAttributes,

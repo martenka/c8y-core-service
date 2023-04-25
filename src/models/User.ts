@@ -21,6 +21,8 @@ export class C8yCredentials {
   baseAddress: string;
 }
 
+const C8yCredentialsSchema = SchemaFactory.createForClass(C8yCredentials);
+
 @Schema({
   toJSON: {
     transform: (doc, ret) => {
@@ -43,7 +45,7 @@ export class User extends Base {
   @Prop({ type: () => [Role], default: [Role.User] })
   roles: Role[];
 
-  @Prop({ type: C8yCredentials })
+  @Prop({ type: C8yCredentialsSchema })
   c8yCredentials?: C8yCredentials;
 
   @Prop({

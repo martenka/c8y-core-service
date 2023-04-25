@@ -38,10 +38,25 @@ export class DataUploadFileMetadata {
   type?: string;
 
   @Prop()
-  description?: string;
+  sensorDescription?: string;
+
+  @Prop()
+  fileDescription?: string;
 }
 
-@Schema({ _id: false })
+@Schema({
+  _id: false,
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.fileId = ret.fileId?.toString();
+    },
+  },
+  toObject: {
+    transform: (doc, ret) => {
+      ret.fileId = ret.fileId?.toString();
+    },
+  },
+})
 export class DataUploadFile {
   @Prop({ type: Types.ObjectId, required: true })
   fileId: Types.ObjectId;
@@ -68,6 +83,8 @@ export class DataUploadFile {
   customAttributes: CustomAttributes;
 }
 
+const DataUploadFileSchema = SchemaFactory.createForClass(DataUploadFile);
+
 @Schema({ _id: false })
 export class DataUploadPlatform {
   @Prop({ required: true })
@@ -76,10 +93,10 @@ export class DataUploadPlatform {
 
 @Schema({ _id: false })
 export class DataUploadPayload {
-  @Prop({ type: () => [DataUploadFile], required: true })
+  @Prop({ type: [DataUploadFileSchema], required: true })
   files: DataUploadFile[];
 
-  @Prop({ type: () => DataUploadPlatform, required: true })
+  @Prop({ type: DataUploadPlatform, required: true })
   platform: DataUploadPlatform;
 }
 

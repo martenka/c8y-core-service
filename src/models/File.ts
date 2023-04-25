@@ -20,6 +20,8 @@ export class FileStorageInfo {
   url?: string;
 }
 
+const FileStorageInfoSchema = SchemaFactory.createForClass(FileStorageInfo);
+
 @Schema()
 export class FileVisibilityState {
   @Prop({ default: false })
@@ -60,6 +62,9 @@ export class FileValueFragment {
   description?: string;
 }
 
+export const FileValueFragmentSchema =
+  SchemaFactory.createForClass(FileValueFragment);
+
 @Schema({
   _id: false,
   toJSON: {
@@ -97,9 +102,11 @@ export class FileMetadata {
   @Prop({ type: () => Date })
   dateTo: Date;
 
-  @Prop({ type: () => [FileValueFragment], default: [] })
+  @Prop({ type: [FileValueFragmentSchema], default: [] })
   valueFragments?: FileValueFragment[];
 }
+
+const FileMetadataSchema = SchemaFactory.createForClass(FileMetadata);
 
 @Schema({
   toJSON: {
@@ -132,10 +139,10 @@ export class File extends Base {
   @Prop()
   description?: string;
 
-  @Prop({ type: FileStorageInfo, required: true })
+  @Prop({ type: FileStorageInfoSchema, required: true })
   storage: FileStorageInfo;
 
-  @Prop({ type: FileMetadata, default: {} })
+  @Prop({ type: FileMetadataSchema, default: {} })
   metadata: FileMetadata;
 
   @Prop({ type: FileVisibilityState, default: {} })

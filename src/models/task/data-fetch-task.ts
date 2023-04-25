@@ -60,6 +60,8 @@ export class DataFetchPayload {
   group?: Group | Types.ObjectId;
 }
 
+const DataFetchPayloadSchema = SchemaFactory.createForClass(DataFetchPayload);
+
 @Schema()
 export class DataFetchTask extends Task {
   taskType: TaskTypes.DATA_FETCH;
@@ -67,7 +69,7 @@ export class DataFetchTask extends Task {
   @Prop({ default: `DataFetch-${new Date().getTime()}`, index: true })
   name: string;
 
-  @Prop({ type: DataFetchPayload, required: true })
+  @Prop({ type: DataFetchPayloadSchema, required: true })
   payload: DataFetchPayload;
 }
 

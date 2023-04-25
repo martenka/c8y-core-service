@@ -18,10 +18,7 @@ import { isNil } from '@nestjs/common/utils/shared.utils';
 import { SensorType } from '../../models/Sensor';
 import { notNil } from '../../utils/validation';
 import { DataFetchTaskMessagePayload } from '../messages/types/message-types/task/data-fetch';
-import {
-  DataUploadTask,
-  DataUploadTaskDocument,
-} from '../../models/task/data-upload-task';
+import { DataUploadTaskDocument } from '../../models/task/data-upload-task';
 import { DataUploadTaskMessagePayload } from '../messages/types/message-types/task/file-upload';
 
 @Injectable()
@@ -73,14 +70,23 @@ export class TaskMessageMapperService implements OnModuleInit {
     };
   }
 
-  mapDataUploadTaskPayload(task: DataUploadTask): DataUploadTaskMessagePayload {
+  mapDataUploadTaskPayload(
+    task: DataUploadTaskDocument,
+  ): DataUploadTaskMessagePayload {
+    const leanTask = task.toObject();
     return {
-      platform: task.payload.platform,
-      files: task.payload.files.map((file) => {
+      platform: leanTask.payload.platform,
+      files: leanTask.payload.files.map((file) => {
         return {
-          ...file,
+          fileName: file.fileName,
+          storage: file.storage,
+          customAttributes: file.customAttributes,
           metadata: {
-            ...file.metadata,
+            managedObjectId: file.metadata.managedObjectId,
+            valueFragmentType: file.metadata.valueFragmentType,
+            managedObjectName: file.metadata.managedObjectName,
+            valueFragmentDescription: file.metadata.valueFragmentDescription,
+            sensorDescription: file.metadata.sensorDescription,
             dateFrom: file.metadata.dateFrom.toISOString(),
             dateTo: file.metadata.dateTo.toISOString(),
           },
