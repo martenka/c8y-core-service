@@ -49,7 +49,7 @@ export class DataUploadFile {
   @Prop({ required: true })
   fileName: string;
 
-  @Prop({ type: () => DataUploadFileStorage, requred: true })
+  @Prop({ type: () => DataUploadFileStorage, required: true })
   storage: DataUploadMessageStorage;
 
   @Prop({ type: () => DataUploadFileMetadata, required: true })

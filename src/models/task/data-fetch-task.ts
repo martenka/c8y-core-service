@@ -26,6 +26,9 @@ class SensorData {
   sensor: Sensor | Types.ObjectId;
 
   @Prop()
+  fileId?: string;
+
+  @Prop()
   fileName?: string;
 
   @Prop()

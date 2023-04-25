@@ -44,8 +44,12 @@ export class MessagesHandlerService {
     switch (message.taskType) {
       case 'DATA_FETCH':
         if (isDataFetchTaskResultMessage(message)) {
-          await this.filesService.createFilesFromMessage(message);
-          await this.tasksService.updateDataFetchTaskResult(taskId, message);
+          const files = await this.filesService.createFilesFromMessage(message);
+          await this.tasksService.updateDataFetchTaskResult(
+            taskId,
+            message,
+            files,
+          );
         }
 
         return;

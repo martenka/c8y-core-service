@@ -144,3 +144,20 @@ export function convertBooleanOrOriginal(value: unknown): boolean | unknown {
   }
   return value;
 }
+
+export function convertArrayToMap<T>(
+  arr: T[],
+  keyFn: (element: T) => string | undefined,
+): Map<string, T> {
+  const resultMap = new Map<string, T>();
+
+  for (const element of arr) {
+    const key = keyFn(element);
+    if (isNil(key)) {
+      continue;
+    }
+    resultMap.set(key, element);
+  }
+
+  return resultMap;
+}

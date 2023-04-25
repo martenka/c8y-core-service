@@ -3,6 +3,7 @@ import { CreateTaskDto } from './dto/input/create-task.dto';
 import { TaskCreationService } from './task-creation.service';
 import {
   DataFetchTaskModel,
+  FileDocument,
   SensorDataType,
   Task,
   TaskDocument,
@@ -30,7 +31,7 @@ import { TaskMessageMapperService } from './task-message-mapper.service';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { TaskFailedMessage } from '../messages/types/message-types/messageTypes';
 import { TaskQueryProperties } from './query/task-query.dto';
-import { removeNilProperties } from '../../utils/helpers';
+import { convertArrayToMap, removeNilProperties } from '../../utils/helpers';
 import { DataFetchTaskResultStatusPayload } from '../messages/types/message-types/task/data-fetch';
 
 import {
@@ -155,6 +156,7 @@ export class TasksService {
   async updateDataFetchTaskResult(
     id: Types.ObjectId,
     result: TaskStatusMessage<DataFetchTaskResultStatusPayload>,
+    files: FileDocument[] = [],
   ) {
     if (isNil(result.payload) || hasNoOwnKeys(result.payload)) {
       return;
@@ -165,6 +167,10 @@ export class TasksService {
       return;
     }
 
+    const filesBySensorIdMap = convertArrayToMap(files, (file) => {
+      return file.metadata?.sensors[0]?._id.toString();
+    });
+
     task.payload.data = task.payload.data.map(
       (existingSensor): SensorDataType => {
         const sensorUpdateData = result.payload.sensors?.find(
@@ -174,9 +180,13 @@ export class TasksService {
         if (isNil(sensorUpdateData)) {
           return existingSensor;
         }
+
+        const matchingFile = filesBySensorIdMap.get(sensorUpdateData.sensorId);
+
         return {
           sensor: existingSensor.sensor,
           fileName: sensorUpdateData.fileName,
+          fileId: matchingFile?.id,
           filePath: sensorUpdateData.filePath,
           fileURL: sensorUpdateData.fileURL,
           bucket: sensorUpdateData.bucket,
