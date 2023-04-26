@@ -17,17 +17,24 @@ export class RabbitConfig {
 }
 
 export class MongoConfig {
+  @IsOptional()
   @IsString()
   USER: string;
 
+  @IsOptional()
   @IsString()
   PASS: string;
 
+  @IsOptional()
   @IsString()
   DB: string;
 
   @IsString()
   PORT = '27017';
+
+  @IsOptional()
+  @IsString()
+  CONNECTION_URI?: string;
 }
 
 export class JwtConfig {

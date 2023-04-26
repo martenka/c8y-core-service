@@ -2,6 +2,7 @@ import { CustomAttributes } from '../../../models';
 import { Exclude, Expose, Type } from 'class-transformer';
 import { BaseDBPagination } from '../../../global/pagination/pagination.dto';
 import { ValidateNested } from 'class-validator';
+import { Properties } from '../../../global/types/types';
 
 @Exclude()
 export class OutputSensorDto {
@@ -40,3 +41,7 @@ export class PaginatedOutputSensorDto extends BaseDBPagination<OutputSensorDto> 
   @ValidateNested({ each: true })
   data: OutputSensorDto[];
 }
+
+export type OutputSensorProperties = Properties<OutputSensorDto>;
+export type PaginatedOutputSensorDtoProperties =
+  Properties<PaginatedOutputSensorDto>;

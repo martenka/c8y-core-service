@@ -10,6 +10,7 @@ import { MongooseModuleOptions } from '@nestjs/mongoose';
 import { RabbitMQConfig } from '@golevelup/nestjs-rabbitmq';
 import { ExchangeTypes } from '../messages/types/exchanges';
 import { JwtModuleOptions } from '@nestjs/jwt/dist/interfaces/jwt-module-options.interface';
+import { isNil } from '@nestjs/common/utils/shared.utils';
 
 @Injectable()
 export class ApplicationConfigService {
@@ -19,11 +20,26 @@ export class ApplicationConfigService {
     readonly jwtEnvironment: JwtConfig,
     readonly secretEnvironment: SecretConfig,
     readonly minioEnvironment: MinioConfig,
-  ) {}
+  ) {
+    const mongoConfig = this.mongoEnvironment;
+    if (
+      isNil(mongoConfig.CONNECTION_URI) &&
+      (isNil(mongoConfig.USER) ||
+        isNil(mongoConfig.PASS) ||
+        isNil(mongoConfig.DB) ||
+        isNil(mongoConfig.PORT))
+    ) {
+      throw new Error(
+        'Unable to create MongoDB connection. Check Mongo ENV variables, either URI or USER,PASS, DB and PORT must be present!',
+      );
+    }
+  }
 
   get mongooseModuleOptions(): MongooseModuleOptions {
     return {
-      uri: `mongodb://${this.mongoEnvironment.USER}:${this.mongoEnvironment.PASS}@localhost:${this.mongoEnvironment.PORT}`,
+      uri:
+        this.mongoEnvironment.CONNECTION_URI ??
+        `mongodb://${this.mongoEnvironment.USER}:${this.mongoEnvironment.PASS}@localhost:${this.mongoEnvironment.PORT}`,
       dbName: this.mongoEnvironment.DB,
       minPoolSize: 3,
       maxPoolSize: 5,

@@ -54,5 +54,5 @@ export class Sensor extends Base {
 export const SensorSchema = SchemaFactory.createForClass(Sensor);
 
 export type SensorDocument = HydratedDocument<Sensor>;
-export type SensorModel = Model<SensorDocument>;
+export type SensorModel = Model<Sensor>;
 export type SensorType = Properties<Sensor>;

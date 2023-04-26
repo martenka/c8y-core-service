@@ -161,3 +161,19 @@ export function convertArrayToMap<T>(
 
   return resultMap;
 }
+
+export function omit<T extends object, K extends Extract<keyof T, string>>(
+  value: T,
+  ...keys: K[]
+): Omit<T, K> {
+  const result: Omit<T, K> = {} as Omit<T, K>;
+  const keySet: Set<string> = new Set(keys);
+
+  Object.keys(value).forEach((key) => {
+    if (!keySet.has(key)) {
+      result[key] = value[key];
+    }
+  });
+
+  return result;
+}
