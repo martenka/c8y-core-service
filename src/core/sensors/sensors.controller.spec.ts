@@ -1,45 +1,61 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SensorsController } from './sensors.controller';
 import { SensorsService } from './sensors.service';
-import { Connection, connection, Types } from 'mongoose';
+import { connection, Types } from 'mongoose';
 import { Sensor, SensorModel, SensorSchema } from '../../models/Sensor';
 
 import { omit } from '../../utils/helpers';
 import { getModelToken } from '@nestjs/mongoose';
 import { SkipPagingService } from '../paging/skip-paging.service';
+import { UpdateSensorDto } from './dto/update-sensor.dto';
 
-const sensorId = '64256472920c8d7a4cfb1970';
-
-const testSensorEntity: Sensor = {
-  _id: new Types.ObjectId(sensorId),
-  managedObjectId: '123',
-  managedObjectName: "AA01'Wall'BB1",
-  valueFragmentType: 'VFT',
-  valueFragmentDisplayName: 'Temperature',
-  type: 'TEST_TYPE',
-  owner: 'TEST_OWNER',
-  description: 'TEST_DESCRIPTION',
-  customAttributes: {
-    test: 'value',
-  },
-  createdAt: new Date('2023-04-26T18:27:13.461Z'),
-  updatedAt: new Date('2023-04-26T18:27:13.461Z'),
-};
-
-const leanTestSensorEntity = {
-  ...omit(testSensorEntity, '_id'),
-  _id: sensorId,
-};
-
-const testCreateSensorDto = omit(testSensorEntity, '_id');
 describe('SensorsController', () => {
   let controller: SensorsController;
-  const mongoConnection: Connection = connection;
+  const mongoConnection = connection;
   const sensorModel: SensorModel = mongoConnection.model(
     Sensor.name,
     SensorSchema,
   );
 
+  const testSensorEntities: Sensor[] = [
+    {
+      _id: new Types.ObjectId('64256472920c8d7a4cfb1970'),
+      managedObjectId: '123',
+      managedObjectName: "AA01'Wall'BB1",
+      valueFragmentType: 'VFT',
+      valueFragmentDisplayName: 'Temperature',
+      type: 'TEST_TYPE',
+      owner: 'TEST_OWNER',
+      description: 'TEST_DESCRIPTION',
+      customAttributes: {
+        test: 'value',
+      },
+      createdAt: new Date('2023-04-26T18:27:13.461Z'),
+      updatedAt: new Date('2023-04-26T18:27:13.461Z'),
+    },
+    {
+      _id: new Types.ObjectId('644a39b32c79bd2d6793694a'),
+      managedObjectId: '456',
+      managedObjectName: "BB'Floor",
+      valueFragmentType: 'DP',
+      valueFragmentDisplayName: 'Co2',
+      type: 'TEST_TYPE',
+      owner: 'TEST_OWNER',
+      description: 'Some CO2 sensor',
+      customAttributes: { test: 'value' },
+      createdAt: new Date('2023-04-27T13:00:13.461Z'),
+      updatedAt: new Date('2023-04-27T13:00:13.461Z'),
+    },
+  ];
+
+  const firstSensorId = testSensorEntities[0]._id.toString();
+  const secondSensorId = testSensorEntities[1]._id.toString();
+  const leanTestSensorEntity = {
+    ...omit(testSensorEntities[0], '_id'),
+    _id: firstSensorId,
+  };
+
+  const testCreateSensorDto = omit(testSensorEntities[0], '_id');
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SensorsController],
@@ -62,9 +78,15 @@ describe('SensorsController', () => {
   });
 
   it('finds existing sensor', async () => {
-    await sensorModel.create(testSensorEntity);
-    const sensor = (await controller.findOne(sensorId)).toObject();
+    await sensorModel.create(testSensorEntities[0]);
+    const sensor = (await controller.findOne(firstSensorId)).toObject();
     expect(sensor).toMatchObject(leanTestSensorEntity);
+  });
+
+  it('return undefined when no sensor is found', async () => {
+    await sensorModel.create(testSensorEntities[0]);
+    const sensor = await controller.findOne('64256472920c8d7a4cfb1973');
+    expect(sensor).toBeUndefined();
   });
 
   it('returns new created sensor', async () => {
@@ -78,5 +100,130 @@ describe('SensorsController', () => {
         omit(testCreateSensorDto, 'createdAt', 'updatedAt'),
       ),
     ]);
+  });
+
+  it('correctly removes sensor from db', async () => {
+    await sensorModel.create(testSensorEntities[0]);
+    await controller.remove(firstSensorId);
+    const deletedSensor = await sensorModel.findById(firstSensorId);
+    expect(deletedSensor).toBeNull();
+  });
+
+  it('correctly searches sensors', async () => {
+    await sensorModel.create(testSensorEntities);
+    const sensorFilterResponse = await controller.searchSensors(
+      {
+        managedObjectId: '456',
+      },
+      {},
+    );
+    expect(sensorFilterResponse).toHaveProperty('data');
+    expect(sensorFilterResponse).toHaveProperty('pageInfo');
+    expect(Array.isArray(sensorFilterResponse?.data)).toBe(true);
+    expect(sensorFilterResponse.data).toHaveLength(1);
+
+    const leanSensors = sensorFilterResponse.data.map((sensor) =>
+      sensor.toObject(),
+    );
+
+    expect(leanSensors).toEqual([
+      expect.objectContaining({
+        ...omit(testSensorEntities[1], '_id'),
+        _id: secondSensorId,
+      }),
+    ]);
+    expect(sensorFilterResponse?.pageInfo).toMatchObject({
+      currentPage: 1,
+    });
+  });
+
+  it('correctly updates one sensor', async () => {
+    await sensorModel.create(testSensorEntities[0]);
+    const sensorUpdate = {
+      valueFragmentDisplayName: 'Temp',
+      customAttributes: { another: 'value' },
+    };
+
+    const updatedSensor = await controller.updateOne(
+      sensorUpdate,
+      firstSensorId,
+    );
+
+    expect(updatedSensor).toBeDefined();
+
+    const leanUpdatedSensor = updatedSensor.toObject();
+
+    expect(leanUpdatedSensor).toMatchObject({
+      ...omit(
+        testSensorEntities[0],
+        '_id',
+        'valueFragmentDisplayName',
+        'customAttributes',
+      ),
+      ...sensorUpdate,
+      _id: firstSensorId,
+    });
+  });
+
+  it('correctly updates many sensors', async () => {
+    await sensorModel.create(testSensorEntities);
+    const sensor1Update: UpdateSensorDto = {
+      id: firstSensorId,
+      valueFragmentDisplayName: 'ABCD',
+      description: 'UpdatedDescription',
+    };
+
+    const sensor2Update: UpdateSensorDto = {
+      id: secondSensorId,
+      valueFragmentDisplayName: 'AAAA',
+      valueFragmentType: 'Type2',
+    };
+
+    const updatedSensors = await controller.update([
+      sensor1Update,
+      sensor2Update,
+    ]);
+
+    expect(updatedSensors).toBeDefined();
+    expect(Array.isArray(updatedSensors)).toBe(true);
+
+    const leanUpdatedSensors = updatedSensors.map((sensor) =>
+      sensor.toObject(),
+    );
+
+    expect(leanUpdatedSensors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          omit(
+            {
+              ...omit(
+                testSensorEntities[0],
+                '_id',
+                'valueFragmentDisplayName',
+                'description',
+              ),
+              ...sensor1Update,
+              _id: firstSensorId,
+            },
+            'id',
+          ),
+        ),
+        expect.objectContaining(
+          omit(
+            {
+              ...omit(
+                testSensorEntities[1],
+                '_id',
+                'valueFragmentDisplayName',
+                'valueFragmentType',
+              ),
+              ...sensor2Update,
+              _id: secondSensorId,
+            },
+            'id',
+          ),
+        ),
+      ]),
+    );
   });
 });

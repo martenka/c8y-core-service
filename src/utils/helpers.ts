@@ -162,18 +162,30 @@ export function convertArrayToMap<T>(
   return resultMap;
 }
 
-export function omit<T extends object, K extends Extract<keyof T, string>>(
+/**
+ * Omits the specified keys from object at runtime.<br>
+ * ONLY works with string keys
+
+ */
+export function omit<T extends object, K extends (keyof T)[]>(
   value: T,
-  ...keys: K[]
-): Omit<T, K> {
-  const result: Omit<T, K> = {} as Omit<T, K>;
-  const keySet: Set<string> = new Set(keys);
+  ...keys: K
+): Omit<T, K[number]> {
+  const result = {} as Omit<T, K[number]>;
+  const keySet = new Set(keys);
 
   Object.keys(value).forEach((key) => {
-    if (!keySet.has(key)) {
+    if (!keySet.has(key as keyof T)) {
       result[key] = value[key];
     }
   });
 
   return result;
+}
+
+export function nullToUndefined<T>(value: T): Omit<T, null> {
+  if (value === null) {
+    return undefined;
+  }
+  return value;
 }

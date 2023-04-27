@@ -11,12 +11,13 @@ import {
   remapIDAndRemoveNil,
   awaitAllPromises,
   remapCustomAttributes,
+  nullToUndefined,
 } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
 import { SensorSearchOptions } from '../../global/query/types';
-import { FilterQuery, QueryOptions } from 'mongoose';
+import { connection, FilterQuery, QueryOptions } from 'mongoose';
 
 @Injectable()
 export class SensorsService {
@@ -28,7 +29,7 @@ export class SensorsService {
   async createSensors(
     createSensorDtos: CreateSensorDtoProperties[],
   ): Promise<SensorDocument[] | undefined> {
-    return await this.sensorModel.create(createSensorDtos);
+    return nullToUndefined(await this.sensorModel.create(createSensorDtos));
   }
 
   async findMany(
@@ -69,7 +70,9 @@ export class SensorsService {
       return undefined;
     }
 
-    return await this.sensorModel.findOne({ ...searchOptions }).exec();
+    return nullToUndefined(
+      await this.sensorModel.findOne({ ...searchOptions }).exec(),
+    );
   }
 
   async updateSensors(
@@ -105,6 +108,8 @@ export class SensorsService {
       return undefined;
     }
 
-    return await this.sensorModel.findByIdAndDelete(objectId).exec();
+    return nullToUndefined(
+      await this.sensorModel.findByIdAndDelete(objectId).exec(),
+    );
   }
 }
