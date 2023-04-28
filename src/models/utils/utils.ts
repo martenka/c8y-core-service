@@ -1,4 +1,4 @@
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { Base } from '../Base';
 import { ensureArray, notNil } from '../../utils/validation';
 
@@ -16,4 +16,19 @@ export async function getDeletedIds<T extends Base = Base>(
   const existingIds = new Set(deleteCheck.map((item) => item._id));
 
   return itemsToDelete.filter((id) => !existingIds.has(id));
+}
+
+export function wrapFilterWithPrefixSearch<T>(
+  filter: FilterQuery<T>,
+): FilterQuery<T> {
+  const resultFilter: FilterQuery<T> = {};
+
+  for (const key in filter) {
+    resultFilter[key as keyof FilterQuery<T>] = {
+      $regex: `^${filter[key]}`,
+      $options: 'i',
+    };
+  }
+
+  return resultFilter;
 }

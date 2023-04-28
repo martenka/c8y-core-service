@@ -15,15 +15,19 @@ import { Properties } from '../global/types/types';
       ret._id = ret._id.toString();
     },
   },
+  collation: {
+    locale: 'en',
+    strength: 2,
+  },
 })
 export class Sensor extends Base {
-  @Prop({ required: true })
+  @Prop({ required: true, index: true })
   managedObjectId: string;
 
   @Prop({ required: true })
   managedObjectName: string;
 
-  @Prop()
+  @Prop({ index: true })
   valueFragmentType: string;
 
   @Prop()
@@ -52,6 +56,11 @@ export class Sensor extends Base {
 }
 
 export const SensorSchema = SchemaFactory.createForClass(Sensor);
+SensorSchema.index({
+  managedObjectName: 'text',
+  valueFragmentType: 'text',
+  valueFragmentDisplayName: 'text',
+});
 
 export type SensorDocument = HydratedDocument<Sensor>;
 export type SensorModel = Model<Sensor>;

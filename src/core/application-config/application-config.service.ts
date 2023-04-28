@@ -43,6 +43,7 @@ export class ApplicationConfigService {
       dbName: this.mongoEnvironment.DB,
       minPoolSize: 3,
       maxPoolSize: 5,
+      autoIndex: true,
     };
   }
 

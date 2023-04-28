@@ -6,18 +6,25 @@ import { SensorDocument, SensorModel } from '../../models/Sensor';
 import { InjectModel } from '@nestjs/mongoose';
 import { hasNoOwnKeys, notNil } from '../../utils/validation';
 import {
-  idToObjectIDOrUndefined,
-  pickBy,
-  remapIDAndRemoveNil,
   awaitAllPromises,
-  remapCustomAttributes,
+  idToObjectIDOrOriginal,
+  idToObjectIDOrUndefined,
   nullToUndefined,
+  omit,
+  pickBy,
+  remapCustomAttributes,
+  remapIDAndRemoveNil,
+  removeNilProperties,
 } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
 import { SensorSearchOptions } from '../../global/query/types';
 import { FilterQuery, QueryOptions } from 'mongoose';
+import { Sort } from '../paging/types/types';
+import { SensorQueryOptions } from './query/sensor-query.dto';
+import { wrapFilterWithPrefixSearch } from '../../models/utils/utils';
+import { SearchType } from '../../global/query/key-value';
 
 @Injectable()
 export class SensorsService {
@@ -33,18 +40,38 @@ export class SensorsService {
   }
 
   async findMany(
-    searchOptions: SensorSearchOptions,
+    searchOptions: SensorQueryOptions,
     pagingOptions: IPagingOptions,
   ): Promise<DBPagingResult<Sensor>> {
     const { customAttributesQuery, ...rest } =
       remapCustomAttributes(searchOptions);
+
+    const filterOptions: FilterQuery<Sensor> = {
+      _id: idToObjectIDOrOriginal(searchOptions.id),
+      ...omit(rest, 'id'),
+    };
+    let sort: Sort<Sensor> = {};
+
+    if (searchOptions.query) {
+      filterOptions.$text = { $search: searchOptions.query };
+      filterOptions.score = { $meta: 'textScore' };
+      sort = { score: { $meta: 'textScore' } };
+    } else {
+      sort = { _id: 1 };
+    }
+    let transformedFilter = {
+      ...removeNilProperties(filterOptions),
+      ...customAttributesQuery,
+    };
+
+    if (searchOptions.searchType === SearchType.PREFIX) {
+      transformedFilter = wrapFilterWithPrefixSearch(transformedFilter);
+    }
+
     return await this.skipPagingService.findWithPagination({
       model: this.sensorModel,
-      filter: {
-        ...remapIDAndRemoveNil(rest),
-        ...customAttributesQuery,
-      },
-      sort: { _id: 1 },
+      filter: transformedFilter,
+      sort,
       pagingOptions: pagingOptions,
     });
   }

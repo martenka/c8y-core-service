@@ -1,14 +1,30 @@
-import { IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsLowercase,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 import { SensorSearchOptions } from '../../../global/query/types';
 import { Type } from 'class-transformer';
 import { TransformCustomAttributes } from '../../../decorators/transformers/custom-attributes-transformer';
-import { KeyValue } from '../../../global/query/key-value';
+import { KeyValue, SearchType } from '../../../global/query/key-value';
+import { Properties } from '../../../global/types/types';
+import { TransformToLowercase } from '../../../decorators/transformers/lowercase-transformer';
 
 export class SensorQuery implements SensorSearchOptions {
   @IsOptional()
   @IsString()
   id?: string;
+
+  @IsOptional()
+  @IsString()
+  query?: string;
+
+  @IsOptional()
+  @TransformToLowercase()
+  @IsLowercase()
+  searchType?: SearchType;
 
   @IsOptional()
   @IsString()
@@ -35,3 +51,5 @@ export class SensorQuery implements SensorSearchOptions {
   @TransformCustomAttributes()
   customAttributes?: KeyValue[];
 }
+
+export type SensorQueryOptions = Properties<SensorQuery>;
