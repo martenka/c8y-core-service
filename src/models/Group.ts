@@ -52,6 +52,7 @@ export class Group extends Base {
 }
 
 export const GroupSchema = SchemaFactory.createForClass(Group);
+GroupSchema.index({ name: 'text' });
 
 export type GroupDocument = HydratedDocument<Group>;
 export type GroupModel = Model<Group>;

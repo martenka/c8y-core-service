@@ -20,10 +20,13 @@ import { GroupSearchOptions } from '../../global/query/types';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import {
   DBPagingResult,
+  IPagingOptions,
   PagingOptionsType,
 } from '../../global/pagination/types';
 import { GroupQueryOptions } from './query/group-query.dto';
 import { FilterQuery } from 'mongoose';
+import { Sort } from '../paging/types/types';
+import { SearchType } from '../../global/query/key-value';
 
 @Injectable()
 export class GroupsService {
@@ -60,14 +63,37 @@ export class GroupsService {
   ): Promise<DBPagingResult<Group>> {
     const filter: FilterQuery<Group> = {
       _id: idToObjectIDOrOriginal(searchOptions.id),
-      name: searchOptions.name,
     };
+    let sort: Sort<Group> = {};
+    const modifiedPagingOptions: IPagingOptions = pagingOptions;
+
+    switch (searchOptions.searchType) {
+      case SearchType.PREFIX: {
+        filter.name = {
+          $regex: `^${searchOptions.name}`,
+          $options: 'i',
+        };
+        sort = { _id: -1 };
+        break;
+      }
+      case SearchType.TOKEN: {
+        filter.$text = { $search: searchOptions.name };
+        filter.score = { $meta: 'textScore' };
+        sort = { score: { $meta: 'textScore' } };
+        modifiedPagingOptions.pageSize ??= 30;
+        break;
+      }
+      default: {
+        filter.name = searchOptions.name;
+        sort = { _id: -1 };
+      }
+    }
 
     return await this.pagingService.findWithPagination({
       model: this.groupModel,
       filter: removeNilProperties(filter),
-      sort: { _id: -1 },
-      pagingOptions,
+      sort,
+      pagingOptions: modifiedPagingOptions,
     });
   }
 

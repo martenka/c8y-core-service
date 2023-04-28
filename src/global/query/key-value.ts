@@ -12,3 +12,8 @@ export class KeyValue {
 }
 
 export type KeyValueProperties = Properties<KeyValue>;
+
+export enum SearchType {
+  TOKEN = 'token',
+  PREFIX = 'prefix',
+}

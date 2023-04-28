@@ -7,9 +7,11 @@ import {
 } from 'mongoose';
 import { IPagingOptions } from '../../../global/pagination/types';
 
-export type Sort<T extends object> = {
-  [key in keyof T]?: SortOrder | undefined | null;
-};
+export type Sort<T extends object> =
+  | {
+      [key in keyof T]?: SortOrder | undefined | null;
+    }
+  | { score: { $meta: 'textScore' } };
 
 export interface SkipPagingOptions<T extends object> {
   model: Model<T>;

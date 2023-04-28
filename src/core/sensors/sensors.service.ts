@@ -17,7 +17,7 @@ import { isNil } from '@nestjs/common/utils/shared.utils';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
 import { SensorSearchOptions } from '../../global/query/types';
-import { connection, FilterQuery, QueryOptions } from 'mongoose';
+import { FilterQuery, QueryOptions } from 'mongoose';
 
 @Injectable()
 export class SensorsService {
