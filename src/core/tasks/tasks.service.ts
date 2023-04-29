@@ -38,6 +38,7 @@ import {
   DataUploadTaskDocument,
   DataUploadTaskModel,
 } from '../../models/task/data-upload-task';
+import { AlreadyExistsException } from '../../global/exceptions/already-exists.exception';
 
 @Injectable()
 export class TasksService {
@@ -58,6 +59,14 @@ export class TasksService {
     loggedInUserId: string,
     task: T,
   ): Promise<TaskDocument> {
+    const existingTask = await this.taskModel
+      .findOne({ name: task.name })
+      .exec();
+
+    if (notNil(existingTask)) {
+      throw new AlreadyExistsException(`Task ${task.name} already exists!`);
+    }
+
     const createdTask = await this.taskCreationService.createTask({
       ...task,
       initiatedByUser: new Types.ObjectId(loggedInUserId),

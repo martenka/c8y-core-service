@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -33,6 +34,7 @@ import { LoggedInUser } from '../../decorators/user';
 import { LoggedInUserType } from '../auth/types/types';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TaskQuery } from './query/task-query.dto';
+import { AlreadyExistsException } from '../../global/exceptions/already-exists.exception';
 
 @Controller('tasks')
 @UseInterceptors(DtoTransformInterceptor)
@@ -51,7 +53,13 @@ export class TasksController {
     @Body(new TaskTransformPipe(TaskCreationDtos))
     task: T,
   ): Promise<object | undefined> {
-    return await this.tasksService.createAndScheduleTask(user._id, task);
+    try {
+      return await this.tasksService.createAndScheduleTask(user._id, task);
+    } catch (e) {
+      if (e instanceof AlreadyExistsException) {
+        throw new BadRequestException(e.message);
+      }
+    }
   }
 
   @Get('/search')

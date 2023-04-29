@@ -55,6 +55,7 @@ export class TaskMetadata {
 export class Task extends Base {
   taskType: keyof typeof TaskTypes;
 
+  @Prop()
   name: string;
 
   @Prop({

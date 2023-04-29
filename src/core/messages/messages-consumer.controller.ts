@@ -18,7 +18,7 @@ export class MessagesController {
 
   @RabbitSubscribe({
     exchange: ExchangeTypes.GENERAL,
-    queue: 'cumuservice.tasks.status',
+    queue: 'coreservice.tasks.status',
     routingKey: 'task.status.#',
     createQueueIfNotExists: true,
     errorHandler: (channel, msg, error) => {
@@ -35,7 +35,7 @@ export class MessagesController {
 
   @RabbitSubscribe({
     exchange: ExchangeTypes.GENERAL,
-    queue: 'cumuservice.files.result',
+    queue: 'coreservice.files.result',
     routingKey: 'file.result.#',
     createQueueIfNotExists: true,
     errorHandler: (channel, msg, error) => {
