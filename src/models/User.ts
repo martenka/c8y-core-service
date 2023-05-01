@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Base } from './Base';
 import { HydratedDocument, Model } from 'mongoose';
-
+import * as bcrypt from 'bcrypt';
 import { CustomAttributes } from './types/types';
 import { Role } from '../global/types/roles';
 import { Properties } from '../global/types/types';
@@ -62,6 +62,12 @@ export class User extends Base {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+UserSchema.methods.isPasswordMatch = async function (
+  passwordToCompare: string,
+): Promise<boolean> {
+  const user = this as UserDocument;
+  return await bcrypt.compare(passwordToCompare, user.password);
+};
 
 export interface PasswordCheck {
   isPasswordMatch: (passwordToCompare: string) => Promise<boolean>;

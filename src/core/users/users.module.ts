@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserDocument, UserSchema } from '../../models/User';
+import { User, UserSchema } from '../../models/User';
 import * as bcrypt from 'bcrypt';
 import { ApplicationConfigService } from '../application-config/application-config.service';
 import { MessagesModule } from '../messages/messages.module';
@@ -29,14 +29,6 @@ import { MessagesModule } from '../messages/messages.module';
 
             next();
           });
-
-          schema.methods.isPasswordMatch = async function (
-            passwordToCompare,
-          ): Promise<boolean> {
-            // eslint-disable-next-line @typescript-eslint/no-this-alias
-            const user: UserDocument = this;
-            return await bcrypt.compare(passwordToCompare, user.password);
-          };
 
           return schema;
         },

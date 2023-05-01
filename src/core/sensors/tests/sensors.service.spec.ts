@@ -1,16 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SensorsController } from './sensors.controller';
-import { SensorsService } from './sensors.service';
+import { SensorsService } from '../sensors.service';
 import { connection, Types } from 'mongoose';
-import { Sensor, SensorModel, SensorSchema } from '../../models/Sensor';
-
-import { omit } from '../../utils/helpers';
+import { Sensor, SensorModel, SensorSchema } from '../../../models/Sensor';
+import { omit } from '../../../utils/helpers';
 import { getModelToken } from '@nestjs/mongoose';
-import { SkipPagingService } from '../paging/skip-paging.service';
-import { UpdateSensorDto } from './dto/update-sensor.dto';
+import { SkipPagingService } from '../../paging/skip-paging.service';
+import { UpdateSensorDto } from '../dto/update-sensor.dto';
 
-describe('SensorsController', () => {
-  let controller: SensorsController;
+describe('SensorsService', () => {
+  let service: SensorsService;
   const mongoConnection = connection;
   const sensorModel: SensorModel = mongoConnection.model(
     Sensor.name,
@@ -56,9 +54,9 @@ describe('SensorsController', () => {
   };
 
   const testCreateSensorDto = omit(testSensorEntities[0], '_id');
+
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [SensorsController],
       providers: [
         { provide: getModelToken(Sensor.name), useValue: sensorModel },
         { provide: SkipPagingService, useValue: new SkipPagingService() },
@@ -66,7 +64,7 @@ describe('SensorsController', () => {
       ],
     }).compile();
 
-    controller = module.get<SensorsController>(SensorsController);
+    service = module.get<SensorsService>(SensorsService);
   });
 
   afterEach(async () => {
@@ -79,18 +77,20 @@ describe('SensorsController', () => {
 
   it('finds existing sensor', async () => {
     await sensorModel.create(testSensorEntities[0]);
-    const sensor = (await controller.findOne(firstSensorId)).toObject();
+    const sensor = (
+      await service.findOne({ id: firstSensorId, managedObjectId: '123' })
+    ).toObject();
     expect(sensor).toMatchObject(leanTestSensorEntity);
   });
 
   it('return undefined when no sensor is found', async () => {
     await sensorModel.create(testSensorEntities[0]);
-    const sensor = await controller.findOne('64256472920c8d7a4cfb1973');
+    const sensor = await service.findOne({ id: '64256472920c8d7a4cfb1973' });
     expect(sensor).toBeUndefined();
   });
 
   it('returns new created sensor', async () => {
-    const createResponse = await controller.createSensor([testCreateSensorDto]);
+    const createResponse = await service.createSensors([testCreateSensorDto]);
     expect(Array.isArray(createResponse)).toBe(true);
     expect(createResponse).toHaveLength(1);
     const leanResponse = createResponse.map((sensor) => sensor.toObject());
@@ -104,14 +104,14 @@ describe('SensorsController', () => {
 
   it('correctly removes sensor from db', async () => {
     await sensorModel.create(testSensorEntities[0]);
-    await controller.remove(firstSensorId);
+    await service.removeSensor(firstSensorId);
     const deletedSensor = await sensorModel.findById(firstSensorId);
     expect(deletedSensor).toBeNull();
   });
 
   it('correctly searches sensors', async () => {
     await sensorModel.create(testSensorEntities);
-    const sensorFilterResponse = await controller.searchSensors(
+    const sensorFilterResponse = await service.findMany(
       {
         managedObjectId: '456',
       },
@@ -144,14 +144,13 @@ describe('SensorsController', () => {
       customAttributes: { another: 'value' },
     };
 
-    const updatedSensor = await controller.updateOne(
-      sensorUpdate,
-      firstSensorId,
-    );
+    const updatedSensors = await service.updateSensors([
+      { ...sensorUpdate, id: firstSensorId },
+    ]);
 
-    expect(updatedSensor).toBeDefined();
-
-    const leanUpdatedSensor = updatedSensor.toObject();
+    expect(updatedSensors).toBeDefined();
+    expect(updatedSensors).toHaveLength(1);
+    const leanUpdatedSensor = updatedSensors[0].toObject();
 
     expect(leanUpdatedSensor).toMatchObject({
       ...omit(
@@ -179,7 +178,7 @@ describe('SensorsController', () => {
       valueFragmentType: 'Type2',
     };
 
-    const updatedSensors = await controller.update([
+    const updatedSensors = await service.updateSensors([
       sensor1Update,
       sensor2Update,
     ]);
