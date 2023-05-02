@@ -6,7 +6,6 @@ import { UserSchema } from '../../../models/User';
 import { getModelToken } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../users/users.service';
-import { CreateUserDto } from '../../users/dto/input/create-user.dto';
 import { BadRequestException } from '@nestjs/common';
 import { clearCollections } from '../../../utils/tests';
 import { Role } from '../../../global/types/roles';
@@ -17,17 +16,19 @@ import { omit } from '../../../utils/helpers';
 describe('AuthService', () => {
   let service: AuthService;
 
-  const createUserDto: CreateUserDto = {
-    username: 'testUser',
-    password: 'testPassword',
-    c8yCredentials: {
-      password: 'c8y-user',
-      username: 'c8y-pass',
-      baseAddress: 'https://localhost/',
-      tenantID: 'c8y-tenat',
-    },
-    role: [Role.Admin],
-  };
+  function getCreateUserDto(username: string) {
+    return {
+      username,
+      password: 'testPassword',
+      c8yCredentials: {
+        password: 'c8y-user',
+        username: 'c8y-pass',
+        baseAddress: 'https://localhost/',
+        tenantID: 'c8y-tenat',
+      },
+      role: [Role.Admin],
+    };
+  }
 
   const userModel = connection.model(User.name, UserSchema);
 
@@ -57,24 +58,27 @@ describe('AuthService', () => {
   afterEach(clearCollections(connection));
 
   it('handles user registration', async () => {
-    const registeredUser = await service.register(createUserDto);
+    const userDto = getCreateUserDto('eNtEa');
+    const registeredUser = await service.register(userDto);
     expect(registeredUser.toObject()).toMatchObject({
-      ...omit(createUserDto, 'role'),
+      ...omit(userDto, 'role', 'password'),
       roles: [Role.Admin, Role.User],
     });
   });
 
   it('does not allow multiple users with the same username', async () => {
-    await service.register(createUserDto);
+    const userDto = getCreateUserDto('inIcaNkE');
+    await service.register(userDto);
 
-    await expect(service.register(createUserDto)).rejects.toThrow(
+    await expect(service.register(userDto)).rejects.toThrow(
       BadRequestException,
     );
   });
 
   it('handles user login', async () => {
+    const userDto = getCreateUserDto('Olitylea');
     const loginResponse = service.login({
-      username: createUserDto.username,
+      username: userDto.username,
       roles: [Role.Admin, Role.User],
       _id: '123',
     });
@@ -85,19 +89,20 @@ describe('AuthService', () => {
   });
 
   it('validates user', async () => {
+    const userDto = getCreateUserDto('RiNCaTeR');
     const salt = await bcrypt.genSalt(2);
-    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+    const hashedPassword = await bcrypt.hash(userDto.password, salt);
     await service.register({
-      ...omit(createUserDto, 'password'),
+      ...omit(userDto, 'password'),
       password: hashedPassword,
     });
     const validatedUser = await service.validateUser(
-      createUserDto.username,
-      createUserDto.password,
+      userDto.username,
+      userDto.password,
     );
 
     expect(validatedUser).toMatchObject<Partial<User>>({
-      username: createUserDto.username,
+      username: userDto.username,
       roles: [Role.Admin, Role.User],
     });
   });

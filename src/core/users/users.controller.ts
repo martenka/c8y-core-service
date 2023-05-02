@@ -22,6 +22,8 @@ import { AdminRoute } from '../../decorators/authorization';
 import { UpdateUserDto } from './dto/input/update-user.dto';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
+import { Types } from 'mongoose';
 
 @Controller('users')
 @UseInterceptors(DtoTransformInterceptor)
@@ -33,7 +35,9 @@ export class UsersController {
   @SetControllerDTO(UserOutputDto)
   @ApiTags('users')
   @ApiOperation({ operationId: 'Get one user' })
-  async findOne(@Param('id') id: string): Promise<UserDocument | undefined> {
+  async findOne(
+    @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
+  ): Promise<UserDocument | undefined> {
     return await this.usersService.findOne({ id });
   }
 
@@ -46,7 +50,7 @@ export class UsersController {
   async deleteUsers(
     @Body() deleteEntityDto: DeleteUserInputDto,
   ): Promise<IDeleteUsersResponse> {
-    return await this.usersService.deleteAndSendMessages(deleteEntityDto);
+    return await this.usersService.delete(deleteEntityDto);
   }
 
   @Patch(':id')
@@ -55,7 +59,7 @@ export class UsersController {
   @ApiTags('users')
   @ApiOperation({ operationId: 'Update user' })
   async updateUser(
-    @Param() id: string,
+    @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserDocument> {
     const result = await this.usersService.updateOne(id, updateUserDto);

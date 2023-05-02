@@ -8,7 +8,7 @@ import { Options } from 'amqplib';
 export class MessagesProducerService {
   constructor(private readonly amqpConnection: AmqpConnection) {}
 
-  private sendMessage<K extends keyof MessageTypes>(
+  sendMessage<K extends keyof MessageTypes>(
     exchange: ExchangeTypes,
     routingKey: K,
     message: MessageTypes[K],

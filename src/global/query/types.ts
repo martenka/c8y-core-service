@@ -1,4 +1,5 @@
 import { KeyValueProperties } from './key-value';
+import { Types } from 'mongoose';
 
 export interface BaseSearchOptions {
   id?: string;
@@ -24,6 +25,7 @@ export interface FileTaskSearchOptions extends BaseSearchOptions {
   type?: string;
 }
 
-export interface UserSearchOptions extends BaseSearchOptions {
+export interface UserSearchOptions {
+  id?: Types.ObjectId;
   username?: string;
 }

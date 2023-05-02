@@ -12,6 +12,7 @@ import { IDeleteUsers, IDeleteUsersResponse, IUpdateUser } from './dto/types';
 import { Role } from '../../global/types/roles';
 import { MessagesProducerService } from '../messages/messages-producer.service';
 import { getDeletedIds } from '../../models/utils/utils';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class UsersService {
@@ -40,7 +41,7 @@ export class UsersService {
     return await query.exec();
   }
 
-  async create(input: CreateUserDto): Promise<UserDocument> {
+  async create(input: CreateUserDto): Promise<Omit<UserDocument, 'password'>> {
     const { role: roles, ...other } = input;
 
     if (roles?.length === 1 && roles[0] === Role.Admin) {
@@ -48,13 +49,16 @@ export class UsersService {
     }
 
     const user = await this.userModel.create({ roles, ...other });
+    user.password = undefined;
+
     this.logger.log(`Created user with username: ${user?.username ?? 'N/A'}`);
     return user;
   }
 
-  async deleteAndSendMessages(
-    input: IDeleteUsers,
-  ): Promise<IDeleteUsersResponse> {
+  /**
+   * Deletes users locally and sends out messages to sync it with external services
+   */
+  async delete(input: IDeleteUsers): Promise<IDeleteUsersResponse> {
     const idsToDelete = idToObjectIDOrUndefined(input.items);
 
     const deletionTime = new Date().toISOString();
@@ -80,11 +84,9 @@ export class UsersService {
   }
 
   async updateOne(
-    id: string,
+    id: Types.ObjectId,
     input: IUpdateUser,
   ): Promise<UserDocument | undefined> {
-    const objectId = idToObjectIDOrUndefined(id);
-
     const updateData = removeNilProperties(input);
     updateData.c8yCredentials = removeNilProperties(
       updateData.c8yCredentials ?? {},
@@ -102,14 +104,23 @@ export class UsersService {
       setOperation['roles'] = updateData.role;
     }
 
-    return await this.userModel
+    const updatedUser = await this.userModel
       .findOneAndUpdate(
-        { _id: objectId },
+        { _id: id },
         {
           $set: setOperation,
         },
         { new: true },
       )
       .exec();
+
+    const leanUpdatedUser = updatedUser.toObject();
+    this.messagesProducerService.sendUserMessage({
+      id: leanUpdatedUser._id.toString(),
+      c8yCredentials: leanUpdatedUser.c8yCredentials,
+    });
+
+    this.logger.log(`Updated user with id: ${leanUpdatedUser._id.toString()}`);
+    return updatedUser;
   }
 }

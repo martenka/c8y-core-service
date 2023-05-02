@@ -73,7 +73,9 @@ export interface PasswordCheck {
   isPasswordMatch: (passwordToCompare: string) => Promise<boolean>;
 }
 
-export type UserDocument = HydratedDocument<User>;
+export type UserDocument = Omit<HydratedDocument<User>, 'password'> & {
+  password?: string;
+};
 export type UserModel = Model<User>;
 
 export type C8yCredentialsType = Properties<C8yCredentials>;
