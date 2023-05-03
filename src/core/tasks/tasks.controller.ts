@@ -34,7 +34,7 @@ import { LoggedInUser } from '../../decorators/user';
 import { LoggedInUserType } from '../auth/types/types';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TaskQuery } from './query/task-query.dto';
-import { AlreadyExistsException } from '../../global/exceptions/already-exists.exception';
+import { CustomException } from '../../global/exceptions/custom.exception';
 
 @Controller('tasks')
 @UseInterceptors(DtoTransformInterceptor)
@@ -56,7 +56,7 @@ export class TasksController {
     try {
       return await this.tasksService.createAndScheduleTask(user._id, task);
     } catch (e) {
-      if (e instanceof AlreadyExistsException) {
+      if (e instanceof CustomException) {
         throw new BadRequestException(e.message);
       }
     }

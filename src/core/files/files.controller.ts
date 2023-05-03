@@ -34,11 +34,22 @@ import { DeleteInputDto } from '../../global/dto/deletion';
 import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
 import { Types } from 'mongoose';
 import { VisibilityStateDto } from './dto/visibility-state.dto';
+import { FileUploadSuitabilityQueryDto } from './query/upload-suitability-query.dto';
 
 @Controller('files')
 @UseInterceptors(DtoTransformInterceptor)
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
+
+  @Get('/upload-readiness')
+  @NoDTOValidation()
+  async getFilesUnsuitableForUpload(
+    @Query() filesToCheck: FileUploadSuitabilityQueryDto,
+  ) {
+    return await this.filesService.getFilesUnsuitableForUpload(
+      filesToCheck.fileIds,
+    );
+  }
 
   @Get('/search')
   @SetControllerDTO(PaginatedOutputFileDto)

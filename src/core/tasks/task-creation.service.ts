@@ -40,6 +40,8 @@ import {
 } from '../../models/task/data-upload-task';
 import { SensorType } from '../../models/Sensor';
 import { Platform } from '../../global/tokens';
+import { FilesService } from '../files/files.service';
+import { CustomException } from '../../global/exceptions/custom.exception';
 
 @Injectable()
 export class TaskCreationService implements OnModuleInit {
@@ -58,6 +60,7 @@ export class TaskCreationService implements OnModuleInit {
     private readonly dataUploadModel: DataUploadTaskModel,
     @InjectModel(Group.name) private readonly groupModel: GroupModel,
     @InjectModel(File.name) private readonly fileModel: FileModel,
+    private readonly filesService: FilesService,
   ) {}
 
   private async createDataFetchTask(
@@ -96,6 +99,14 @@ export class TaskCreationService implements OnModuleInit {
     if (isNil(files) || files.length === 0) {
       throw new BadRequestException(
         `Could not find suitable files to upload with given ids - Already present files won't be uploaded`,
+      );
+    }
+
+    const problematicFiles =
+      await this.filesService.getFilesUnsuitableForUpload(taskPayload.fileIds);
+    if (problematicFiles.length > 0) {
+      throw new CustomException(
+        'Unable to upload files, please check that all sensors in all files of this task payload have valueFragmentDescription/DisplayName field present',
       );
     }
 

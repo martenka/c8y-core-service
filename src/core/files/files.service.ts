@@ -27,7 +27,7 @@ import {
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { FilterQuery, Types, UpdateQuery } from 'mongoose';
 import { FileQueryOptions } from './query/file-query.dto';
-import { FileLink } from './types/types';
+import { FileLink, FileWithSensorProblem } from './types/types';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { ApplicationConfigService } from '../application-config/application-config.service';
 import { DeleteInputProperties } from '../../global/dto/deletion';
@@ -37,6 +37,7 @@ import { getDeletedIds } from '../../models/utils/utils';
 import { VisibilityStateDtoProperties } from './dto/visibility-state.dto';
 import { DataFetchTaskResult } from '../messages/types/message-types/task/data-fetch';
 import { Platform } from '../../global/tokens';
+import { SensorType } from '../../models/Sensor';
 
 @Injectable()
 export class FilesService {
@@ -311,5 +312,34 @@ export class FilesService {
     return await this.fileModel
       .updateMany({ _id: { $in: fileIds } }, updateQuery)
       .exec();
+  }
+
+  async getFilesUnsuitableForUpload(
+    fileIds: Types.ObjectId[],
+  ): Promise<FileWithSensorProblem[]> {
+    const files = await this.fileModel
+      .find({ _id: { $in: fileIds } })
+      .populate({
+        path: 'metadata.sensors',
+        match: { valueFragmentDisplayName: { $exists: false } },
+      })
+      .lean(true)
+      .exec();
+
+    const problematicFiles = files.filter((file) => {
+      const filteredSensors = ensureArray(
+        file.metadata.sensors as SensorType[],
+      ).filter(notNil);
+      return filteredSensors.length > 0;
+    });
+
+    return problematicFiles.map((file) => ({
+      fileId: file._id.toString(),
+      sensor: {
+        sensorId: file.metadata.sensors[0]._id.toString(),
+        problem:
+          'valueFragmentDisplayName must be present for uploading file to external system',
+      },
+    }));
   }
 }

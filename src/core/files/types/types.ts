@@ -3,3 +3,11 @@ export interface FileLink {
   url: string;
   fileName?: string;
 }
+
+export interface FileWithSensorProblem {
+  fileId: string;
+  sensor: {
+    sensorId: string;
+    problem: string;
+  };
+}
