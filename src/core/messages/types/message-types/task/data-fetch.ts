@@ -12,17 +12,25 @@ export interface DataFetchTaskMessagePayload
   })[];
 }
 
+export interface DataFetchTaskResultSensor {
+  sensorId: string;
+  bucket: string;
+  isPublicBucket: boolean;
+  /**
+   * Path inside the bucket including the filename
+   */
+  filePath?: string;
+  fileURL?: string;
+  /**
+   * Filename excluding path and bucket
+   */
+  fileName: string;
+  dateFrom: string;
+  dateTo: string;
+}
+
 export interface DataFetchTaskResultStatusPayload {
-  sensors: {
-    sensorId: string;
-    bucket: string;
-    isPublicBucket: boolean;
-    filePath?: string;
-    fileURL?: string;
-    fileName: string;
-    dateFrom: string;
-    dateTo: string;
-  }[];
+  sensors: DataFetchTaskResultSensor[];
 }
 
 export type DataFetchTaskResult =

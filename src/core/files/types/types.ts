@@ -1,3 +1,6 @@
+import { Types } from 'mongoose';
+import { VisibilityState } from '../../../models';
+
 export interface FileLink {
   id: string;
   url: string;
@@ -10,4 +13,12 @@ export interface FileWithSensorProblem {
     sensorId: string;
     problem: string;
   };
+}
+
+export interface FileSetVisibilityStateParams {
+  id: Types.ObjectId;
+  isSyncing: boolean;
+  visibilityState?: VisibilityState;
+  storage?: { path?: string; bucket?: string };
+  errorMessage?: string;
 }

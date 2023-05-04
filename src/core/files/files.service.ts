@@ -12,6 +12,7 @@ import {
   FileProperties,
   FileStorageProperties,
   FileValueFragmentProperties,
+  VisibilityState,
 } from '../../models';
 import { SensorsService } from '../sensors/sensors.service';
 import { ensureArray, notNil } from '../../utils/validation';
@@ -27,7 +28,11 @@ import {
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { FilterQuery, Types, UpdateQuery } from 'mongoose';
 import { FileQueryOptions } from './query/file-query.dto';
-import { FileLink, FileWithSensorProblem } from './types/types';
+import {
+  FileLink,
+  FileSetVisibilityStateParams,
+  FileWithSensorProblem,
+} from './types/types';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { ApplicationConfigService } from '../application-config/application-config.service';
 import { DeleteInputProperties } from '../../global/dto/deletion';
@@ -214,28 +219,30 @@ export class FilesService {
     };
   }
 
-  async getFileStorageInfo(
-    id: Types.ObjectId,
-  ): Promise<FileStorageProperties | undefined> {
-    const file = await this.fileModel
-      .findById(id, { storage: 1 })
-      .lean()
-      .exec();
+  async setFileVisibilityState({
+    storage,
+    errorMessage,
+    isSyncing,
+    id,
+    visibilityState,
+  }: FileSetVisibilityStateParams) {
+    const fileUpdate: UpdateQuery<File> = {
+      'visibilityState.stateChanging': isSyncing,
+    };
 
-    return file?.storage;
-  }
-
-  async setFileVisibilityStateSyncingState(
-    id: Types.ObjectId,
-    isSyncing: boolean,
-    errorMessage?: string,
-  ) {
-    await this.fileModel
-      .findByIdAndUpdate(id, {
-        'visibilityState.stateChanging': false,
-        'visibilityState.errorMessage': errorMessage,
-      })
-      .exec();
+    if (notNil(errorMessage)) {
+      fileUpdate['visibilityState.errorMessage'] = errorMessage;
+    } else {
+      fileUpdate['visibilityState.published'] =
+        visibilityState === VisibilityState.PUBLIC;
+      if (notNil(storage.bucket)) {
+        fileUpdate['storage.bucket'] = storage.bucket;
+      }
+      if (notNil(storage.path)) {
+        fileUpdate['storage.path'] = storage.path;
+      }
+    }
+    await this.fileModel.findByIdAndUpdate(id, fileUpdate).exec();
   }
 
   async handleFileVisibilityChangeRequest(
@@ -267,7 +274,7 @@ export class FilesService {
     });
 
     file.visibilityState = {
-      ...file.visibilityState,
+      exposedToPlatforms: file.visibilityState.exposedToPlatforms,
       published: file.visibilityState.published,
       stateChanging: true,
       errorMessage: undefined,

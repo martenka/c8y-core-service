@@ -12,12 +12,12 @@ import {
   isObjectSyncTaskStatusMessage,
 } from './guards/object-sync';
 import { ObjectSyncTaskMessageHandler } from './handlers/object-sync-task-message.handler';
-import { TaskSteps, VisibilityState } from '../../models';
+import { TaskSteps } from '../../models';
 
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { VisibilityStateResultMessage } from './types/message-types/file/types';
 import { isDataFetchTaskResultMessage } from './guards/data-fetch';
 import { Platform } from '../../global/tokens';
+import { FileSetVisibilityStateParams } from '../files/types/types';
 
 @Injectable()
 export class MessagesHandlerService {
@@ -80,27 +80,20 @@ export class MessagesHandlerService {
   async handleFileVisibilityStateResultMessage(
     message: VisibilityStateResultMessage,
   ) {
-    const file = await this.filesService.findById(
-      new Types.ObjectId(message.fileId),
-    );
-
-    if (isNil(file)) {
-      this.logger.error(
-        `Did not found file in handleFileVisibilityStateResultMessage with fileId ${message.fileId}`,
-      );
-      return;
-    }
-
-    file.visibilityState.stateChanging = false;
+    const options: FileSetVisibilityStateParams = {
+      id: new Types.ObjectId(message.fileId),
+      isSyncing: false,
+    };
     if ('errorMessage' in message) {
-      file.visibilityState.errorMessage = message.errorMessage;
+      options.errorMessage = message.errorMessage;
     } else if ('newVisibilityState' in message) {
-      file.visibilityState.published =
-        message.newVisibilityState === VisibilityState.PUBLIC;
-      file.storage.path = message.filePath;
-      file.storage.bucket = message.bucket;
+      options.visibilityState = message.newVisibilityState;
+      options.storage = {
+        bucket: message.bucket,
+        path: message.filePath,
+      };
     }
 
-    await file.save();
+    await this.filesService.setFileVisibilityState(options);
   }
 }

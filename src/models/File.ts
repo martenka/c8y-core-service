@@ -22,7 +22,7 @@ export class FileStorageInfo {
 
 const FileStorageInfoSchema = SchemaFactory.createForClass(FileStorageInfo);
 
-@Schema()
+@Schema({ _id: false })
 export class FileVisibilityState {
   @Prop({ default: false })
   published: boolean;
