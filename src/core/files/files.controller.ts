@@ -35,8 +35,13 @@ import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
 import { Types } from 'mongoose';
 import { VisibilityStateDto } from './dto/visibility-state.dto';
 import { FileUploadSuitabilityQueryDto } from './query/upload-suitability-query.dto';
+import { LoggedInUser } from '../../decorators/user';
+import { LoggedInUserType } from '../auth/types/types';
+import { Role } from '../../global/types/roles';
+import { UseRolesGuard } from '../../guards/RoleGuard';
 
 @Controller('files')
+@UseRolesGuard()
 @UseInterceptors(DtoTransformInterceptor)
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
@@ -58,8 +63,13 @@ export class FilesController {
   async searchFiles(
     @Query() searchQuery: FileQuery,
     @Query() pagingQuery: PagingQuery,
+    @LoggedInUser() user: LoggedInUserType,
   ): Promise<DBPagingResult<File>> {
-    return await this.filesService.findMany(searchQuery, pagingQuery);
+    return await this.filesService.findMany(
+      searchQuery,
+      pagingQuery,
+      user.roles.includes(Role.Admin),
+    );
   }
 
   @Get(':id')
@@ -69,12 +79,16 @@ export class FilesController {
   @ApiOperation({ operationId: 'Get one file' })
   async getFileDetails(
     @Param('id') id: string,
+    @LoggedInUser() user: LoggedInUserType,
   ): Promise<FileDocument | undefined> {
     const fileId = idToObjectIDOrUndefined(id);
     if (isNil(fileId)) {
       throw new NotFoundException();
     }
-    return await this.filesService.findById(fileId);
+    return await this.filesService.findById(
+      fileId,
+      user.roles.includes(Role.Admin),
+    );
   }
 
   @Get(':id/link')
@@ -82,15 +96,22 @@ export class FilesController {
   @NoDTOValidation()
   @ApiTags('files')
   @ApiOperation({ operationId: 'Get file download link' })
-  async getFileLink(@Param('id') id: string): Promise<FileLink | undefined> {
+  async getFileLink(
+    @Param('id') id: string,
+    @LoggedInUser() user: LoggedInUserType,
+  ): Promise<FileLink | undefined> {
     const fileId = idToObjectIDOrUndefined(id);
     if (isNil(fileId)) {
       throw new NotFoundException();
     }
-    return await this.filesService.getFileLink(fileId);
+    return await this.filesService.getFileLink(
+      fileId,
+      user.roles.includes(Role.Admin),
+    );
   }
 
   @Post(':id/visibility-state')
+  @AdminRoute()
   @SetExposeGroups(Groups.ALL)
   @SetControllerDTO(OutputFileDto)
   @ApiTags('files')
@@ -98,10 +119,12 @@ export class FilesController {
   async setFileVisibilityState(
     @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
     @Body() visibilityStateDto: VisibilityStateDto,
+    @LoggedInUser() user: LoggedInUserType,
   ): Promise<FileDocument | undefined> {
     return await this.filesService.handleFileVisibilityChangeRequest(
       id,
       visibilityStateDto,
+      user.roles.includes(Role.Admin),
     );
   }
 
@@ -118,6 +141,7 @@ export class FilesController {
   }
 
   @Delete(':id')
+  @AdminRoute()
   async deleteFile(
     @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
   ): Promise<void> {

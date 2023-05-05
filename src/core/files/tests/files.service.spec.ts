@@ -382,6 +382,7 @@ describe('FilesService', () => {
         dateTo: '2023-01-20T12:00:00.000Z',
       },
       {},
+      true,
     );
     expect(pagedFoundFiles.data).toHaveLength(2);
     const leanFiles = (pagedFoundFiles.data as FileDocument[]).map((file) =>
@@ -399,6 +400,88 @@ describe('FilesService', () => {
       }),
       expect.objectContaining({
         _id: '6453b3885add0a725128f80e',
+        name: 'file20.csv',
+        metadata: expect.objectContaining({
+          dateFrom: new Date('2023-01-05T12:00:00.000Z'),
+          dateTo: new Date('2023-01-13T12:00:00.000Z'),
+          valueFragments: [{ type: 'C8y_Temperature' }],
+        }),
+      }),
+    ]);
+  });
+
+  it('non admin users finds only published files', async () => {
+    const sensorId = new Types.ObjectId('6452a6971306581241dddd61');
+
+    const file1Id = new Types.ObjectId('6454b7e8c726ce31e7e35adb');
+    const file2Id = new Types.ObjectId('6454b8173fe10f2a1caa4533');
+    const file3Id = new Types.ObjectId('6454b81a52647d0787d2e73d');
+    const file4Id = new Types.ObjectId('6454b81eb55270a38bc54777');
+
+    await fileModel.create([
+      getFileStub({ _id: file1Id }),
+      {
+        ...getFileStub({ _id: file2Id }),
+        metadata: {
+          sensors: [sensorId],
+          dateFrom: new Date('2023-01-05T12:00:00.000Z'),
+          dateTo: new Date('2023-01-13T12:00:00.000Z'),
+          managedObjectName: "AB'AB'A1",
+          managedObjectId: '200',
+          valueFragments: [{ type: 'C8y_Temperature' }],
+        },
+        visibilityState: {
+          stateChanging: false,
+          published: true,
+          exposedToPlatforms: [],
+        },
+        storage: { bucket: 'test-bucket', path: 'file20.csv' },
+        name: 'file20.csv',
+      },
+      {
+        ...getFileStub({ _id: file3Id }),
+        metadata: {
+          sensors: [sensorId],
+          dateFrom: new Date('2023-01-13T12:00:00.001Z'),
+          dateTo: new Date('2023-01-20T12:00:00.000Z'),
+          managedObjectName: "AB'AB'A1",
+          managedObjectId: '200',
+          valueFragments: [{ type: 'C8y_Temperature' }],
+        },
+        storage: { bucket: 'test-bucket', path: 'file21.csv' },
+        name: 'file21.csv',
+      },
+      {
+        ...getFileStub({ _id: file4Id }),
+        metadata: {
+          sensors: [sensorId],
+          dateFrom: new Date('2023-01-07T12:00:00.001Z'),
+          dateTo: new Date('2023-01-17T12:00:00.000Z'),
+          managedObjectName: "EE'KK'A1",
+          managedObjectId: '300',
+          valueFragments: [{ type: 'C8y_Humidity' }],
+        },
+        storage: { bucket: 'test-bucket', path: 'file22.csv' },
+        name: 'file22.csv',
+      },
+    ]);
+
+    const pagedFoundFiles = await service.findMany(
+      {
+        valueFragmentType: 'C8y_Temperature',
+        dateFrom: '2023-01-04T12:00:00.000Z',
+        dateTo: '2023-01-20T12:00:00.000Z',
+      },
+      {},
+      false,
+    );
+    expect(pagedFoundFiles.data).toHaveLength(1);
+    const leanFiles = (pagedFoundFiles.data as FileDocument[]).map((file) =>
+      file.toObject(),
+    );
+    expect(leanFiles).toEqual([
+      expect.objectContaining({
+        _id: '6454b8173fe10f2a1caa4533',
         name: 'file20.csv',
         metadata: expect.objectContaining({
           dateFrom: new Date('2023-01-05T12:00:00.000Z'),

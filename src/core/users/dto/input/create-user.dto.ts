@@ -1,5 +1,4 @@
 import {
-  IsDefined,
   IsEnum,
   IsOptional,
   IsString,
@@ -36,8 +35,8 @@ export class CreateUserDto {
   @IsEnum(Role, { each: true, message: 'Invalid Role value provided!' })
   role?: Role[];
 
+  @IsOptional()
   @Type(() => C8yCredentialsInputDto)
-  @IsDefined()
   @ValidateNested()
-  c8yCredentials: C8yCredentialsInputDto;
+  c8yCredentials?: C8yCredentialsInputDto;
 }

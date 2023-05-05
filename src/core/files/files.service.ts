@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -108,6 +109,7 @@ export class FilesService {
   async findMany(
     searchOptions: FileQueryOptions,
     pagingOptions: PagingOptionsType,
+    isAdmin?: boolean,
   ): Promise<DBPagingResult<File>> {
     const filter: FilterQuery<File> = {
       _id: idToObjectIDOrOriginal(searchOptions.id),
@@ -140,6 +142,11 @@ export class FilesService {
         ? { $lte: new Date(searchOptions.dateTo) }
         : undefined,
     };
+
+    if (!isAdmin) {
+      filter['visibilityState.published'] = true;
+    }
+
     const paginatedResponse = await this.skipPagingService.findWithPagination({
       model: this.fileModel,
       filter: removeNilProperties(filter),
@@ -150,8 +157,14 @@ export class FilesService {
     return paginatedResponse;
   }
 
-  async findById(id: Types.ObjectId): Promise<FileDocument | undefined> {
+  async findById(
+    id: Types.ObjectId,
+    isAdmin?: boolean,
+  ): Promise<FileDocument | undefined> {
     const file = await this.fileModel.findById(id).exec();
+    if (!isAdmin && !file.visibilityState.published) {
+      throw new ForbiddenException();
+    }
     this.populateUrl(file);
     return file;
   }
@@ -206,10 +219,17 @@ export class FilesService {
     return result;
   }
 
-  async getFileLink(id: Types.ObjectId): Promise<FileLink | undefined> {
+  async getFileLink(
+    id: Types.ObjectId,
+    isAdmin?: boolean,
+  ): Promise<FileLink | undefined> {
     const file = await this.fileModel.findById(id).exec();
+    if (!isAdmin && !file.visibilityState.published) {
+      throw new ForbiddenException();
+    }
+
     if (isNil(file)) {
-      return undefined;
+      throw new NotFoundException();
     }
 
     return {
@@ -248,8 +268,9 @@ export class FilesService {
   async handleFileVisibilityChangeRequest(
     fileId: Types.ObjectId,
     visibilityState: VisibilityStateDtoProperties,
+    isAdmin?: boolean,
   ): Promise<FileDocument> {
-    const file = await this.findById(fileId);
+    const file = await this.findById(fileId, isAdmin);
 
     if (isNil(file)) {
       throw new NotFoundException();
@@ -302,7 +323,7 @@ export class FilesService {
     platform: Platform,
     exposed: boolean,
   ) {
-    let updateQuery: UpdateQuery<File> = {};
+    let updateQuery: UpdateQuery<File>;
 
     if (exposed) {
       updateQuery = {
