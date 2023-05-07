@@ -107,10 +107,6 @@ describe('TasksService', () => {
     await clearCollections(connection);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   it('creates and schedules task', async () => {
     const objectSyncTask: ObjectSyncTask = {
       taskType: TaskTypes.OBJECT_SYNC,

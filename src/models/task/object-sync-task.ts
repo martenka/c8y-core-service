@@ -3,8 +3,16 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { Properties } from '../../global/types/types';
 import { TaskTypes } from './types';
+import { taskEntityConverter } from '../utils/utils';
 
-@Schema()
+@Schema({
+  toJSON: {
+    transform: taskEntityConverter,
+  },
+  toObject: {
+    transform: taskEntityConverter,
+  },
+})
 export class ObjectSyncTask extends Task {
   taskType: TaskTypes.OBJECT_SYNC;
 

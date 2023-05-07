@@ -8,7 +8,6 @@ import {
   Task,
   TaskDocument,
   TaskModel,
-  TaskSchema,
   TaskStatus,
   TaskSteps,
   TaskType,

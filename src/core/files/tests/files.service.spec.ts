@@ -23,6 +23,8 @@ import { SkipPagingService } from '../../paging/skip-paging.service';
 import { ExchangeTypes } from '../../messages/types/exchanges';
 import { FileLink, FileWithSensorProblem } from '../types/types';
 import { Platform } from '../../../global/tokens';
+import { getFileStub } from '../../../tests/stubs/file';
+import { ForbiddenException } from '@nestjs/common';
 
 describe('FilesService', () => {
   let service: FilesService;
@@ -71,37 +73,6 @@ describe('FilesService', () => {
       stateChanging: false,
     },
   };
-
-  function getFileStub(override: Partial<File> = {}): File {
-    return {
-      _id: new Types.ObjectId('6452b24bcb044a0a9ef2f9d4'),
-      createdByTask: new Types.ObjectId('6452b3a88dec40aa3fb072c1'),
-      customAttributes: {},
-      description: '',
-      metadata: {
-        sensors: [new Types.ObjectId('6452a6971306581241dddd61')],
-        dateFrom: new Date('2023-01-03T12:00:00.000Z'),
-        dateTo: new Date('2023-01-06T12:00:00.000Z'),
-        managedObjectName: "AA'BB'C1",
-        managedObjectId: '100',
-        valueFragments: [
-          { type: 'C8y_Temperature', description: 'Temperature' },
-        ],
-      },
-      name: 'TestDataFetch1.csv',
-      storage: {
-        bucket: 'test_bucket',
-        path: 'TestDataFetch1.csv',
-      },
-      url: `${mockApplicationConfigService.minioConfig.url}/test_bucket/TestDataFetch1.csv`,
-      visibilityState: {
-        published: false,
-        exposedToPlatforms: [],
-        stateChanging: false,
-      },
-      ...override,
-    };
-  }
 
   const fileModel = connection.model(File.name, FileSchema);
   const sensorModel = connection.model(Sensor.name, SensorSchema);
@@ -184,12 +155,12 @@ describe('FilesService', () => {
   it('handles visibility change request', async () => {
     const fileId = new Types.ObjectId('6452c1a13522331070faf106');
     await fileModel.create(getFileStub({ _id: fileId }));
-
     const updatedFile = await service.handleFileVisibilityChangeRequest(
       fileId,
       {
         newVisibilityState: VisibilityState.PUBLIC,
       },
+      true,
     );
     expect(updatedFile.visibilityState.stateChanging).toEqual(true);
     const updatedFileFromDB = await fileModel.findById(fileId).exec();
@@ -220,14 +191,32 @@ describe('FilesService', () => {
 
     const notExistingFileLink = await service.getFileLink(
       new Types.ObjectId('645396bbb3fb3db8824372db'),
+      true,
     );
     expect(notExistingFileLink).toBeUndefined();
-    const fileLink = await service.getFileLink(file2Id);
+    const fileLink = await service.getFileLink(file2Id, true);
     expect(fileLink).toEqual<FileLink>({
       id: '645395cc551ed7c818712b8e',
       fileName: 'file5.csv',
       url: `${mockApplicationConfigService.minioConfig.url}/bucket123/data/file5.csv`,
     });
+  });
+
+  it(`does not get file link without admin permissions`, async () => {
+    const file1Id = new Types.ObjectId('6457775c858be5d53da151ec');
+    const file2Id = new Types.ObjectId('645777628a3b8550b0dd2967');
+    await fileModel.create([
+      getFileStub({ _id: file1Id }),
+      {
+        ...getFileStub({ _id: file2Id }),
+        storage: { bucket: 'bucket123', path: 'data/file5.csv' },
+        name: 'file5.csv',
+      },
+    ]);
+
+    await expect(service.getFileLink(file2Id)).rejects.toThrowError(
+      ForbiddenException,
+    );
   });
 
   it('sets file exposed to platform information', async () => {

@@ -6,6 +6,7 @@ import { Sensor } from '../Sensor';
 import { Group } from '../Group';
 import { Properties } from '../../global/types/types';
 import { TaskTypes } from './types';
+import { taskEntityConverter } from '../utils/utils';
 
 @Schema({
   _id: false,
@@ -45,6 +46,20 @@ const SensorDataSchema = SchemaFactory.createForClass(SensorData);
 
 @Schema({
   _id: false,
+  toJSON: {
+    transform: (doc, ret) => {
+      if (ret?.group instanceof Types.ObjectId) {
+        ret.group = ret.group.toString();
+      }
+    },
+  },
+  toObject: {
+    transform: (doc, ret) => {
+      if (ret?.group instanceof Types.ObjectId) {
+        ret.group = ret.group.toString();
+      }
+    },
+  },
 })
 export class DataFetchPayload {
   @Prop({ type: [SensorDataSchema], default: [] })
@@ -62,7 +77,14 @@ export class DataFetchPayload {
 
 const DataFetchPayloadSchema = SchemaFactory.createForClass(DataFetchPayload);
 
-@Schema()
+@Schema({
+  toJSON: {
+    transform: taskEntityConverter,
+  },
+  toObject: {
+    transform: taskEntityConverter,
+  },
+})
 export class DataFetchTask extends Task {
   taskType: TaskTypes.DATA_FETCH;
 

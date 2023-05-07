@@ -5,6 +5,7 @@ import { DataUploadMessageStorage } from '../../core/messages/types/message-type
 import { CustomAttributes } from '../types/types';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { Properties } from '../../global/types/types';
+import { taskEntityConverter } from '../utils/utils';
 @Schema({ _id: false })
 export class DataUploadFileStorage {
   @Prop({ required: true })
@@ -100,7 +101,14 @@ export class DataUploadPayload {
   platform: DataUploadPlatform;
 }
 
-@Schema()
+@Schema({
+  toJSON: {
+    transform: taskEntityConverter,
+  },
+  toObject: {
+    transform: taskEntityConverter,
+  },
+})
 export class DataUploadTask extends Task {
   taskType: TaskTypes.DATA_UPLOAD;
 

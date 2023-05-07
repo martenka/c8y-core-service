@@ -32,3 +32,16 @@ export function wrapFilterWithPrefixSearch<T>(
 
   return resultFilter;
 }
+
+/**
+ * Converts _id and initiatedByUser to string on given task entity
+ */
+export const taskEntityConverter = (
+  doc: Record<string, unknown>,
+  ret: Record<string, unknown>,
+) => {
+  if (ret.initiatedByUser instanceof Types.ObjectId) {
+    ret.initiatedByUser = ret.initiatedByUser.toString();
+  }
+  ret._id = ret._id.toString();
+};

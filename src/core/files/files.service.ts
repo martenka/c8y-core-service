@@ -224,12 +224,13 @@ export class FilesService {
     isAdmin?: boolean,
   ): Promise<FileLink | undefined> {
     const file = await this.fileModel.findById(id).exec();
-    if (!isAdmin && !file.visibilityState.published) {
-      throw new ForbiddenException();
-    }
 
     if (isNil(file)) {
-      throw new NotFoundException();
+      return undefined;
+    }
+
+    if (!isAdmin && !file.visibilityState?.published) {
+      throw new ForbiddenException();
     }
 
     return {

@@ -5,6 +5,7 @@ import { HydratedDocument, Model, Types } from 'mongoose';
 import { User } from '../User';
 import { Properties } from '../../global/types/types';
 import { TaskStatus, TaskSteps, TaskTypes } from './types';
+import { taskEntityConverter } from '../utils/utils';
 
 @Schema({ _id: false })
 export class PeriodicData {
@@ -42,20 +43,10 @@ export class TaskMetadata {
 @Schema({
   discriminatorKey: 'taskType',
   toJSON: {
-    transform: (doc, ret) => {
-      if (ret.initiatedByUser instanceof Types.ObjectId) {
-        ret.initiatedByUser = ret.initiatedByUser.toString();
-      }
-      ret._id = ret._id.toString();
-    },
+    transform: taskEntityConverter,
   },
   toObject: {
-    transform: (doc, ret) => {
-      if (ret.initiatedByUser instanceof Types.ObjectId) {
-        ret.initiatedByUser = ret.initiatedByUser.toString();
-      }
-      ret._id = ret._id.toString();
-    },
+    transform: taskEntityConverter,
   },
 })
 export class Task extends Base {

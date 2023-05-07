@@ -11,6 +11,7 @@ import { omit } from '../../../utils/helpers';
 import { clearCollections, fakeTime } from '../../../utils/tests';
 import { ExchangeTypes } from '../../messages/types/exchanges';
 import { SendMessageParams } from '../../messages/types/producer';
+import { notNil } from '../../../utils/validation';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -112,7 +113,7 @@ describe('UsersService', () => {
       true,
     );
 
-    expect(foundUser).toBeDefined();
+    expect(notNil(foundUser)).toBe(true);
     const leanUser = foundUser.toObject();
     expect(leanUser.password).toBeDefined();
     expect(leanUser).toMatchObject({
