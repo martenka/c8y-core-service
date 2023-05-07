@@ -33,7 +33,9 @@ export class TaskMessageMapperService implements OnModuleInit {
       this.logger.error(
         `Task mapping with unknown task type - ${task?.taskType}.`,
       );
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException(
+        'Internal error - check server logs',
+      );
     }
     return handler(task);
   }

@@ -43,11 +43,17 @@ export class TaskMetadata {
   discriminatorKey: 'taskType',
   toJSON: {
     transform: (doc, ret) => {
+      if (ret.initiatedByUser instanceof Types.ObjectId) {
+        ret.initiatedByUser = ret.initiatedByUser.toString();
+      }
       ret._id = ret._id.toString();
     },
   },
   toObject: {
     transform: (doc, ret) => {
+      if (ret.initiatedByUser instanceof Types.ObjectId) {
+        ret.initiatedByUser = ret.initiatedByUser.toString();
+      }
       ret._id = ret._id.toString();
     },
   },

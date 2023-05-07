@@ -31,6 +31,7 @@ export interface DataFetchTaskResultSensor {
 
 export interface DataFetchTaskResultStatusPayload {
   sensors: DataFetchTaskResultSensor[];
+  completedAt?: string;
 }
 
 export type DataFetchTaskResult =

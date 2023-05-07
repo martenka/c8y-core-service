@@ -8,6 +8,7 @@ import {
   Task,
   TaskDocument,
   TaskModel,
+  TaskSchema,
   TaskStatus,
   TaskSteps,
   TaskType,
@@ -153,7 +154,9 @@ export class TasksService {
         'metadata.lastFailedAt': new Date(),
       };
     }
-    return await this.taskModel.findByIdAndUpdate(id, statusUpdate).exec();
+    return await this.taskModel
+      .findByIdAndUpdate(id, statusUpdate, { returnDocument: 'after' })
+      .exec();
   }
 
   async updateTaskStatus(id: Types.ObjectId, status: TaskStatus) {
@@ -162,17 +165,30 @@ export class TasksService {
       .exec();
   }
 
+  /**
+   * Updates task data using data-fetch task result message.
+   * Saves down the actual file storage bucket and path, updated filename and created file id if present
+   * @param taskId - Id of the task to update
+   * @param result - Task result message
+   * @param files - Files created previously from the same task result message
+   */
   async updateDataFetchTaskResult(
-    id: Types.ObjectId,
+    taskId: Types.ObjectId,
     result: TaskStatusMessage<DataFetchTaskResultStatusPayload>,
     files: FileDocument[] = [],
   ) {
     if (isNil(result.payload) || hasNoOwnKeys(result.payload)) {
+      this.logger.log(
+        `Data fetch task result payload is empty, not doing update for task ${taskId.toString()}`,
+      );
       return;
     }
 
-    const task = await this.dataFetchTaskModel.findById(id).exec();
+    const task = await this.dataFetchTaskModel.findById(taskId).exec();
     if (isNil(task)) {
+      this.logger.log(
+        `Did not found task with id ${taskId.toString()} in data-fetch task result handler`,
+      );
       return;
     }
 
@@ -180,6 +196,10 @@ export class TasksService {
       return file.metadata?.sensors[0]?._id.toString();
     });
 
+    task.status = TaskSteps.DONE;
+    if (notNil(result.payload.completedAt)) {
+      task.metadata.lastCompletedAt = new Date(result.payload.completedAt);
+    }
     task.payload.data = task.payload.data.map(
       (existingSensor): SensorDataType => {
         const sensorUpdateData = result.payload.sensors?.find(
@@ -187,11 +207,18 @@ export class TasksService {
             sensorUpdate.sensorId === existingSensor.sensor.toString(),
         );
         if (isNil(sensorUpdateData)) {
+          this.logger.log(
+            `Sensor ${existingSensor.sensor.toString()} not found in data-fetch result message. \nSkipping update for this sensor. Message sensors: ${result?.payload?.sensors
+              ?.map((sensor) => sensor?.sensorId)
+              .join(' , ')}`,
+          );
           return existingSensor;
         }
 
         const matchingFile = filesBySensorIdMap.get(sensorUpdateData.sensorId);
-
+        this.logger.log(
+          `No matching file found for sensorId ${sensorUpdateData.sensorId} . Not setting fileId to task entity`,
+        );
         return {
           sensor: existingSensor.sensor,
           fileName: sensorUpdateData.fileName,
@@ -202,7 +229,7 @@ export class TasksService {
         };
       },
     );
-    await task.save();
+    return await task.save();
   }
 
   async getDataUploadTaskFileIds(
