@@ -12,6 +12,8 @@ import { Role } from '../../../global/types/roles';
 import * as bcrypt from 'bcrypt';
 import { MessagesProducerService } from '../../messages/messages-producer.service';
 import { omit } from '../../../utils/helpers';
+import { SendMessageParams } from '../../messages/types/producer';
+import { ExchangeTypes } from '../../messages/types/exchanges';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -29,6 +31,10 @@ describe('AuthService', () => {
       role: [Role.Admin],
     };
   }
+  const messageProducerService = new MessagesProducerService(null);
+  const sendMessageSpy: jest.SpyInstance<void, SendMessageParams> = jest
+    .spyOn(messageProducerService, 'sendMessage')
+    .mockImplementation((_args) => undefined);
 
   const userModel = connection.model(User.name, UserSchema);
 
@@ -36,7 +42,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         { provide: getModelToken(User.name), useValue: userModel },
-        { provide: MessagesProducerService, useValue: null },
+        { provide: MessagesProducerService, useValue: messageProducerService },
         { provide: UsersService, useClass: UsersService },
         {
           provide: JwtService,
@@ -55,6 +61,7 @@ describe('AuthService', () => {
     service = module.get<AuthService>(AuthService);
   });
 
+  beforeEach(() => jest.clearAllMocks());
   afterEach(clearCollections(connection));
 
   it('handles user registration', async () => {
@@ -64,6 +71,15 @@ describe('AuthService', () => {
       ...omit(userDto, 'role', 'password'),
       roles: [Role.Admin, Role.User],
     });
+
+    expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
+      ExchangeTypes.GENERAL,
+      'user.user',
+      {
+        id: registeredUser._id.toString(),
+        c8yCredentials: userDto.c8yCredentials,
+      },
+    );
   });
 
   it('does not allow multiple users with the same username', async () => {

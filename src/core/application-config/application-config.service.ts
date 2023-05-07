@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  DefaultUserConfig,
   JwtConfig,
   MinioConfig,
   MongoConfig,
@@ -11,15 +12,21 @@ import { RabbitMQConfig } from '@golevelup/nestjs-rabbitmq';
 import { ExchangeTypes } from '../messages/types/exchanges';
 import { JwtModuleOptions } from '@nestjs/jwt/dist/interfaces/jwt-module-options.interface';
 import { isNil } from '@nestjs/common/utils/shared.utils';
+import { UserType } from '../../models/User';
+import { Role } from '../../global/types/roles';
+import { notNil } from '../../utils/validation';
 
 @Injectable()
 export class ApplicationConfigService {
+  private defaultUserViewed = false;
+
   constructor(
     readonly mongoEnvironment: MongoConfig,
     readonly rabbitEnvironment: RabbitConfig,
     readonly jwtEnvironment: JwtConfig,
     readonly secretEnvironment: SecretConfig,
     readonly minioEnvironment: MinioConfig,
+    private readonly defaultUserEnvironment: DefaultUserConfig,
   ) {
     const mongoConfig = this.mongoEnvironment;
     if (
@@ -88,5 +95,42 @@ export class ApplicationConfigService {
     return {
       url: this.minioEnvironment.URL,
     };
+  }
+
+  get defaultUser():
+    | Pick<UserType, 'roles' | 'username' | 'password' | 'c8yCredentials'>
+    | undefined {
+    if (!this.defaultUserViewed) {
+      if (this.defaultUserEnvironment.USER === '') {
+        throw new Error('Default user username cannot be empty string!');
+      }
+
+      if (
+        notNil(this.defaultUserEnvironment.USER) &&
+        (isNil(this.defaultUserEnvironment.C8Y_USER) ||
+          isNil(this.defaultUserEnvironment.C8Y_TENANT_ID) ||
+          isNil(this.defaultUserEnvironment.PASS) ||
+          isNil(this.defaultUserEnvironment.C8Y_PASS) ||
+          isNil(this.defaultUserEnvironment.C8Y_TENANT_DOMAIN))
+      ) {
+        throw new Error(
+          'Default user password and Cumulocity account details must also be provided if default username is provided',
+        );
+      }
+      const user = {
+        username: this.defaultUserEnvironment.USER,
+        password: this.defaultUserEnvironment.PASS,
+        roles: [Role.Admin, Role.User],
+        c8yCredentials: {
+          username: this.defaultUserEnvironment.C8Y_USER,
+          password: this.defaultUserEnvironment.C8Y_PASS,
+          tenantID: this.defaultUserEnvironment.C8Y_TENANT_ID,
+          baseAddress: this.defaultUserEnvironment.C8Y_TENANT_DOMAIN,
+        },
+      };
+      this.defaultUserViewed = true;
+      return user;
+    }
+    return undefined;
   }
 }

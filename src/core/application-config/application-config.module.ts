@@ -1,4 +1,4 @@
-import { dotenvLoader, TypedConfigModule } from 'nest-typed-config/index';
+import { dotenvLoader, TypedConfigModule } from 'nest-typed-config';
 import { Global, Module } from '@nestjs/common';
 import { RootConfig } from './application-config.definitions';
 import { ApplicationConfigService } from './application-config.service';

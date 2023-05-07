@@ -51,6 +51,32 @@ export class MinioConfig {
   URL: string;
 }
 
+export class DefaultUserConfig {
+  @IsOptional()
+  @IsString()
+  USER?: string;
+
+  @IsOptional()
+  @IsString()
+  PASS?: string;
+
+  @IsOptional()
+  @IsString()
+  C8Y_USER?: string;
+
+  @IsOptional()
+  @IsString()
+  C8Y_PASS?: string;
+
+  @IsOptional()
+  @IsString()
+  C8Y_TENANT_ID?: string;
+
+  @IsOptional()
+  @IsString()
+  C8Y_TENANT_DOMAIN?: string;
+}
+
 export class SecretConfig {
   @Transform(({ value }) => parseInt(value, 10))
   @IsNumber({ allowInfinity: false, allowNaN: false })
@@ -78,4 +104,9 @@ export class RootConfig {
   @Type(() => MinioConfig)
   @ValidateNested()
   MINIO: MinioConfig;
+
+  @IsOptional()
+  @Type(() => DefaultUserConfig)
+  @ValidateNested({ message: 'Error validation' })
+  DEFAULT: DefaultUserConfig = new DefaultUserConfig();
 }
