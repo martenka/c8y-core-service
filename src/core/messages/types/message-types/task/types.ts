@@ -26,5 +26,9 @@ export interface TaskStatusMessage<
   taskId: string;
   taskType: keyof typeof TaskTypes;
   status: S;
+  /**
+   * The date when the status event happened
+   */
+  timestamp?: string;
   payload: P;
 }

@@ -39,7 +39,7 @@ export class MessagesHandlerService {
       );
     }
 
-    await this.tasksService.updateTaskStatus(taskId, message.status);
+    await this.tasksService.updateTaskStatus(taskId, message);
 
     switch (message.taskType) {
       case 'DATA_FETCH':

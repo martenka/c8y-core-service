@@ -189,3 +189,17 @@ export function nullToUndefined<T>(value: T): Omit<T, null> {
   }
   return value;
 }
+
+/**
+ * Parses the date from input into date or return current date on failure
+ */
+export function parseDateOrNow(inputDate: string | undefined): Date {
+  if (isNil(inputDate)) {
+    return new Date();
+  }
+  const date = new Date(inputDate);
+  if (date.toString() == 'Invalid Date') {
+    return new Date();
+  }
+  return date;
+}

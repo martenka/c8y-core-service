@@ -24,7 +24,7 @@ export class ObjectSyncTaskMessageHandler {
   async handleStatusMessage(message: ObjectSyncTaskStatusMessage) {
     await this.tasksService.updateTaskStatus(
       new Types.ObjectId(message.taskId),
-      message.status,
+      message,
     );
 
     for (const object of message.payload.objects) {

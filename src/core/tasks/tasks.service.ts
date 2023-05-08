@@ -8,7 +8,6 @@ import {
   Task,
   TaskDocument,
   TaskModel,
-  TaskStatus,
   TaskSteps,
   TaskType,
   TaskTypes,
@@ -31,7 +30,11 @@ import { TaskMessageMapperService } from './task-message-mapper.service';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { TaskFailedMessage } from '../messages/types/message-types/messageTypes';
 import { TaskQueryProperties } from './query/task-query.dto';
-import { convertArrayToMap, removeNilProperties } from '../../utils/helpers';
+import {
+  convertArrayToMap,
+  parseDateOrNow,
+  removeNilProperties,
+} from '../../utils/helpers';
 import { DataFetchTaskResultStatusPayload } from '../messages/types/message-types/task/data-fetch';
 
 import {
@@ -150,7 +153,7 @@ export class TasksService {
         ...statusUpdate,
         status: message.status,
         'metadata.lastFailReason': message.payload.reason,
-        'metadata.lastFailedAt': new Date(),
+        'metadata.lastFailedAt': parseDateOrNow(message.timestamp),
       };
     }
     return await this.taskModel
@@ -158,10 +161,15 @@ export class TasksService {
       .exec();
   }
 
-  async updateTaskStatus(id: Types.ObjectId, status: TaskStatus) {
-    return await this.taskModel
-      .findByIdAndUpdate(id, { status: status })
-      .exec();
+  async updateTaskStatus(id: Types.ObjectId, statusMessage: TaskStatusMessage) {
+    const update: UpdateQuery<Task> = {
+      status: statusMessage.status,
+    };
+
+    if (statusMessage.status === TaskSteps.PROCESSING) {
+      update['metadata.lastRanAt'] = parseDateOrNow(statusMessage.timestamp);
+    }
+    return await this.taskModel.findByIdAndUpdate(id, update).exec();
   }
 
   /**

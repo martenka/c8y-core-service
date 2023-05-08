@@ -7,6 +7,7 @@ import { TaskStatusMessage } from './types/message-types/task/types';
 import { NoAuthRoute } from '../../decorators/authentication';
 import { ConsumeMessage } from 'amqplib';
 import { VisibilityStateResultMessage } from './types/message-types/file/types';
+import { notNil } from '../../utils/validation';
 
 @Controller()
 @NoAuthRoute()
@@ -29,8 +30,19 @@ export class MessagesController {
       console.error(channel);
     },
   })
-  async consumeTaskStatusMessage(message: TaskStatusMessage) {
-    await this.messageHandlerService.handleTaskStatusMessage(message);
+  async consumeTaskStatusMessage(
+    message: TaskStatusMessage,
+    amqpMsg: ConsumeMessage,
+  ) {
+    const timestamp = amqpMsg.properties.timestamp;
+    const updatedMessage = {
+      ...message,
+      timestamp: typeof timestamp === 'string' ? timestamp : undefined,
+    };
+    if (typeof timestamp === 'string' && notNil(message.timestamp)) {
+      message.timestamp = timestamp;
+    }
+    await this.messageHandlerService.handleTaskStatusMessage(updatedMessage);
   }
 
   @RabbitSubscribe({
