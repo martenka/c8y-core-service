@@ -12,7 +12,7 @@ export interface DataFetchTaskMessagePayload
   })[];
 }
 
-export interface DataFetchTaskResultSensor {
+export interface DataFetchTaskResultFile {
   sensorId: string;
   bucket: string;
   isPublicBucket: boolean;
@@ -30,7 +30,7 @@ export interface DataFetchTaskResultSensor {
 }
 
 export interface DataFetchTaskResultStatusPayload {
-  sensors: DataFetchTaskResultSensor[];
+  sensors: DataFetchTaskResultFile[];
   completedAt?: string;
 }
 

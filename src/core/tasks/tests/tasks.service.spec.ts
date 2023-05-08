@@ -4,9 +4,11 @@ import { connection, Types } from 'mongoose';
 import {
   DataFetchTask,
   DataFetchTaskSchema,
+  FileSchema,
   ObjectSyncTask,
   ObjectSyncTaskSchema,
   Task,
+  File,
   TaskDocument,
   TaskSchema,
   TaskSteps,
@@ -26,6 +28,7 @@ import { CreateTaskDto } from '../dto/input/create-task.dto';
 import { SendMessageParams } from '../../messages/types/producer';
 import { ExchangeTypes } from '../../messages/types/exchanges';
 import { Logger } from '@nestjs/common';
+import { getFileStub } from '../../../tests/stubs/file';
 
 describe('TasksService', () => {
   let service: TasksService;
@@ -37,7 +40,7 @@ describe('TasksService', () => {
     .discriminator(TaskTypes.OBJECT_SYNC, ObjectSyncTaskSchema)
     .discriminator(TaskTypes.DATA_UPLOAD, DataUploadTaskSchema);
   const taskModel = connection.model(Task.name, testingTaskSchema);
-
+  const fileModel = connection.model(File.name, FileSchema);
   const mockTaskCreationService = {
     createTask: jest
       .fn()
@@ -228,7 +231,7 @@ describe('TasksService', () => {
     };
 
     await taskModel.create(dataFetchTask);
-    await service.updateDataFetchTaskResult(taskId, {
+    await service.handleDataFetchTaskResult(taskId, {
       taskId: taskId.toString(),
       taskType: 'DATA_FETCH',
       status: TaskSteps.DONE,
@@ -267,6 +270,113 @@ describe('TasksService', () => {
             fileName: 'duplicate_avoidance-Testing-datafetch-taskname.csv',
             bucket: 'test',
             filePath: 'data/duplicate_avoidance-Testing-datafetch-taskname.csv',
+          },
+        ],
+        dateTo: new Date('2023-02-01T12:00:02.000Z'),
+        dateFrom: new Date('2023-01-20T12:00:02.000Z'),
+      },
+    });
+  });
+
+  it('handles data-fetch task result with new files', async () => {
+    const now = new Date('2023-03-12T12:00:02.000Z');
+    fakeTime({ now, fake: ['Date'] });
+    const taskId = new Types.ObjectId('64592e30a16f4a1d83a5945c');
+    const dataFetchTask: DataFetchTask = {
+      taskType: TaskTypes.DATA_FETCH,
+      _id: taskId,
+      initiatedByUser: new Types.ObjectId('645677573f56adad8ddcc091'),
+      status: TaskSteps.PROCESSING,
+      name: 'Datafetch1',
+      payload: {
+        data: [
+          {
+            sensor: new Types.ObjectId('645692be99aec85add4c90ed'),
+            fileName: 'Testing-datafetch-taskname',
+          },
+        ],
+        dateTo: new Date('2023-02-01T12:00:02.000Z'),
+        dateFrom: new Date('2023-01-20T12:00:02.000Z'),
+      },
+      customAttributes: {},
+      metadata: {},
+    };
+
+    const fileStub = getFileStub({
+      _id: new Types.ObjectId('645928a259d9844eb29e460a'),
+    });
+    const createdFile = await fileModel.create(fileStub);
+    await taskModel.create(dataFetchTask);
+
+    await service.handleDataFetchTaskResult(taskId, {
+      taskId: taskId.toString(),
+      taskType: 'DATA_FETCH',
+      status: TaskSteps.DONE,
+      payload: {
+        sensors: [
+          {
+            sensorId: '645692be99aec85add4c90ed',
+            fileName: 'duplicate_avoidance-Testing-datafetch-taskname.csv',
+            bucket: 'test',
+            isPublicBucket: false,
+            dateTo: '2023-02-01T12:00:02.000Z',
+            dateFrom: '2023-01-20T12:00:02.000Z',
+            filePath: 'data/duplicate_avoidance-Testing-datafetch-taskname.csv',
+          },
+        ],
+        completedAt: '2023-03-12T12:00:01.000Z',
+      },
+    });
+
+    await service.handleDataFetchTaskResult(
+      taskId,
+      {
+        taskId: taskId.toString(),
+        taskType: 'DATA_FETCH',
+        status: TaskSteps.DONE,
+        payload: {
+          sensors: [
+            {
+              sensorId: '6452a6971306581241dddd61',
+              fileName: 'some-filename.csv',
+              bucket: 'test',
+              isPublicBucket: false,
+              dateTo: '2023-02-01T12:00:02.000Z',
+              dateFrom: '2023-01-20T12:00:02.000Z',
+              filePath: 'data/some-filename.csv',
+            },
+          ],
+          completedAt: '2023-03-12T12:05:01.000Z',
+        },
+      },
+      [createdFile],
+    );
+
+    const updatedEntity = await taskModel.findById(taskId).exec();
+    const leanEntity = updatedEntity.toObject();
+
+    expect(leanEntity).toMatchObject({
+      _id: '64592e30a16f4a1d83a5945c',
+      initiatedByUser: '645677573f56adad8ddcc091',
+      taskType: TaskTypes.DATA_FETCH,
+      name: 'Datafetch1',
+      status: TaskSteps.DONE,
+      metadata: expect.objectContaining({
+        lastCompletedAt: new Date('2023-03-12T12:05:01.000Z'),
+      }),
+      payload: {
+        data: [
+          {
+            sensor: '645692be99aec85add4c90ed',
+            fileName: 'duplicate_avoidance-Testing-datafetch-taskname.csv',
+            bucket: 'test',
+            filePath: 'data/duplicate_avoidance-Testing-datafetch-taskname.csv',
+          },
+          {
+            sensor: '6452a6971306581241dddd61',
+            fileName: 'some-filename.csv',
+            bucket: 'test',
+            filePath: 'data/some-filename.csv',
           },
         ],
         dateTo: new Date('2023-02-01T12:00:02.000Z'),

@@ -45,7 +45,7 @@ export class MessagesHandlerService {
       case 'DATA_FETCH':
         if (isDataFetchTaskResultMessage(message)) {
           const files = await this.filesService.createFilesFromMessage(message);
-          await this.tasksService.updateDataFetchTaskResult(
+          await this.tasksService.handleDataFetchTaskResult(
             taskId,
             message,
             files,

@@ -14,7 +14,7 @@ import { MessagesProducerService } from '../../messages/messages-producer.servic
 import { SendMessageParams } from '../../messages/types/producer';
 import { getModelToken } from '@nestjs/mongoose';
 import { ApplicationConfigService } from '../../application-config/application-config.service';
-import { DataFetchTaskResultSensor } from '../../messages/types/message-types/task/data-fetch';
+import { DataFetchTaskResultFile } from '../../messages/types/message-types/task/data-fetch';
 import { SensorSearchOptions } from '../../../global/query/types';
 import { SensorSchema, SensorType } from '../../../models/Sensor';
 import { getSensorStub } from '../../../tests/stubs/sensor';
@@ -36,8 +36,8 @@ describe('FilesService', () => {
     },
   };
   function getDataFetchSensorStub(
-    valueOverride: Partial<DataFetchTaskResultSensor> = {},
-  ): DataFetchTaskResultSensor {
+    valueOverride: Partial<DataFetchTaskResultFile> = {},
+  ): DataFetchTaskResultFile {
     return {
       bucket: 'test_bucket',
       dateFrom: '2023-01-03T12:00:00.000Z',

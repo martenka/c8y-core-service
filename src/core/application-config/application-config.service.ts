@@ -12,9 +12,9 @@ import { RabbitMQConfig } from '@golevelup/nestjs-rabbitmq';
 import { ExchangeTypes } from '../messages/types/exchanges';
 import { JwtModuleOptions } from '@nestjs/jwt/dist/interfaces/jwt-module-options.interface';
 import { isNil } from '@nestjs/common/utils/shared.utils';
-import { UserType } from '../../models/User';
 import { Role } from '../../global/types/roles';
 import { notNil } from '../../utils/validation';
+import { DefaultUserType } from './types/types';
 
 @Injectable()
 export class ApplicationConfigService {
@@ -97,9 +97,7 @@ export class ApplicationConfigService {
     };
   }
 
-  get defaultUser():
-    | Pick<UserType, 'roles' | 'username' | 'password' | 'c8yCredentials'>
-    | undefined {
+  get defaultUser(): DefaultUserType | undefined {
     if (!this.defaultUserViewed) {
       if (this.defaultUserEnvironment.USER === '') {
         throw new Error('Default user username cannot be empty string!');

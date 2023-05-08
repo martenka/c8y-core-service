@@ -14,6 +14,8 @@ import { MessagesProducerService } from '../../messages/messages-producer.servic
 import { omit } from '../../../utils/helpers';
 import { SendMessageParams } from '../../messages/types/producer';
 import { ExchangeTypes } from '../../messages/types/exchanges';
+import { DefaultUserType } from '../../application-config/types/types';
+import { ApplicationConfigService } from '../../application-config/application-config.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -31,6 +33,23 @@ describe('AuthService', () => {
       role: [Role.Admin],
     };
   }
+  const defaultUser: DefaultUserType = {
+    username: 'test-default-user',
+    password: 'default-pass',
+    roles: [Role.Admin, Role.User],
+    c8yCredentials: {
+      password: '123',
+      username: 'user',
+      baseAddress: 'http://localhost/',
+      tenantID: 'tenant',
+    },
+  };
+  const mockConfigService = {
+    get defaultUser() {
+      return defaultUser;
+    },
+  };
+
   const messageProducerService = new MessagesProducerService(null);
   const sendMessageSpy: jest.SpyInstance<void, SendMessageParams> = jest
     .spyOn(messageProducerService, 'sendMessage')
@@ -54,6 +73,7 @@ describe('AuthService', () => {
             },
           }),
         },
+        { provide: ApplicationConfigService, useValue: mockConfigService },
         AuthService,
       ],
     }).compile();
@@ -120,6 +140,25 @@ describe('AuthService', () => {
     expect(validatedUser).toMatchObject<Partial<User>>({
       username: userDto.username,
       roles: [Role.Admin, Role.User],
+    });
+  });
+
+  it('creates default user', async () => {
+    await service.onModuleInit();
+    const createdUser = await userModel.findOne({
+      username: defaultUser.username,
+    });
+
+    const leanUser = createdUser.toObject();
+    expect(leanUser).toMatchObject({
+      username: 'test-default-user',
+      roles: [Role.Admin, Role.User],
+      c8yCredentials: {
+        password: '123',
+        username: 'user',
+        baseAddress: 'http://localhost/',
+        tenantID: 'tenant',
+      },
     });
   });
 });

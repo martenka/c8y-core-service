@@ -35,7 +35,10 @@ import {
   parseDateOrNow,
   removeNilProperties,
 } from '../../utils/helpers';
-import { DataFetchTaskResultStatusPayload } from '../messages/types/message-types/task/data-fetch';
+import {
+  DataFetchTaskResultFile,
+  DataFetchTaskResultStatusPayload,
+} from '../messages/types/message-types/task/data-fetch';
 
 import {
   DataUploadTaskDocument,
@@ -175,18 +178,19 @@ export class TasksService {
   /**
    * Updates task data using data-fetch task result message.
    * Saves down the actual file storage bucket and path, updated filename and created file id if present
+   * If necessary, adds newly created to task payload
    * @param taskId - Id of the task to update
    * @param result - Task result message
-   * @param files - Files created previously from the same task result message
+   * @param createdFiles - Files created previously from the same task result message
    */
-  async updateDataFetchTaskResult(
+  async handleDataFetchTaskResult(
     taskId: Types.ObjectId,
     result: TaskStatusMessage<DataFetchTaskResultStatusPayload>,
-    files: FileDocument[] = [],
+    createdFiles: FileDocument[] = [],
   ) {
     if (isNil(result.payload) || hasNoOwnKeys(result.payload)) {
       this.logger.log(
-        `Data fetch task result payload is empty, not doing update for task ${taskId.toString()}`,
+        `Data fetch task result payload is empty, not updating task ${taskId.toString()}`,
       );
       return;
     }
@@ -198,44 +202,58 @@ export class TasksService {
       );
       return;
     }
+    const createdFilesByFileNameMap = convertArrayToMap(
+      createdFiles,
+      (file) => {
+        return file.name;
+      },
+    );
 
-    const filesBySensorIdMap = convertArrayToMap(files, (file) => {
-      return file.metadata?.sensors[0]?._id.toString();
+    const existingTaskDataByFileNameMap = convertArrayToMap(
+      task.payload.data,
+      (entity) => entity.fileName,
+    );
+
+    for (const file of result.payload.sensors) {
+      const fileName = file.fileName;
+      const existingSensorData = existingTaskDataByFileNameMap.get(fileName);
+      this.mapFileToSensorData(file);
+
+      /**
+       * If file data already exists under task payload, then update its fields
+       * Otherwise add new file data entity to task payload
+       */
+      if (notNil(existingSensorData)) {
+        existingTaskDataByFileNameMap.set(fileName, {
+          ...this.mapFileToSensorData(file),
+          sensor: existingSensorData.sensor,
+        });
+      } else {
+        const newFile = createdFilesByFileNameMap.get(file.fileName);
+        if (isNil(newFile)) {
+          this.logger.log(
+            `Received new file ${file.fileName} but have no matching file entity.\n Skipping adding new file to existing task payload`,
+          );
+          continue;
+        }
+
+        existingTaskDataByFileNameMap.set(
+          newFile.name,
+          this.mapFileToSensorData(file, newFile._id.toString()),
+        );
+      }
+    }
+
+    const updatedTaskDataArray: SensorDataType[] = [];
+    existingTaskDataByFileNameMap.forEach((sensorData) => {
+      updatedTaskDataArray.push(sensorData);
     });
 
-    task.status = TaskSteps.DONE;
+    task.payload.data = updatedTaskDataArray;
     if (notNil(result.payload.completedAt)) {
       task.metadata.lastCompletedAt = new Date(result.payload.completedAt);
     }
-    task.payload.data = task.payload.data.map(
-      (existingSensor): SensorDataType => {
-        const sensorUpdateData = result.payload.sensors?.find(
-          (sensorUpdate) =>
-            sensorUpdate.sensorId === existingSensor.sensor.toString(),
-        );
-        if (isNil(sensorUpdateData)) {
-          this.logger.log(
-            `Sensor ${existingSensor.sensor.toString()} not found in data-fetch result message. \nSkipping update for this sensor. Message sensors: ${result?.payload?.sensors
-              ?.map((sensor) => sensor?.sensorId)
-              .join(' , ')}`,
-          );
-          return existingSensor;
-        }
-
-        const matchingFile = filesBySensorIdMap.get(sensorUpdateData.sensorId);
-        this.logger.log(
-          `No matching file found for sensorId ${sensorUpdateData.sensorId} . Not setting fileId to task entity`,
-        );
-        return {
-          sensor: existingSensor.sensor,
-          fileName: sensorUpdateData.fileName,
-          fileId: matchingFile?.id,
-          filePath: sensorUpdateData.filePath,
-          fileURL: sensorUpdateData.fileURL,
-          bucket: sensorUpdateData.bucket,
-        };
-      },
-    );
+    task.status = TaskSteps.DONE;
     return await task.save();
   }
 
@@ -253,5 +271,18 @@ export class TasksService {
 
     const fileIds = task.payload.files.map((file) => file?.fileId);
     return fileIds.filter(notNil);
+  }
+
+  private mapFileToSensorData(
+    file: DataFetchTaskResultFile,
+    fileIdOverride?: string,
+  ): SensorDataType {
+    return {
+      fileName: file.fileName,
+      sensor: new Types.ObjectId(file.sensorId),
+      filePath: file.filePath,
+      bucket: file.bucket,
+      fileId: fileIdOverride,
+    };
   }
 }
