@@ -28,7 +28,6 @@ export class ObjectSyncTaskMessageHandler {
     );
 
     for (const object of message.payload.objects) {
-      console.log(object.managedObjectId, object.objectType);
       if (isSensor(object)) {
         const existingSensor = await this.sensorsService.findOne({
           managedObjectId: object.managedObjectId,
@@ -51,8 +50,6 @@ export class ObjectSyncTaskMessageHandler {
         };
         await this.sensorsService.createSensors([sensorToCreate]);
       } else if (isGroup(object)) {
-        console.log('Found group');
-        console.dir(object, { depth: 10 });
         await this.saveGroup(object);
       }
     }

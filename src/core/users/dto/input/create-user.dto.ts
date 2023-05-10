@@ -8,6 +8,7 @@ import {
 import { Transform, Type } from 'class-transformer';
 import { Role } from '../../../../global/types/roles';
 import { ensureArray } from '../../../../utils/validation';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class C8yCredentialsInputDto {
   @IsString()
@@ -36,6 +37,7 @@ export class CreateUserDto {
   role?: Role[];
 
   @IsOptional()
+  @ApiPropertyOptional()
   @Type(() => C8yCredentialsInputDto)
   @ValidateNested()
   c8yCredentials?: C8yCredentialsInputDto;

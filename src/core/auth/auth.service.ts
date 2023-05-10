@@ -2,7 +2,7 @@ import {
   BadRequestException,
   Injectable,
   Logger,
-  OnModuleInit,
+  OnApplicationBootstrap,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -21,7 +21,7 @@ import { ApplicationConfigService } from '../application-config/application-conf
 import { notNil } from '../../utils/validation';
 
 @Injectable()
-export class AuthService implements OnModuleInit {
+export class AuthService implements OnApplicationBootstrap {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
@@ -62,6 +62,7 @@ export class AuthService implements OnModuleInit {
 
   async register(user: CreateUserDto): Promise<UserDocument> {
     try {
+      console.log('Register user');
       const createdUser = await this.userService.create(user);
       const leanUser: UserType = createdUser.toObject();
       this.messagesProducerService.sendUserMessage({
@@ -105,7 +106,7 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async onModuleInit(): Promise<void> {
+  async onApplicationBootstrap(): Promise<void> {
     await this.handleDefaultUser();
   }
 }

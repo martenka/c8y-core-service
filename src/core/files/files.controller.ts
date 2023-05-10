@@ -48,6 +48,10 @@ export class FilesController {
 
   @Get('/upload-readiness')
   @NoDTOValidation()
+  @ApiTags('files')
+  @ApiOperation({
+    operationId: 'Check for files upload readiness to external system',
+  })
   async getFilesUnsuitableForUpload(
     @Query() filesToCheck: FileUploadSuitabilityQueryDto,
   ) {
@@ -142,6 +146,8 @@ export class FilesController {
 
   @Delete(':id')
   @AdminRoute()
+  @ApiTags('files')
+  @ApiOperation({ operationId: 'Delete files' })
   async deleteFile(
     @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
   ): Promise<void> {
