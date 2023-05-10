@@ -9,12 +9,14 @@ export interface DataFetchTaskMessagePayload
       managedObjectId: string;
       fragmentType: string;
     };
+    dataId?: string;
   })[];
 }
 
 export interface DataFetchTaskResultFile {
   sensorId: string;
   bucket: string;
+  dataId?: string;
   isPublicBucket: boolean;
   /**
    * Path inside the bucket including the filename

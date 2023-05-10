@@ -42,6 +42,7 @@ import { SensorType } from '../../models/Sensor';
 import { Platform } from '../../global/tokens';
 import { FilesService } from '../files/files.service';
 import { CustomException } from '../../global/exceptions/custom.exception';
+import crypto from 'crypto';
 
 @Injectable()
 export class TaskCreationService implements OnModuleInit {
@@ -211,6 +212,7 @@ export class TaskCreationService implements OnModuleInit {
         const sensorsWithFilenames = groupSensorIds.map((sensor) => ({
           sensor,
           filename: taskDetails.taskPayload.entities[0].fileName,
+          dataId: crypto.randomUUID(),
         }));
 
         const payload: Properties<DataFetchPayload> = {
@@ -231,6 +233,7 @@ export class TaskCreationService implements OnModuleInit {
           (entity) => ({
             sensor: entity.id,
             fileName: entity.fileName,
+            dataId: crypto.randomUUID(),
           }),
         );
 

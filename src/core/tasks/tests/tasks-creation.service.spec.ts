@@ -166,6 +166,7 @@ describe('TasksCreationService', () => {
             sensor: expect.objectContaining({
               _id: sensorId.toString(),
             }),
+            dataId: expect.any(String),
             fileName: 'Test-datafetch-name',
           },
         ],
@@ -223,6 +224,7 @@ describe('TasksCreationService', () => {
               _id: sensor1Id.toString(),
               __v: 0,
             },
+            dataId: expect.any(String),
           },
           {
             sensor: {
@@ -230,6 +232,7 @@ describe('TasksCreationService', () => {
               _id: sensor2Id.toString(),
               __v: 0,
             },
+            dataId: expect.any(String),
           },
           {
             sensor: {
@@ -237,6 +240,7 @@ describe('TasksCreationService', () => {
               _id: sensor3Id.toString(),
               __v: 0,
             },
+            dataId: expect.any(String),
           },
         ],
         group: groupEntity._id.toString(),

@@ -45,6 +45,7 @@ import {
   DataUploadTaskModel,
 } from '../../models/task/data-upload-task';
 import { AlreadyExistsException } from '../../global/exceptions/already-exists.exception';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class TasksService {
@@ -209,43 +210,42 @@ export class TasksService {
       },
     );
 
-    const existingTaskDataByFileNameMap = convertArrayToMap(
+    const existingTaskDataByDataId = convertArrayToMap(
       task.payload.data,
-      (entity) => entity.fileName,
+      (entity) => entity.dataId,
     );
 
     for (const file of result.payload.sensors) {
-      const fileName = file.fileName;
-      const existingSensorData = existingTaskDataByFileNameMap.get(fileName);
-      this.mapFileToSensorData(file);
+      const dataId = file.dataId;
+      const existingSensorData = existingTaskDataByDataId.get(dataId);
 
+      const newFile = createdFilesByFileNameMap.get(file.fileName);
       /**
        * If file data already exists under task payload, then update its fields
        * Otherwise add new file data entity to task payload
        */
       if (notNil(existingSensorData)) {
-        existingTaskDataByFileNameMap.set(fileName, {
-          ...this.mapFileToSensorData(file),
+        existingTaskDataByDataId.set(dataId, {
+          ...this.mapFileToSensorData(file, newFile?._id.toString()),
           sensor: existingSensorData.sensor,
         });
       } else {
-        const newFile = createdFilesByFileNameMap.get(file.fileName);
         if (isNil(newFile)) {
           this.logger.log(
-            `Received new file ${file.fileName} but have no matching file entity.\n Skipping adding new file to existing task payload`,
+            `Received new file ${file?.fileName} but have no matching file entity.\n Skipping adding new file to existing task payload`,
           );
           continue;
         }
 
-        existingTaskDataByFileNameMap.set(
-          newFile.name,
+        existingTaskDataByDataId.set(
+          crypto.randomUUID(),
           this.mapFileToSensorData(file, newFile._id.toString()),
         );
       }
     }
 
     const updatedTaskDataArray: SensorDataType[] = [];
-    existingTaskDataByFileNameMap.forEach((sensorData) => {
+    existingTaskDataByDataId.forEach((sensorData) => {
       updatedTaskDataArray.push(sensorData);
     });
 
@@ -275,14 +275,15 @@ export class TasksService {
 
   private mapFileToSensorData(
     file: DataFetchTaskResultFile,
-    fileIdOverride?: string,
+    fileId?: string,
   ): SensorDataType {
     return {
       fileName: file.fileName,
       sensor: new Types.ObjectId(file.sensorId),
       filePath: file.filePath,
       bucket: file.bucket,
-      fileId: fileIdOverride,
+      fileId: fileId,
+      dataId: file.dataId ?? crypto.randomUUID(),
     };
   }
 }

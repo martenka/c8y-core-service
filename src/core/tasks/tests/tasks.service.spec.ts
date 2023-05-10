@@ -221,6 +221,7 @@ describe('TasksService', () => {
           {
             sensor: new Types.ObjectId('645692be99aec85add4c90ed'),
             fileName: 'Testing-datafetch-taskname',
+            dataId: 'id1',
           },
         ],
         dateTo: new Date('2023-02-01T12:00:02.000Z'),
@@ -240,6 +241,7 @@ describe('TasksService', () => {
           {
             sensorId: '645692be99aec85add4c90ed',
             fileName: 'duplicate_avoidance-Testing-datafetch-taskname.csv',
+            dataId: 'id1',
             bucket: 'test',
             isPublicBucket: false,
             dateTo: '2023-02-01T12:00:02.000Z',
@@ -268,6 +270,7 @@ describe('TasksService', () => {
           {
             sensor: '645692be99aec85add4c90ed',
             fileName: 'duplicate_avoidance-Testing-datafetch-taskname.csv',
+            dataId: 'id1',
             bucket: 'test',
             filePath: 'data/duplicate_avoidance-Testing-datafetch-taskname.csv',
           },
@@ -293,6 +296,7 @@ describe('TasksService', () => {
           {
             sensor: new Types.ObjectId('645692be99aec85add4c90ed'),
             fileName: 'Testing-datafetch-taskname',
+            dataId: 'id2',
           },
         ],
         dateTo: new Date('2023-02-01T12:00:02.000Z'),
@@ -308,26 +312,37 @@ describe('TasksService', () => {
     const createdFile = await fileModel.create(fileStub);
     await taskModel.create(dataFetchTask);
 
-    await service.handleDataFetchTaskResult(taskId, {
-      taskId: taskId.toString(),
-      taskType: 'DATA_FETCH',
-      status: TaskSteps.DONE,
-      payload: {
-        sensors: [
-          {
-            sensorId: '645692be99aec85add4c90ed',
-            fileName: 'duplicate_avoidance-Testing-datafetch-taskname.csv',
-            bucket: 'test',
-            isPublicBucket: false,
-            dateTo: '2023-02-01T12:00:02.000Z',
-            dateFrom: '2023-01-20T12:00:02.000Z',
-            filePath: 'data/duplicate_avoidance-Testing-datafetch-taskname.csv',
-          },
-        ],
-        completedAt: '2023-03-12T12:00:01.000Z',
+    await service.handleDataFetchTaskResult(
+      taskId,
+      {
+        taskId: taskId.toString(),
+        taskType: 'DATA_FETCH',
+        status: TaskSteps.DONE,
+        payload: {
+          sensors: [
+            {
+              sensorId: '645692be99aec85add4c90ed',
+              fileName: 'duplicate_avoidance-Testing-datafetch-taskname.csv',
+              bucket: 'test',
+              dataId: 'id2',
+              isPublicBucket: false,
+              dateTo: '2023-02-01T12:00:02.000Z',
+              dateFrom: '2023-01-20T12:00:02.000Z',
+              filePath:
+                'data/duplicate_avoidance-Testing-datafetch-taskname.csv',
+            },
+          ],
+          completedAt: '2023-03-12T12:00:01.000Z',
+        },
       },
-    });
+      [createdFile],
+    );
 
+    const fileStub2 = getFileStub({
+      _id: new Types.ObjectId('645be48efdfd7bb35a23ba9d'),
+      name: 'some-filename.csv',
+    });
+    const createdFile2 = await fileModel.create(fileStub2);
     await service.handleDataFetchTaskResult(
       taskId,
       {
@@ -340,6 +355,7 @@ describe('TasksService', () => {
               sensorId: '6452a6971306581241dddd61',
               fileName: 'some-filename.csv',
               bucket: 'test',
+              dataId: expect.any(String),
               isPublicBucket: false,
               dateTo: '2023-02-01T12:00:02.000Z',
               dateFrom: '2023-01-20T12:00:02.000Z',
@@ -349,7 +365,7 @@ describe('TasksService', () => {
           completedAt: '2023-03-12T12:05:01.000Z',
         },
       },
-      [createdFile],
+      [createdFile2],
     );
 
     const updatedEntity = await taskModel.findById(taskId).exec();
@@ -370,6 +386,7 @@ describe('TasksService', () => {
             sensor: '645692be99aec85add4c90ed',
             fileName: 'duplicate_avoidance-Testing-datafetch-taskname.csv',
             bucket: 'test',
+            dataId: 'id2',
             filePath: 'data/duplicate_avoidance-Testing-datafetch-taskname.csv',
           },
           {

@@ -26,6 +26,12 @@ class SensorData {
   @Prop({ type: Types.ObjectId, ref: () => Sensor })
   sensor: Sensor | Types.ObjectId;
 
+  /**
+   * Random ID to differentiate between existing and incoming new files from messages
+   */
+  @Prop({ required: true })
+  dataId: string;
+
   @Prop()
   fileId?: string;
 

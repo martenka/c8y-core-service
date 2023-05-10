@@ -98,6 +98,10 @@ export class AuthService implements OnModuleInit {
           `Skipping creating default user as user ${user.username} already exists!`,
         );
       }
+    } else {
+      this.logger.log(
+        'Skipping creating default user as username is not specified',
+      );
     }
   }
 

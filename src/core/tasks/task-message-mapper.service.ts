@@ -56,6 +56,7 @@ export class TaskMessageMapperService implements OnModuleInit {
         const currentSensor = sensorData.sensor as SensorType;
         return {
           fileName: sensorData.fileName,
+          dataId: sensorData.dataId,
           sensor: {
             id: currentSensor._id.toString(),
             managedObjectId: currentSensor.managedObjectId,
