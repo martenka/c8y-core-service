@@ -8,6 +8,7 @@ import {
 import { CustomAttributes } from '../../../models';
 import { Properties } from '../../../global/types/types';
 import { Types } from 'mongoose';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateGroupDto {
   @IsString()
@@ -22,6 +23,7 @@ export class UpdateGroupDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @ApiProperty({ type: 'string', isArray: true })
   sensors: string[] | Types.ObjectId[];
 
   @IsOptional()

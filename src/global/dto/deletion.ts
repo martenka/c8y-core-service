@@ -14,7 +14,11 @@ export class BaseDeleteResponse implements IDeleteResponse {
 export class DeleteInputDto {
   @IsMongoIdInstance({ each: true })
   @TransformMongoId()
-  @ApiProperty({ type: 'string', isArray: true })
+  @ApiProperty({
+    type: 'string',
+    isArray: true,
+    description: 'File ids to delete',
+  })
   items: Types.ObjectId[];
 }
 

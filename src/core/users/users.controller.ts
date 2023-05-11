@@ -17,11 +17,11 @@ import { NoDTOValidation, SetControllerDTO } from '../../decorators/dto';
 import { UserOutputDto } from './dto/output/output-user.dto';
 import { UseRolesGuard } from '../../guards/RoleGuard';
 import { DeleteUserInputDto } from './dto/input/delete-user.dto';
-import { IDeleteUsersResponse } from './dto/types';
+
 import { AdminRoute } from '../../decorators/authorization';
 import { UpdateUserDto } from './dto/input/update-user.dto';
 import { isNil } from '@nestjs/common/utils/shared.utils';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
 import { Types } from 'mongoose';
 
@@ -35,6 +35,7 @@ export class UsersController {
   @SetControllerDTO(UserOutputDto)
   @ApiTags('users')
   @ApiOperation({ operationId: 'Get one user' })
+  @ApiParam({ name: 'id', type: 'string' })
   async findOne(
     @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
   ): Promise<UserDocument | undefined> {
@@ -47,10 +48,8 @@ export class UsersController {
   @NoDTOValidation()
   @ApiTags('users')
   @ApiOperation({ operationId: 'Remove users' })
-  async deleteUsers(
-    @Body() deleteEntityDto: DeleteUserInputDto,
-  ): Promise<IDeleteUsersResponse> {
-    return await this.usersService.delete(deleteEntityDto);
+  async deleteUsers(@Body() deleteEntityDto: DeleteUserInputDto) {
+    await this.usersService.delete(deleteEntityDto);
   }
 
   @Patch(':id')

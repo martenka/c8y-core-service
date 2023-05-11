@@ -5,7 +5,7 @@
 This is the main service for data exporting and sharing solution based on [Cumulocity](https://cumulocity.com/guides/concepts/introduction/) 
 The solution consists of three services: c8y-core-service(this), [c8y-data-service](https://github.com/martenka/c8y-data-service) and [c8y-admin](https://github.com/martenka/c8y-admin)
 
-API documentation can be viewed by running the service and going to http://localhost:[PORT]/v1/api  
+API documentation can be viewed by running the service and going to http://localhost:[PORT]/v1/api. API specification in JSON format is also found under [docs](docs) 
 Port by default is 3001
 
 ## Installation

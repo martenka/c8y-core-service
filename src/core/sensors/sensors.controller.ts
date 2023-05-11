@@ -35,7 +35,7 @@ export class SensorsController {
 
   @Post()
   @AdminRoute()
-  @SetControllerDTO(OutputSensorDto)
+  @SetControllerDTO(OutputSensorDto, { apiResponseOptions: { status: 201 } })
   @ApiTags('sensors')
   @ApiOperation({ operationId: 'Create a new sensor' })
   @ApiBody({ type: [CreateSensorDto] })

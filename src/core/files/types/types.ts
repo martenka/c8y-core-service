@@ -2,6 +2,9 @@ import { Types } from 'mongoose';
 import { VisibilityState } from '../../../models';
 
 export interface FileLink {
+  /**
+   * File ID
+   */
   id: string;
   url: string;
   fileName?: string;

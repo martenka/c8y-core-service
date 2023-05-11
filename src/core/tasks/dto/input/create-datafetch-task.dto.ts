@@ -15,6 +15,7 @@ import { Types } from 'mongoose';
 import { CreateTaskDto } from './create-task.dto';
 import { IsMongoIdInstance } from '../../../../decorators/custom-validators/mongo-id.validator';
 import { Properties } from '../../../../global/types/types';
+import { ApiProperty } from '@nestjs/swagger';
 
 const DownloadInputValues = ['GROUP', 'SENSOR'] as const;
 
@@ -29,6 +30,7 @@ export class DataFetchEntityDto {
     return value;
   })
   @IsNotEmpty()
+  @ApiProperty({ type: 'string' })
   id: Types.ObjectId;
 
   @IsOptional()
@@ -49,11 +51,13 @@ export class DataFetchPayloadDto {
   @IsOptional()
   @Type(() => Date)
   @IsDate()
+  @ApiProperty({ type: 'string', format: 'date-time' })
   dateFrom?: Date;
 
   @IsOptional()
   @Type(() => Date)
   @IsDate()
+  @ApiProperty({ type: 'string', format: 'date-time' })
   dateTo?: Date;
 }
 

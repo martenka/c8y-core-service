@@ -6,11 +6,13 @@ import { TransformMongoId } from '../../../../decorators/transformers/object-id-
 import { Properties } from '../../../../global/types/types';
 import { Type } from 'class-transformer';
 import { Types } from 'mongoose';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDataUploadTaskDtoPayload {
   @IsArray()
   @IsMongoIdInstance({ each: true })
   @TransformMongoId()
+  @ApiProperty({ type: 'string', isArray: true })
   fileIds: Types.ObjectId[];
 }
 

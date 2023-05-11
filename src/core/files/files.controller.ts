@@ -26,10 +26,14 @@ import { idToObjectIDOrUndefined } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { OutputFileDto, PaginatedOutputFileDto } from './dto/output-file.dto';
 import { FileQuery } from './query/file-query.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FileLink } from './types/types';
 import { AdminRoute } from '../../decorators/authorization';
-import { IDeleteResponse } from '../../global/dto/types';
 import { DeleteInputDto } from '../../global/dto/deletion';
 import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
 import { Types } from 'mongoose';
@@ -100,6 +104,16 @@ export class FilesController {
   @NoDTOValidation()
   @ApiTags('files')
   @ApiOperation({ operationId: 'Get file download link' })
+  @ApiOkResponse({
+    schema: {
+      required: ['id', 'url'],
+      properties: {
+        id: { type: 'string', description: 'File ID' },
+        url: { type: 'string' },
+        fileName: { type: 'string' },
+      },
+    },
+  })
   async getFileLink(
     @Param('id') id: string,
     @LoggedInUser() user: LoggedInUserType,
@@ -138,16 +152,16 @@ export class FilesController {
   @NoDTOValidation()
   @ApiTags('files')
   @ApiOperation({ operationId: 'Remove files' })
-  async deleteFiles(
-    @Body() deleteEntityDto: DeleteInputDto,
-  ): Promise<IDeleteResponse | undefined> {
-    return await this.filesService.removeMany(deleteEntityDto);
+  async deleteFiles(@Body() deleteEntityDto: DeleteInputDto) {
+    await this.filesService.removeMany(deleteEntityDto);
   }
 
   @Delete(':id')
   @AdminRoute()
+  @NoDTOValidation()
   @ApiTags('files')
-  @ApiOperation({ operationId: 'Delete files' })
+  @ApiOperation({ operationId: 'Delete file' })
+  @ApiParam({ type: 'string', name: 'id' })
   async deleteFile(
     @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
   ): Promise<void> {

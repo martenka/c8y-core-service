@@ -22,7 +22,7 @@ import {
 } from './dto/output-group.dto';
 import { UseRolesGuard } from '../../guards/RoleGuard';
 import { AdminRoute } from '../../decorators/authorization';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GroupQuery } from './query/group-query.dto';
 import { PagingQuery } from '../../global/pagination/pagination.dto';
 import { DBPagingResult } from '../../global/pagination/types';
@@ -36,13 +36,13 @@ export class GroupsController {
 
   @Post()
   @AdminRoute()
-  @SetControllerDTO(OutputGroupDto)
+  @SetControllerDTO(OutputGroupDto, {
+    isArray: true,
+    apiResponseOptions: { status: 201 },
+  })
   @ApiTags('groups')
   @ApiOperation({ operationId: 'Create a new group' })
   @ApiBody({ type: [CreateGroupDto] })
-  @ApiResponse({
-    type: [OutputGroupDto],
-  })
   async create(
     @Body(new ParseArrayPipe({ items: CreateGroupDto }))
     createGroupDto: CreateGroupDto[],
@@ -71,21 +71,19 @@ export class GroupsController {
   @SetExposeGroups(Groups.ALL)
   @ApiTags('groups')
   @ApiOperation({ operationId: 'Get one group' })
-  @ApiResponse({
-    type: OutputGroupDto,
-  })
   findOne(@Param('id') id: string) {
     return this.groupsService.findOne({ id });
   }
 
   @Patch()
   @AdminRoute()
-  @SetControllerDTO(OutputGroupDto)
+  @SetControllerDTO(OutputGroupDto, { isArray: true })
   @ApiTags('groups')
-  @ApiOperation({ operationId: 'Update groups' })
-  @ApiResponse({
-    type: [OutputGroupDto],
+  @ApiOperation({
+    operationId: 'Update groups',
+    description: 'Merges new sensors with existing ones',
   })
+  @ApiBody({ type: [UpdateGroupDto] })
   /**
    * Updates the underlying group by merging the sensors
    */

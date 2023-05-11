@@ -32,9 +32,12 @@ import { DBPagingResult } from '../../global/pagination/types';
 import { PagingQuery } from '../../global/pagination/pagination.dto';
 import { LoggedInUser } from '../../decorators/user';
 import { LoggedInUserType } from '../auth/types/types';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { TaskQuery } from './query/task-query.dto';
 import { CustomException } from '../../global/exceptions/custom.exception';
+import { CreateDataFetchDto } from './dto/input/create-datafetch-task.dto';
+import { CreateDataUploadTaskDto } from './dto/input/create-dataupload-task.dto';
+import { CreateObjectSyncDto } from './dto/input/create-objectsync-task.dto';
 
 @Controller('tasks')
 @UseInterceptors(DtoTransformInterceptor)
@@ -48,6 +51,15 @@ export class TasksController {
   @SetExposeGroups(Groups.ALL)
   @ApiTags('tasks')
   @ApiOperation({ operationId: 'Create a new task' })
+  @ApiBody({
+    schema: {
+      anyOf: [
+        { $ref: getSchemaPath(CreateDataFetchDto) },
+        { $ref: getSchemaPath(CreateDataUploadTaskDto) },
+        { $ref: getSchemaPath(CreateObjectSyncDto) },
+      ],
+    },
+  })
   async createTask<T extends CreateTaskDto>(
     @LoggedInUser() user: LoggedInUserType,
     @Body(new TaskTransformPipe(TaskCreationDtos))

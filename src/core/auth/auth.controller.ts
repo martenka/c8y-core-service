@@ -46,7 +46,7 @@ export class AuthController {
 
   @Post('/register')
   @SetControllerDTO(UserOutputDto, {
-    apiResponseOptions: { description: 'User registered' },
+    apiResponseOptions: { description: 'User registered', status: 201 },
   })
   @ApiOperation({ operationId: 'Register a new user' })
   @ApiTags('auth')

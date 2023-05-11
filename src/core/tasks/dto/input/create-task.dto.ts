@@ -9,11 +9,18 @@ import {
 import { TaskTypes } from '../../../../models';
 import { Type } from 'class-transformer';
 import { IsValidTaskPeriodicPattern } from '../../../../decorators/custom-validators/task-periodic-pattern';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class PeriodicData {
   @IsValidTaskPeriodicPattern({
     message:
       'Pattern must be a valid numeric string, human-interval or cron pattern. 0 is not allowed',
+  })
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description:
+      'Cron pattern (parseable by cron-parser library) or human-interval',
   })
   pattern: string;
 
