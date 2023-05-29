@@ -49,7 +49,12 @@ export class UsersController {
   @ApiTags('users')
   @ApiOperation({ operationId: 'Remove users' })
   async deleteUsers(@Body() deleteEntityDto: DeleteUserInputDto) {
-    await this.usersService.delete(deleteEntityDto);
+    try {
+      await this.usersService.delete(deleteEntityDto);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   }
 
   @Patch(':id')

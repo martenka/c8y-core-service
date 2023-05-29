@@ -62,7 +62,6 @@ export class AuthService implements OnApplicationBootstrap {
 
   async register(user: CreateUserDto): Promise<UserDocument> {
     try {
-      console.log('Register user');
       const createdUser = await this.userService.create(user);
       const leanUser: UserType = createdUser.toObject();
       this.messagesProducerService.sendUserMessage({
