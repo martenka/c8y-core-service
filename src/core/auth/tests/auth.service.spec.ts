@@ -144,7 +144,7 @@ describe('AuthService', () => {
   });
 
   it('creates default user', async () => {
-    await service.onModuleInit();
+    await service.onApplicationBootstrap();
     const createdUser = await userModel.findOne({
       username: defaultUser.username,
     });
