@@ -199,7 +199,7 @@ export class TasksService {
     const task = await this.dataFetchTaskModel.findById(taskId).exec();
     if (isNil(task)) {
       this.logger.log(
-        `Did not found task with id ${taskId.toString()} in data-fetch task result handler`,
+        `Did not find task with id ${taskId.toString()} in data-fetch task result handler`,
       );
       return;
     }

@@ -1,5 +1,6 @@
 import { Sensor } from '../../models';
 import { Types } from 'mongoose';
+import { CreateSensorDto } from '../../core/sensors/dto/create-sensor.dto';
 
 export function getSensorStub(override: Partial<Sensor> = {}): Sensor {
   return {
@@ -16,6 +17,24 @@ export function getSensorStub(override: Partial<Sensor> = {}): Sensor {
     type: 'bacnet',
     createdAt: new Date('2023-04-01T19:00:24.540Z'),
     updatedAt: new Date('2023-04-01T19:00:24.540Z'),
+    ...override,
+  };
+}
+
+export function getCreateSensorDtoStub(
+  override?: Partial<CreateSensorDto>,
+): CreateSensorDto {
+  return {
+    managedObjectId: '980',
+    managedObjectName: "AC01'Wall'BB5",
+    valueFragmentType: 'TMP',
+    valueFragmentDisplayName: 'Temperature',
+    type: 'TEST_TYPE',
+    owner: 'TEST_OWNER',
+    description: 'TEST_DESCRIPTION',
+    customAttributes: {
+      test: 'value',
+    },
     ...override,
   };
 }

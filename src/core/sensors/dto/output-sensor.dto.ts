@@ -10,7 +10,7 @@ export class OutputSensorDto {
   id: string;
 
   @Expose()
-  managedObjectId: number;
+  managedObjectId: string;
 
   @Expose()
   managedObjectName: string;

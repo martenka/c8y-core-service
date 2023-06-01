@@ -96,10 +96,9 @@ export class SensorsController {
 
   @Delete(':id')
   @AdminRoute()
-  @SetControllerDTO(OutputSensorDto)
   @ApiTags('sensors')
   @ApiOperation({ operationId: 'Delete sensor' })
   async remove(@Param('id') id: string) {
-    return await this.sensorsService.removeSensor(id);
+    await this.sensorsService.removeSensor(id);
   }
 }
