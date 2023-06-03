@@ -157,9 +157,6 @@ export class GroupsService {
       return undefined;
     }
 
-    return await this.groupModel
-      .findByIdAndDelete(objectId)
-      .populate('sensors')
-      .exec();
+    return await this.groupModel.findByIdAndDelete(objectId).exec();
   }
 }

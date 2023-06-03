@@ -99,7 +99,7 @@ export class GroupsController {
   @SetControllerDTO(OutputGroupDto)
   @ApiTags('groups')
   @ApiOperation({ operationId: 'Delete group' })
-  remove(@Param('id') id: string) {
-    return this.groupsService.removeGroup(id);
+  async remove(@Param('id') id: string) {
+    await this.groupsService.removeGroup(id);
   }
 }

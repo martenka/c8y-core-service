@@ -27,13 +27,15 @@ export class Group extends Base {
   @Prop()
   owner?: string;
 
-  @Prop({ type: [Types.ObjectId], ref: () => Sensor, default: [] })
+  @Prop({ type: [Types.ObjectId], ref: () => Group, default: [] })
   groups: Types.DocumentArray<Group>;
 
   @Prop({ type: [Types.ObjectId], ref: () => Sensor })
   sensors: Types.DocumentArray<Sensor>;
 
   sensorAmount?: number;
+
+  groupAmount?: number;
 
   @Prop()
   description?: string;
@@ -59,4 +61,8 @@ export type GroupModel = Model<Group>;
 
 GroupSchema.virtual('sensorAmount').get(function (this: GroupDocument) {
   return this?.sensors?.length ?? 0;
+});
+
+GroupSchema.virtual('groupAmount').get(function (this: GroupDocument) {
+  return this?.groups?.length ?? 0;
 });

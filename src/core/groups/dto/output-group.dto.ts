@@ -16,6 +16,12 @@ export class OutputGroupDto {
   @Expose()
   sensorAmount?: number;
 
+  @Expose()
+  groupAmount?: number;
+
+  @Expose({ groups: [Groups.ALL] })
+  owner?: string;
+
   @Expose({ groups: [Groups.ALL] })
   @Type(() => OutputSensorDto)
   sensors: OutputSensorDto[];
