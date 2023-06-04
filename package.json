@@ -18,8 +18,7 @@
     "test": "eslint src/** && tsc --project ./tsconfig.json && jest --maxWorkers 2",
     "test:watch": "jest --watch --maxWorkers 2",
     "test:cov": "jest --coverage --maxWorkers 2",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand ",
-    "test:e2e": "jest --config ./test/jest-e2e.json --maxWorkers 2"
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand "
   },
   "dependencies": {
     "@golevelup/nestjs-modules": "^0.6.1",

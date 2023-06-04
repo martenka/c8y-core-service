@@ -10,12 +10,16 @@ Port by default is 3001
 
 ## Installation
 
+This installs c8y-core-service specific dependencies. This guide also assumes that Docker is installed and running on the  
+local machine.
+
 ```bash
 $ yarn install
 ```
 
-## Running the solution
+## Running all services
 
+Currently, all services run on the local machine.  
 To run the whole solution, git clone this service,  [c8y-data-service](https://github.com/martenka/c8y-data-service) and [c8y-admin](https://github.com/martenka/c8y-admin),  
 fill out necessary ENV variables and run the commands below. Dependencies (mongo, min.io, rabbitmq) will be run through  
 docker, services will run on the host machine. 
@@ -25,9 +29,11 @@ You can use [nvm](https://github.com/nvm-sh/nvm) or [nvm-windows](https://github
 The order of starting the services should be:
 1. docker dependencies
 2. c8y-data-service
-3. c8y-core-service **Important:** Make sure data-service is running before starting core-service, otherwise the default user  
-    may not be synced to data-service
+3. c8y-core-service **Important:** For first run make sure data-service is running before starting core-service, otherwise the default user
+   is not synced to data-service and communication with Cumulocity will fail.
 4. c8y-admin
+
+## Running this service
 
 ### ENV variables
 Cumulocity account (that works with its API) is necessary for the solution to work.  
@@ -40,11 +46,13 @@ However user won't be overwritten on the next start, so it's safe to leave it be
 Other values don't have to be changed for **testing** purposes.
 
 ## Commands
+See [package.json](package.json) for more commands
+
 ```bash
-# Databases
+# Databases and other docker based dependencies
 $ yarn docker:start
 
-# Service in watch mode
+# Service in watch mode OR
 $ yarn start:dev
 
 # Production mode
@@ -62,7 +70,10 @@ $ yarn test:cov
 ```
 
 ## CKAN
-CKAN is the external data portal to where downloaded files can be uploaded.  
+CKAN is the external data portal to where downloaded files can be uploaded. Currently uses the default CKAN configuration.  
+It is recommended to get CKAN running before starting the services as c8y-data-service needs to be configured with ENV  
+values that can only be fetched after CKAN has started. See [c8y-data-service](https://github.com/martenka/c8y-data-service)  
+for more details
 
 ### Running CKAN
 
@@ -80,4 +91,4 @@ Look up the default username from .env file in ckan-docker (CKAN_SYSADMIN_NAME) 
 See [c8y-data-service](https://github.com/martenka/c8y-data-service) on guide to setting up data-service specific env variables for CKAN
 ## License
 
-[MIT license](LICENSE).
+[MIT license](LICENSE.md).
