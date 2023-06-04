@@ -19,8 +19,11 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoginDto } from './dto/input/login.dto';
 import { AccessResponse } from './types/types';
 import { LoginResponseDto } from './dto/output/login-response.dto';
+import { AdminRoute } from '../../decorators/authorization';
+import { UseRolesGuard } from '../../guards/RoleGuard';
 
 @UseInterceptors(DtoTransformInterceptor)
+@UseRolesGuard()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -45,6 +48,7 @@ export class AuthController {
   }
 
   @Post('/register')
+  @AdminRoute()
   @SetControllerDTO(UserOutputDto, {
     apiResponseOptions: { description: 'User registered', status: 201 },
   })
