@@ -42,7 +42,7 @@ export class FileQuery {
   valueFragmentDisplayName?: string;
 
   @IsOptional()
-  @IsISO8601({ strict: true })
+  @IsISO8601({ strict: true, strictSeparator: true })
   @ApiProperty({
     type: 'string',
     format: 'date-time',

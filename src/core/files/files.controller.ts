@@ -132,6 +132,7 @@ export class FilesController {
   @AdminRoute()
   @SetExposeGroups(Groups.ALL)
   @SetControllerDTO(OutputFileDto)
+  @HttpCode(200)
   @ApiTags('files')
   @ApiOperation({ operationId: 'Change file visibility state' })
   async setFileVisibilityState(

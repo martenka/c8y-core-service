@@ -28,7 +28,7 @@ import { OutputGroupDto } from '../dto/output-group.dto';
 import { OutputSensorDto } from '../../sensors/dto/output-sensor.dto';
 import { Role } from '../../../global/types/roles';
 
-describe('Group integration test', () => {
+describe('Groups integration test', () => {
   let app: INestApplication;
   const now = new Date();
 
