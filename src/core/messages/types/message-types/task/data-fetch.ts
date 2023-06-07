@@ -1,8 +1,7 @@
-import { DataFetchPayloadType, SensorDataType } from '../../../../../models';
+import { SensorDataType } from '../../../../../models';
 import { TaskStatusMessage } from './types';
 
-export interface DataFetchTaskMessagePayload
-  extends Pick<DataFetchPayloadType, 'dateFrom' | 'dateTo'> {
+export interface DataFetchTaskMessagePayload {
   data: (Pick<SensorDataType, 'fileName'> & {
     sensor: {
       id: string;
@@ -11,6 +10,8 @@ export interface DataFetchTaskMessagePayload
     };
     dataId?: string;
   })[];
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export interface DataFetchTaskResultFile {

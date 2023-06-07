@@ -203,3 +203,9 @@ export function parseDateOrNow(inputDate: string | undefined): Date {
   }
   return date;
 }
+
+export function exhaustiveCheck(value: never, context: string): never {
+  throw new Error(
+    `${context} - This shouldn't have been called, got called with ${value}`,
+  );
+}

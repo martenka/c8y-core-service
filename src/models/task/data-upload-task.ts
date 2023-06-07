@@ -110,7 +110,8 @@ export class DataUploadPayload {
   },
 })
 export class DataUploadTask extends Task {
-  taskType: TaskTypes.DATA_UPLOAD;
+  @Prop({ default: TaskTypes.DATA_UPLOAD })
+  taskType: TaskTypes.DATA_UPLOAD = TaskTypes.DATA_UPLOAD;
 
   @Prop({ default: `DataUpload-${new Date().getTime()}`, index: true })
   name: string;

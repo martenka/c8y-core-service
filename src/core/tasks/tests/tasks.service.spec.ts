@@ -14,7 +14,10 @@ import {
   TaskSteps,
   TaskTypes,
 } from '../../../models';
-import { DataUploadTaskSchema } from '../../../models/task/data-upload-task';
+import {
+  DataUploadTask,
+  DataUploadTaskSchema,
+} from '../../../models/task/data-upload-task';
 
 import { getModelToken } from '@nestjs/mongoose';
 import { MessagesProducerService } from '../../messages/messages-producer.service';
@@ -39,7 +42,22 @@ describe('TasksService', () => {
   )
     .discriminator(TaskTypes.OBJECT_SYNC, ObjectSyncTaskSchema)
     .discriminator(TaskTypes.DATA_UPLOAD, DataUploadTaskSchema);
-  const taskModel = connection.model(Task.name, testingTaskSchema);
+  const taskModel = connection.model(Task.name, testingTaskSchema, 'tasks');
+  const dataFetchTaskModel = connection.model(
+    DataFetchTask.name,
+    DataFetchTaskSchema,
+    'tasks',
+  );
+  const dataUploadTaskModel = connection.model(
+    DataUploadTask.name,
+    DataUploadTaskSchema,
+    'tasks',
+  );
+  const objectSyncTaskModel = connection.model(
+    ObjectSyncTask.name,
+    ObjectSyncTaskSchema,
+    'tasks',
+  );
   const fileModel = connection.model(File.name, FileSchema);
   const mockTaskCreationService = {
     createTask: jest
@@ -73,15 +91,15 @@ describe('TasksService', () => {
         { provide: getModelToken(Task.name), useValue: taskModel },
         {
           provide: getModelToken(TaskTypes.OBJECT_SYNC),
-          useValue: taskModel,
+          useValue: objectSyncTaskModel,
         },
         {
           provide: getModelToken(TaskTypes.DATA_UPLOAD),
-          useValue: taskModel,
+          useValue: dataUploadTaskModel,
         },
         {
           provide: getModelToken(TaskTypes.DATA_FETCH),
-          useValue: taskModel,
+          useValue: dataFetchTaskModel,
         },
         { provide: MessagesProducerService, useValue: messageProducerService },
         { provide: TaskCreationService, useValue: mockTaskCreationService },
@@ -159,6 +177,7 @@ describe('TasksService', () => {
       },
     });
     const foundTask = await service.findById(taskId);
+
     const leanTask = foundTask.toObject();
     expect(leanTask).toMatchObject({
       _id: taskId,
@@ -231,7 +250,7 @@ describe('TasksService', () => {
       metadata: {},
     };
 
-    await taskModel.create(dataFetchTask);
+    await dataFetchTaskModel.create(dataFetchTask);
     await service.handleDataFetchTaskResult(taskId, {
       taskId: taskId.toString(),
       taskType: 'DATA_FETCH',
@@ -253,7 +272,7 @@ describe('TasksService', () => {
       },
     });
 
-    const updatedEntity = await taskModel.findById(taskId).exec();
+    const updatedEntity = await dataFetchTaskModel.findById(taskId).exec();
     const leanEntity = updatedEntity.toObject();
 
     expect(leanEntity).toMatchObject({
@@ -310,7 +329,7 @@ describe('TasksService', () => {
       _id: new Types.ObjectId('645928a259d9844eb29e460a'),
     });
     const createdFile = await fileModel.create(fileStub);
-    await taskModel.create(dataFetchTask);
+    await dataFetchTaskModel.create(dataFetchTask);
 
     await service.handleDataFetchTaskResult(
       taskId,
@@ -368,7 +387,7 @@ describe('TasksService', () => {
       [createdFile2],
     );
 
-    const updatedEntity = await taskModel.findById(taskId).exec();
+    const updatedEntity = await dataFetchTaskModel.findById(taskId).exec();
     const leanEntity = updatedEntity.toObject();
 
     expect(leanEntity).toMatchObject({

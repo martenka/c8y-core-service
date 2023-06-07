@@ -68,8 +68,8 @@ export class TaskMessageMapperService implements OnModuleInit {
 
     return {
       data: mappedSensorData,
-      dateFrom: leanTask.payload.dateFrom,
-      dateTo: leanTask.payload.dateTo,
+      dateFrom: leanTask.payload.dateFrom?.toISOString(),
+      dateTo: leanTask.payload.dateTo?.toISOString(),
     };
   }
 
@@ -90,6 +90,7 @@ export class TaskMessageMapperService implements OnModuleInit {
             managedObjectName: file.metadata.managedObjectName,
             valueFragmentDescription: file.metadata.valueFragmentDescription,
             sensorDescription: file.metadata.sensorDescription,
+            fileDescription: file.metadata.fileDescription,
             dateFrom: file.metadata.dateFrom.toISOString(),
             dateTo: file.metadata.dateTo.toISOString(),
           },

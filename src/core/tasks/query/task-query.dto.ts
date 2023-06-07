@@ -13,6 +13,7 @@ import { Transform } from 'class-transformer';
 import { Types } from 'mongoose';
 import { Properties } from '../../../global/types/types';
 import { convertBooleanOrOriginal } from '../../../utils/helpers';
+import { TransformToUppercase } from '../../../decorators/transformers/uppercase-transformer';
 
 export class TaskQuery {
   @IsOptional()
@@ -22,10 +23,12 @@ export class TaskQuery {
   id?: Types.ObjectId;
 
   @IsOptional()
+  @TransformToUppercase()
   @IsEnum(TaskTypes)
   taskType?: TaskTypes;
 
   @IsOptional()
+  @TransformToUppercase()
   @IsEnum(TaskSteps)
   taskStatus?: TaskSteps;
 

@@ -14,7 +14,8 @@ import { taskEntityConverter } from '../utils/utils';
   },
 })
 export class ObjectSyncTask extends Task {
-  taskType: TaskTypes.OBJECT_SYNC;
+  @Prop({ default: TaskTypes.OBJECT_SYNC })
+  taskType: TaskTypes.OBJECT_SYNC = TaskTypes.OBJECT_SYNC;
 
   @Prop({ default: `ObjectSync-${new Date().getTime()}`, index: true })
   name: string;

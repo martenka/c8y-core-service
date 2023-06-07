@@ -92,7 +92,8 @@ const DataFetchPayloadSchema = SchemaFactory.createForClass(DataFetchPayload);
   },
 })
 export class DataFetchTask extends Task {
-  taskType: TaskTypes.DATA_FETCH;
+  @Prop({ default: TaskTypes.DATA_FETCH })
+  taskType: TaskTypes.DATA_FETCH = TaskTypes.DATA_FETCH;
 
   @Prop({ default: `DataFetch-${new Date().getTime()}`, index: true })
   name: string;

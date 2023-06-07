@@ -4,9 +4,11 @@ import { TaskCreationService } from './task-creation.service';
 import {
   DataFetchTaskModel,
   FileDocument,
+  ObjectSyncTaskModel,
   SensorDataType,
   Task,
   TaskDocument,
+  TaskDocumentSubtypes,
   TaskModel,
   TaskSteps,
   TaskType,
@@ -32,6 +34,7 @@ import { TaskFailedMessage } from '../messages/types/message-types/messageTypes'
 import { TaskQueryProperties } from './query/task-query.dto';
 import {
   convertArrayToMap,
+  exhaustiveCheck,
   parseDateOrNow,
   removeNilProperties,
 } from '../../utils/helpers';
@@ -61,6 +64,8 @@ export class TasksService {
     private readonly dataFetchTaskModel: DataFetchTaskModel,
     @InjectModel(TaskTypes.DATA_UPLOAD)
     private readonly dataUploadTaskModel: DataUploadTaskModel,
+    @InjectModel(TaskTypes.OBJECT_SYNC)
+    private readonly objectSyncTaskModel: ObjectSyncTaskModel,
   ) {}
   async createAndScheduleTask<T extends CreateTaskDto>(
     loggedInUserId: string,
@@ -108,7 +113,9 @@ export class TasksService {
   }
 
   async findById(id: Types.ObjectId): Promise<TaskDocument | undefined> {
-    return this.taskModel.findById(id).exec();
+    const task = await this.taskModel.findById(id).exec();
+
+    return this.convertTaskToSubtask(task);
   }
 
   async findMany(
@@ -285,5 +292,19 @@ export class TasksService {
       fileId: fileId,
       dataId: file.dataId ?? crypto.randomUUID(),
     };
+  }
+
+  private convertTaskToSubtask(task: TaskDocument): TaskDocumentSubtypes {
+    const leanTask = task.toObject({ transform: false });
+    switch (task.taskType) {
+      case 'DATA_FETCH':
+        return this.dataFetchTaskModel.hydrate(leanTask);
+      case 'DATA_UPLOAD':
+        return this.dataUploadTaskModel.hydrate(leanTask);
+      case 'OBJECT_SYNC':
+        return this.objectSyncTaskModel.hydrate(leanTask);
+    }
+
+    exhaustiveCheck(task.taskType, 'CTTST');
   }
 }

@@ -41,7 +41,7 @@ export class TaskMetadata {
 }
 
 @Schema({
-  discriminatorKey: 'taskType',
+  discriminatorKey: 'type',
   toJSON: {
     transform: taskEntityConverter,
   },
@@ -50,6 +50,7 @@ export class TaskMetadata {
   },
 })
 export class Task extends Base {
+  @Prop({ type: String, enum: TaskTypes })
   taskType: keyof typeof TaskTypes;
 
   @Prop()
