@@ -1,5 +1,5 @@
 import { CreateDataFetchDto } from '../../core/tasks/dto/input/create-datafetch-task.dto';
-import { Task, TaskSteps, TaskTypes } from '../../models';
+import { Task, TaskMode, TaskSteps, TaskTypes } from '../../models';
 import { Types } from 'mongoose';
 import { CreateObjectSyncDto } from '../../core/tasks/dto/input/create-objectsync-task.dto';
 import { CreateDataUploadTaskDto } from '../../core/tasks/dto/input/create-dataupload-task.dto';
@@ -71,6 +71,7 @@ export function getTaskStub(
 ): Task {
   return {
     status: TaskSteps.PROCESSING,
+    mode: TaskMode.ENABLED,
     name: 'TestingTask',
     taskType,
     initiatedByUser: new Types.ObjectId('647def0431e60c140e279c59'),

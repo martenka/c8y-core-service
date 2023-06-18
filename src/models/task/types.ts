@@ -9,6 +9,12 @@ export enum TaskSteps {
   PROCESSING = 'PROCESSING',
   DONE = 'DONE',
   FAILED = 'FAILED',
+  DISABLED = 'DISABLED',
+}
+
+export enum TaskMode {
+  ENABLED = 'ENABLED',
+  DISABLED = 'DISABLED',
 }
 
 export enum TaskTypes {

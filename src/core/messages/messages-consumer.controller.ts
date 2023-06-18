@@ -8,6 +8,7 @@ import { NoAuthRoute } from '../../decorators/authentication';
 import { ConsumeMessage } from 'amqplib';
 import { VisibilityStateResultMessage } from './types/message-types/file/types';
 import { notNil } from '../../utils/validation';
+import { MessageTypes } from './types/message-types/messageTypes';
 
 @Controller()
 @NoAuthRoute()
@@ -66,5 +67,19 @@ export class MessagesController {
         );
       }
     }
+  }
+  @RabbitSubscribe({
+    exchange: ExchangeTypes.GENERAL,
+    queue: 'coreservice.tasks.mode.changed',
+    routingKey: 'task.mode.changed',
+    createQueueIfNotExists: true,
+    errorHandler: (channel, msg, error) => {
+      console.error(error);
+    },
+  })
+  async consumeTaskModeChangedMessage(payload: object) {
+    await this.messageHandlerService.handleTaskModeChangedMessage(
+      payload as MessageTypes['task.mode'],
+    );
   }
 }

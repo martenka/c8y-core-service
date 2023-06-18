@@ -43,4 +43,8 @@ export class MessagesProducerService {
       message,
     );
   }
+
+  sendTaskModeUpdateMessage(message: MessageTypes['task.mode']) {
+    this.sendMessage(ExchangeTypes.GENERAL, 'task.mode', message);
+  }
 }

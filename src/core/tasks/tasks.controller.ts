@@ -6,6 +6,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
@@ -38,12 +39,24 @@ import { CustomException } from '../../global/exceptions/custom.exception';
 import { CreateDataFetchDto } from './dto/input/create-datafetch-task.dto';
 import { CreateDataUploadTaskDto } from './dto/input/create-dataupload-task.dto';
 import { CreateObjectSyncDto } from './dto/input/create-objectsync-task.dto';
+import { TaskModeDto } from './dto/input/task-mode.dto';
 
 @Controller('tasks')
 @UseInterceptors(DtoTransformInterceptor)
 @UseRolesGuard()
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
+
+  @Put('/mode')
+  @AdminRoute()
+  @ApiTags('tasks')
+  @ApiOperation({
+    operationId: 'Set mode for tasks',
+    description: 'Allows to disable/enable periodic tasks',
+  })
+  async setTaskMode(@Body() taskModeBody: TaskModeDto): Promise<void> {
+    await this.tasksService.sendTaskMode(taskModeBody);
+  }
 
   @Post()
   @AdminRoute()

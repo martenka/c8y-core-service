@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { TaskFailedMessage } from './types/message-types/messageTypes';
+import {
+  MessageTypes,
+  TaskFailedMessage,
+} from './types/message-types/messageTypes';
 
 import { Types } from 'mongoose';
 
@@ -75,6 +78,13 @@ export class MessagesHandlerService {
           );
         }
     }
+  }
+
+  async handleTaskModeChangedMessage(message: MessageTypes['task.mode']) {
+    await this.tasksService.changeTasksModes(
+      message.tasks.map((task) => task.taskId),
+      message.type,
+    );
   }
 
   async handleFileVisibilityStateResultMessage(

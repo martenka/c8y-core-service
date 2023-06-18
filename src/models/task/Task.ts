@@ -4,7 +4,7 @@ import { notNil } from '../../utils/validation';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { User } from '../User';
 import { Properties } from '../../global/types/types';
-import { TaskStatus, TaskSteps, TaskTypes } from './types';
+import { TaskMode, TaskStatus, TaskSteps, TaskTypes } from './types';
 import { taskEntityConverter } from '../utils/utils';
 
 @Schema({ _id: false })
@@ -68,6 +68,18 @@ export class Task extends Base {
     },
   })
   status: TaskStatus;
+
+  @Prop({
+    enum: TaskMode,
+    default: TaskMode.ENABLED,
+    validate: {
+      validator: (input) =>
+        notNil(input) && Object.values(TaskMode).includes(input),
+      message: (props) =>
+        `${props?.value ?? 'UNKNOWN'} is not a valid mode value!`,
+    },
+  })
+  mode: TaskMode;
 
   @Prop({ type: TaskMetadata, default: {} })
   metadata: TaskMetadata;

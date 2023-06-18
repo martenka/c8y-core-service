@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateTaskDto } from './dto/input/create-task.dto';
 import { TaskCreationService } from './task-creation.service';
 import {
@@ -9,6 +9,7 @@ import {
   Task,
   TaskDocument,
   TaskDocumentSubtypes,
+  TaskMode,
   TaskModel,
   TaskSteps,
   TaskType,
@@ -27,7 +28,7 @@ import {
   TaskStatusMessage,
 } from '../messages/types/message-types/task/types';
 
-import { hasNoOwnKeys, notNil } from '../../utils/validation';
+import { ensureArray, hasNoOwnKeys, notNil } from '../../utils/validation';
 import { TaskMessageMapperService } from './task-message-mapper.service';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { TaskFailedMessage } from '../messages/types/message-types/messageTypes';
@@ -35,6 +36,7 @@ import { TaskQueryProperties } from './query/task-query.dto';
 import {
   convertArrayToMap,
   exhaustiveCheck,
+  idToObjectIDOrUndefined,
   parseDateOrNow,
   removeNilProperties,
 } from '../../utils/helpers';
@@ -49,6 +51,7 @@ import {
 } from '../../models/task/data-upload-task';
 import { AlreadyExistsException } from '../../global/exceptions/already-exists.exception';
 import * as crypto from 'crypto';
+import { TaskModeDto } from './dto/input/task-mode.dto';
 
 @Injectable()
 export class TasksService {
@@ -183,6 +186,33 @@ export class TasksService {
     return await this.taskModel.findByIdAndUpdate(id, update).exec();
   }
 
+  async sendTaskMode(taskStatusBody: TaskModeDto) {
+    const dbTasks = await this.taskModel
+      .find({
+        _id: { $in: taskStatusBody.taskIds },
+      })
+      .select({ _id: 1 })
+      .exec();
+
+    const dbTaskIds = dbTasks.map((task) => task._id.toString());
+    const dbTaskSet = new Set(dbTaskIds);
+
+    const tasksNotInDB = taskStatusBody.taskIds.filter(
+      (id) => !dbTaskSet.has(id.toString()),
+    );
+
+    if (tasksNotInDB.length > 0) {
+      throw new NotFoundException(
+        'Check input - found taskIds from input that are not present in database',
+      );
+    }
+
+    this.messageProducerService.sendTaskModeUpdateMessage({
+      type: taskStatusBody.type,
+      tasks: dbTaskIds.map((id) => ({ taskId: id.toString() })),
+    });
+  }
+
   /**
    * Updates task data using data-fetch task result message.
    * Saves down the actual file storage bucket and path, updated filename and created file id if present
@@ -262,6 +292,11 @@ export class TasksService {
     }
     task.status = TaskSteps.DONE;
     return await task.save();
+  }
+
+  async changeTasksModes(taskIds: string[], mode: TaskMode) {
+    const ids = ensureArray(idToObjectIDOrUndefined(taskIds));
+    await this.taskModel.updateMany({ _id: { $in: ids } }, { mode: mode });
   }
 
   async getDataUploadTaskFileIds(
