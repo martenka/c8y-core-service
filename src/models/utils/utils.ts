@@ -1,6 +1,8 @@
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Base } from '../Base';
 import { ensureArray, notNil } from '../../utils/validation';
+import { BasicAttributes } from '../types/types';
+import { isNil } from '@nestjs/common/utils/shared.utils';
 
 export async function getDeletedIds<T extends Base = Base>(
   model: Model<T>,
@@ -45,3 +47,57 @@ export const taskEntityConverter = (
   }
   ret._id = ret._id.toString();
 };
+
+/**
+ *
+ * Converts the given attributes suitable for Mongoose query<br>
+ * Each key will be converted to form {objectName}.key<br>
+ * Works only without nested attributes
+ *
+ * @param attributes - The attributes to convert
+ * @param objectName - The object name to put as prefix to every attribute in the attributes objects
+ */
+export function transformAttributesToQuery(
+  attributes: BasicAttributes | undefined | null,
+  objectName: string,
+): BasicAttributes {
+  if (isNil(objectName) || isNil(attributes)) {
+    return attributes;
+  }
+
+  const transformedAttributes: BasicAttributes = {};
+
+  Object.keys(attributes).map(
+    (key) => (transformedAttributes[`${objectName}.${key}`] = attributes[key]),
+  );
+
+  return transformedAttributes;
+}
+
+/**
+ * Transforms given key names to MongoDB unset query in the form
+ *  {objectName}.{key}
+ *
+ * Returns empty object if keys are not provided
+ * Empty keys are ignored
+ * @param keys - Keys to remove
+ * @param objectName - Base object name
+ */
+export function transformKeysToUnsetForm(
+  keys: string[] | undefined | null,
+  objectName: string,
+): Record<string, 1> {
+  if (isNil(objectName) || isNil(keys)) {
+    return {};
+  }
+
+  const transformedAttributes = {};
+
+  keys.map((key) => {
+    if (key !== '') {
+      transformedAttributes[`${objectName}.${key}`] = 1;
+    }
+  });
+
+  return transformedAttributes;
+}

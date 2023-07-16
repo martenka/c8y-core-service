@@ -489,7 +489,7 @@ describe('Sensors integration test', () => {
           valueFragmentType: 'TMP',
           description: 'UpdatedDescription',
           valueFragmentDisplayName: 'UpdatedFragmentDisplayName',
-          customAttributes: { updatedKey: 'updatedValue' },
+          customAttributes: { test: 'value', updatedKey: 'updatedValue' },
         }),
         expect.objectContaining({
           id: '64788fd8581acf2821427f2f',
@@ -498,7 +498,241 @@ describe('Sensors integration test', () => {
           valueFragmentType: 'TMP',
           description: 'AnotherUpdatedDescription',
           valueFragmentDisplayName: 'Type1',
-          customAttributes: { attribute: 'value1' },
+          customAttributes: { test: 'value', attribute: 'value1' },
+        }),
+      ]),
+    );
+  });
+
+  it('updates multiple sensors custom attributes by common valueFragmentType', async () => {
+    const sensorEntities = await sensorModel.create([
+      {
+        ...getCreateSensorDtoStub(),
+        _id: new Types.ObjectId('649e9407d3169338fd07a4cc'),
+        valueFragmentType: 'CommonIdentifierType',
+      },
+      {
+        ...getCreateSensorDtoStub({
+          managedObjectName: 'TestName2',
+          valueFragmentType: 'CommonIdentifierType',
+        }),
+        _id: new Types.ObjectId('649e943ec09fcdde931d5944'),
+      },
+      {
+        ...getCreateSensorDtoStub({
+          managedObjectName: 'TestName3',
+          valueFragmentType: 'SomeOtherIdentifierType',
+        }),
+        _id: new Types.ObjectId('649e94456b2900d8d5284306'),
+      },
+    ]);
+
+    const user = getTestUser('umsbca_user', '649e94571f4308695805fd60', {
+      jwtService: testJwtService,
+    });
+
+    const sensorResponse = await request(app.getHttpServer())
+      .patch('/sensors/attributes')
+      .send({
+        identifiers: { valueFragmentType: 'CommonIdentifierType' },
+        customAttributes: {
+          addedKey: 'addedValue',
+          nestedObj: { nestedKey: 1 },
+        },
+        description: 'Added description',
+      })
+      .set('Authorization', `Bearer ${user.userToken}`);
+
+    expect(sensorResponse.status).toEqual(200);
+    const updatedSensors = await sensorModel
+      .find({
+        _id: { $in: sensorEntities.map((entity) => entity._id) },
+      })
+      .exec();
+
+    expect(updatedSensors.map((sensor) => sensor.toObject())).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          _id: '649e9407d3169338fd07a4cc',
+          valueFragmentType: 'CommonIdentifierType',
+          customAttributes: {
+            addedKey: 'addedValue',
+            test: 'value',
+          },
+          description: 'Added description',
+        }),
+        expect.objectContaining({
+          _id: '649e943ec09fcdde931d5944',
+          valueFragmentType: 'CommonIdentifierType',
+          customAttributes: {
+            addedKey: 'addedValue',
+            test: 'value',
+          },
+          description: 'Added description',
+        }),
+        expect.objectContaining({
+          _id: '649e94456b2900d8d5284306',
+          valueFragmentType: 'SomeOtherIdentifierType',
+          customAttributes: {
+            test: 'value',
+          },
+          description: 'TEST_DESCRIPTION',
+        }),
+      ]),
+    );
+  });
+
+  it('does not allow update by common identifiers if non are specified', async () => {
+    const sensorEntities = await sensorModel.create([
+      {
+        ...getCreateSensorDtoStub(),
+        _id: new Types.ObjectId('649e9df33faf6bc46aded047'),
+        valueFragmentType: 'CommonIdentifierType',
+      },
+      {
+        ...getCreateSensorDtoStub({
+          managedObjectName: 'TestName6',
+          valueFragmentType: 'CommonIdentifierType',
+        }),
+        _id: new Types.ObjectId('649e9df8d3aca61e44bb2b92'),
+      },
+      {
+        ...getCreateSensorDtoStub({
+          managedObjectName: 'TestName9',
+          valueFragmentType: 'SomeOtherIdentifierType',
+        }),
+        _id: new Types.ObjectId('649e9dfcc0c75990d351f01c'),
+      },
+    ]);
+
+    const user = getTestUser('dnaumsbca_user', '649e9e05cce89a4fcf1281c3', {
+      jwtService: testJwtService,
+    });
+
+    const sensorResponse = await request(app.getHttpServer())
+      .patch('/sensors/common-identifiers')
+      .send({
+        identifiers: {},
+        customAttributes: {
+          addedKey: 'addedValue',
+          nestedObj: { nestedKey: 1 },
+        },
+        description: 'Added description',
+      })
+      .set('Authorization', `Bearer ${user.userToken}`);
+
+    expect(sensorResponse.status).toEqual(400);
+    const updatedSensors = await sensorModel
+      .find({
+        _id: { $in: sensorEntities.map((entity) => entity._id) },
+      })
+      .exec();
+
+    expect(updatedSensors.map((sensor) => sensor.toObject())).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          _id: '649e9df33faf6bc46aded047',
+          valueFragmentType: 'CommonIdentifierType',
+          customAttributes: {
+            test: 'value',
+          },
+          description: 'TEST_DESCRIPTION',
+        }),
+        expect.objectContaining({
+          _id: '649e9df8d3aca61e44bb2b92',
+          valueFragmentType: 'CommonIdentifierType',
+          customAttributes: {
+            test: 'value',
+          },
+          description: 'TEST_DESCRIPTION',
+        }),
+        expect.objectContaining({
+          _id: '649e9dfcc0c75990d351f01c',
+          valueFragmentType: 'SomeOtherIdentifierType',
+          customAttributes: {
+            test: 'value',
+          },
+          description: 'TEST_DESCRIPTION',
+        }),
+      ]),
+    );
+  });
+
+  it('removes attributes from sensors identified by common identifier', async () => {
+    const sensorEntities = await sensorModel.create([
+      {
+        ...getCreateSensorDtoStub(),
+        _id: new Types.ObjectId('649ee521248336a6671375ac'),
+        valueFragmentType: 'CommonIdentifierType',
+        customAttributes: {
+          test: 'value',
+          valueToRemove2: '234',
+        },
+      },
+      {
+        ...getCreateSensorDtoStub({
+          managedObjectName: 'TestName7',
+          valueFragmentType: 'CommonIdentifierType',
+          customAttributes: {
+            test: 'value',
+            valueToRemove: '123',
+          },
+        }),
+        _id: new Types.ObjectId('649ee558e42d61df2c76ab04'),
+      },
+      {
+        ...getCreateSensorDtoStub({
+          managedObjectName: 'TestName8',
+          valueFragmentType: 'SomeOtherIdentifierType',
+        }),
+        _id: new Types.ObjectId('649ee55df7432731ed191ca9'),
+      },
+    ]);
+
+    const user = getTestUser('raumsbca_user', '649ee56b61bb35f9fa4c9a0d', {
+      jwtService: testJwtService,
+    });
+
+    const sensorResponse = await request(app.getHttpServer())
+      .post('/sensors/attributes/delete')
+      .send({
+        identifiers: { valueFragmentType: 'CommonIdentifierType' },
+        customAttributeKeys: ['test', 'notExistingKey'],
+        description: true,
+        notExisting: 'value',
+      })
+      .set('Authorization', `Bearer ${user.userToken}`);
+
+    expect(sensorResponse.status).toEqual(200);
+    const updatedSensors = await sensorModel
+      .find({
+        _id: { $in: sensorEntities.map((entity) => entity._id) },
+      })
+      .exec();
+
+    expect(updatedSensors.map((sensor) => sensor.toObject())).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          _id: '649ee521248336a6671375ac',
+          valueFragmentType: 'CommonIdentifierType',
+          customAttributes: { valueToRemove2: '234' },
+          valueFragmentDisplayName: 'Temperature',
+        }),
+        expect.objectContaining({
+          _id: '649ee558e42d61df2c76ab04',
+          valueFragmentType: 'CommonIdentifierType',
+          customAttributes: {
+            valueToRemove: '123',
+          },
+          valueFragmentDisplayName: 'Temperature',
+        }),
+        expect.objectContaining({
+          _id: '649ee55df7432731ed191ca9',
+          valueFragmentType: 'SomeOtherIdentifierType',
+          customAttributes: {
+            test: 'value',
+          },
+          valueFragmentDisplayName: 'Temperature',
         }),
       ]),
     );

@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseArrayPipe,
   Patch,
@@ -12,9 +14,14 @@ import {
 } from '@nestjs/common';
 import { SensorsService } from './sensors.service';
 import { CreateSensorDto } from './dto/create-sensor.dto';
-import { UpdateOneSensorDto, UpdateSensorDto } from './dto/update-sensor.dto';
+import {
+  UpdateOneSensorDto,
+  UpdateSensorsAttributesDto,
+  UpdateSensorDto,
+  DeleteSensorAttributesDto,
+} from './dto/update-sensor.dto';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
-import { SetControllerDTO } from '../../decorators/dto';
+import { NoDTOValidation, SetControllerDTO } from '../../decorators/dto';
 import {
   OutputSensorDto,
   PaginatedOutputSensorDto,
@@ -26,6 +33,9 @@ import { PagingQuery } from '../../global/pagination/pagination.dto';
 import { UseRolesGuard } from '../../guards/RoleGuard';
 import { AdminRoute } from '../../decorators/authorization';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { removeNilProperties } from '../../utils/helpers';
+import { Types } from 'mongoose';
+import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
 
 @Controller('sensors')
 @UseInterceptors(DtoTransformInterceptor)
@@ -65,20 +75,65 @@ export class SensorsController {
     return this.sensorsService.findOne({ id });
   }
 
+  @Patch('/attributes')
+  @HttpCode(200)
+  @AdminRoute()
+  @NoDTOValidation()
+  @ApiTags('sensors')
+  @ApiOperation({
+    operationId: 'Update sensors attributes found by identifiers',
+    description: `Upsert the same attributes to many sensors (e.g same custom attribute) that are identified by the given identifier. 
+       Doesn't overwrite existing not specified custom attributes keys already present on the entity`,
+  })
+  async updateAttributesByIdentifiers(
+    @Body()
+    updateDto: UpdateSensorsAttributesDto,
+  ): Promise<void> {
+    if (Object.keys(removeNilProperties(updateDto.identifiers)).length === 0) {
+      throw new BadRequestException(
+        'At least one sensor identifier must be provided!',
+      );
+    }
+
+    await this.sensorsService.updateSensorsByCommonIdentifiers(updateDto);
+  }
+
+  @Post('/attributes/delete')
+  @HttpCode(200)
+  @AdminRoute()
+  @NoDTOValidation()
+  @ApiTags('sensors')
+  @ApiOperation({
+    operationId: 'Remove attributes from sensors found by identifiers.',
+    description: 'Specifying a boolean true for attribute removes its value',
+  })
+  async removeAttributesByIdentifiers(
+    @Body()
+    updateDto: DeleteSensorAttributesDto,
+  ): Promise<void> {
+    if (Object.keys(removeNilProperties(updateDto.identifiers)).length === 0) {
+      throw new BadRequestException(
+        'At least one sensor identifier must be provided!',
+      );
+    }
+
+    await this.sensorsService.removeSensorAttributesByCommonIdentifiers(
+      updateDto,
+    );
+  }
   @Patch(':id')
   @AdminRoute()
   @SetControllerDTO(OutputSensorDto)
   @ApiTags('sensors')
-  @ApiOperation({ operationId: 'Update one sensor' })
+  @ApiOperation({
+    operationId: 'Update one sensor. Overwrites attribute if given',
+  })
   async updateOne(
     @Body()
     updateSensorDto: UpdateOneSensorDto,
-    @Param('id') id: string,
+    @Param('id', MongoIdTransformPipe) id: Types.ObjectId,
   ): Promise<SensorDocument | undefined> {
-    const updatedSensors = await this.sensorsService.updateSensors([
-      { ...updateSensorDto, id },
-    ]);
-    return updatedSensors[0];
+    return await this.sensorsService.updateOne(id, updateSensorDto);
   }
 
   @Patch()

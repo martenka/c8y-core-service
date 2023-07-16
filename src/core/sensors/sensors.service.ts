@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreateSensorDtoProperties } from './dto/create-sensor.dto';
-import { UpdateSensorDto } from './dto/update-sensor.dto';
+import {
+  UpdateSensorsAttributesDto,
+  UpdateSensorDto,
+  DeleteSensorAttributesDto,
+  UpdateOneSensorDto,
+} from './dto/update-sensor.dto';
 import { Sensor } from '../../models';
 import { SensorDocument, SensorModel } from '../../models/Sensor';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,19 +16,23 @@ import {
   idToObjectIDOrUndefined,
   nullToUndefined,
   omit,
-  pickBy,
-  remapCustomAttributes,
+  remapKeyValueCustomAttributes,
   remapIDAndRemoveNil,
   removeNilProperties,
+  pick,
 } from '../../utils/helpers';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
 import { SensorSearchOptions } from '../../global/query/types';
-import { FilterQuery, QueryOptions } from 'mongoose';
+import { FilterQuery, QueryOptions, Types, UpdateQuery } from 'mongoose';
 import { Sort } from '../paging/types/types';
 import { SensorQueryOptions } from './query/sensor-query.dto';
-import { wrapFilterWithPrefixSearch } from '../../models/utils/utils';
+import {
+  transformAttributesToQuery,
+  transformKeysToUnsetForm,
+  wrapFilterWithPrefixSearch,
+} from '../../models/utils/utils';
 import { SearchType } from '../../global/query/key-value';
 
 @Injectable()
@@ -44,7 +53,7 @@ export class SensorsService {
     pagingOptions: IPagingOptions,
   ): Promise<DBPagingResult<Sensor>> {
     const { customAttributesQuery, ...rest } =
-      remapCustomAttributes(searchOptions);
+      remapKeyValueCustomAttributes(searchOptions);
 
     const filterOptions: FilterQuery<Sensor> = {
       _id: idToObjectIDOrOriginal(searchOptions.id),
@@ -118,7 +127,13 @@ export class SensorsService {
         this.sensorModel
           .findByIdAndUpdate(
             objectId,
-            pickBy(update, (value) => notNil(value)),
+            removeNilProperties({
+              ...omit(update, 'customAttributes'),
+              ...(transformAttributesToQuery(
+                update.customAttributes,
+                'customAttributes' as keyof Sensor,
+              ) ?? {}),
+            }),
             { returnDocument: 'after' },
           )
           .exec(),
@@ -126,6 +141,89 @@ export class SensorsService {
     });
 
     return (await awaitAllPromises(updatesInProgress)).fulfilled;
+  }
+
+  async updateOne(
+    id: Types.ObjectId,
+    update: UpdateOneSensorDto,
+  ): Promise<SensorDocument | undefined> {
+    return await this.sensorModel
+      .findByIdAndUpdate(id, update, { returnDocument: 'after' })
+      .exec();
+  }
+
+  async updateSensorsByCommonIdentifiers(
+    update: UpdateSensorsAttributesDto,
+  ): Promise<void> {
+    const updateFilter: FilterQuery<Sensor> = {
+      valueFragmentType: update.identifiers.valueFragmentType,
+      _id: notNil(update.identifiers.sensorIds)
+        ? { $in: update.identifiers.sensorIds }
+        : undefined,
+    };
+
+    const updateQuery: UpdateQuery<Sensor> = {
+      description: update.description,
+      valueFragmentDisplayName: update.valueFragmentDisplayName,
+      ...(transformAttributesToQuery(
+        update.customAttributes,
+        'customAttributes' as keyof Sensor,
+      ) ?? {}),
+    };
+
+    await this.sensorModel
+      .updateMany(
+        removeNilProperties(updateFilter),
+        removeNilProperties(updateQuery),
+        {
+          lean: true,
+        },
+      )
+      .exec();
+  }
+
+  async removeSensorAttributesByCommonIdentifiers(
+    update: DeleteSensorAttributesDto,
+  ): Promise<void> {
+    const updateFilter: FilterQuery<Sensor> = {
+      valueFragmentType: update.identifiers.valueFragmentType,
+      _id: notNil(update.identifiers.sensorIds)
+        ? { $in: update.identifiers.sensorIds }
+        : undefined,
+    };
+
+    const fieldsToRemove = pick(
+      update,
+      'customAttributes',
+      'description',
+      'valueFragmentDisplayName',
+    );
+
+    const transformedFieldsToRemove = removeNilProperties(
+      Object.fromEntries<number>(
+        Object.entries(fieldsToRemove).map(([key, value]) => [
+          key,
+          value === true ? 1 : undefined,
+        ]),
+      ),
+    );
+
+    const customAttributesToRemove = !update.customAttributes
+      ? transformKeysToUnsetForm(update.customAttributeKeys, 'customAttributes')
+      : {};
+
+    const updateQuery: UpdateQuery<Sensor> = {
+      $unset: {
+        ...customAttributesToRemove,
+        ...transformedFieldsToRemove,
+      },
+    };
+
+    await this.sensorModel
+      .updateMany(removeNilProperties(updateFilter), updateQuery, {
+        lean: true,
+      })
+      .exec();
   }
 
   async removeSensor(id: string): Promise<SensorDocument | undefined> {

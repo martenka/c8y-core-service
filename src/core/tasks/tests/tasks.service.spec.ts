@@ -4,12 +4,13 @@ import { connection, Types } from 'mongoose';
 import {
   DataFetchTask,
   DataFetchTaskSchema,
+  File,
   FileSchema,
   ObjectSyncTask,
   ObjectSyncTaskSchema,
   Task,
-  File,
   TaskDocument,
+  TaskMode,
   TaskSchema,
   TaskSteps,
   TaskTypes,
@@ -131,6 +132,7 @@ describe('TasksService', () => {
   it('creates and schedules task', async () => {
     const objectSyncTask: ObjectSyncTask = {
       taskType: TaskTypes.OBJECT_SYNC,
+      mode: TaskMode.ENABLED,
       name: 'Test Object Syncing',
       initiatedByUser: new Types.ObjectId('645677573f56adad8ddcc091'),
       customAttributes: {},
@@ -231,6 +233,7 @@ describe('TasksService', () => {
     const taskId = new Types.ObjectId('64569195c710ff3cad6b4d7f');
     const dataFetchTask: DataFetchTask = {
       taskType: TaskTypes.DATA_FETCH,
+      mode: TaskMode.ENABLED,
       _id: taskId,
       initiatedByUser: new Types.ObjectId('645677573f56adad8ddcc091'),
       status: TaskSteps.PROCESSING,
@@ -306,6 +309,7 @@ describe('TasksService', () => {
     const taskId = new Types.ObjectId('64592e30a16f4a1d83a5945c');
     const dataFetchTask: DataFetchTask = {
       taskType: TaskTypes.DATA_FETCH,
+      mode: TaskMode.ENABLED,
       _id: taskId,
       initiatedByUser: new Types.ObjectId('645677573f56adad8ddcc091'),
       status: TaskSteps.PROCESSING,

@@ -4,9 +4,12 @@ import { isEmpty } from '@nestjs/common/utils/shared.utils';
 import { notNil } from '../../utils/validation';
 
 /**
- * Converts stringified ObjectIds / MongoIds to Types.ObjectId. If delimiter is given then tries to return an array.
+ * Converts stringified ObjectIds / MongoIds to Types.ObjectId.
+ * If delimiter is given then returns parsed Types.ObjectId array
  *
- * Returns the original value if parsing fails.
+ * Works with both strings and string arrays.
+ *
+ *  Returns the original value if parsing fails.
  * @param delimiter The delimiter to use if an array of IDs is given as a string
  */
 export function TransformMongoId(delimiter?: string) {

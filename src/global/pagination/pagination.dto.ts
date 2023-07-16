@@ -12,6 +12,7 @@ import { HydratedDocument } from 'mongoose';
 import { PageInfo } from './page-info.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { convertBooleanOrOriginal } from '../../utils/helpers';
+import { TransformBoolean } from '../../decorators/transformers/boolean-transformer';
 
 export class BaseDBPagination<T> implements DBPagingResult<T> {
   constructor(input?: DBPagingResult<T>) {
@@ -63,9 +64,7 @@ export class PagingQuery implements IPagingOptions {
   currentPage?: number;
 
   @IsOptional()
-  @Transform(({ value }) => {
-    return convertBooleanOrOriginal(value);
-  })
+  @TransformBoolean()
   @IsBoolean()
   withTotalElements?: boolean;
 

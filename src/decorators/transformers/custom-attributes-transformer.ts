@@ -30,3 +30,33 @@ export function TransformCustomAttributes() {
     return value;
   });
 }
+
+/**
+ * Takes only first level key-value pairs from input object, where value is a string or number.<br>
+ * Converts numbers to string.<br>
+ * Empty string keys are omitted
+ *
+ * Returns the original value on parsing failure
+ */
+export function TransformCustomAttributesObject() {
+  return Transform(({ value: obj }) => {
+    const attributes: Record<string, string> = {};
+
+    try {
+      Object.entries(obj).forEach(([key, value]) => {
+        switch (typeof value) {
+          case 'string':
+          case 'number':
+          case 'boolean': {
+            if (key !== '') {
+              attributes[key] = String(value);
+            }
+          }
+        }
+      });
+      return attributes;
+    } catch (e) {
+      return obj;
+    }
+  });
+}

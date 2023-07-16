@@ -122,7 +122,7 @@ export function getCustomAttributesQuery(
   return query;
 }
 
-export function remapCustomAttributes<
+export function remapKeyValueCustomAttributes<
   T extends { customAttributes?: KeyValue[] },
 >(query: T) {
   const customAttributesQuery = getCustomAttributesQuery(
@@ -176,6 +176,22 @@ export function omit<T extends object, K extends (keyof T)[]>(
 
   Object.keys(value).forEach((key) => {
     if (!keySet.has(key as keyof T)) {
+      result[key] = value[key];
+    }
+  });
+
+  return result;
+}
+
+export function pick<T extends object, K extends (keyof T)[]>(
+  value: T,
+  ...keys: K
+): Pick<T, K[number]> {
+  const result = {} as Pick<T, K[number]>;
+  const keySet = new Set(keys);
+
+  Object.keys(value).forEach((key) => {
+    if (keySet.has(key as keyof T)) {
       result[key] = value[key];
     }
   });
