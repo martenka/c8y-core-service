@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User } from '../../models';
 import { ApplicationConfigService } from '../application-config/application-config.service';
 import { MessagesModule } from '../messages/messages.module';
-import { usersMongooseFactory } from './helpers/factories';
+import { usersMongoosePasswordHashMiddleware } from './helpers/middleware';
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { usersMongooseFactory } from './helpers/factories';
     MongooseModule.forFeatureAsync([
       {
         name: User.name,
-        useFactory: usersMongooseFactory,
+        useFactory: usersMongoosePasswordHashMiddleware,
         inject: [ApplicationConfigService],
       },
     ]),

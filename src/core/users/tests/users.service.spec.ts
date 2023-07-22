@@ -1,24 +1,37 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from '../users.service';
-import { connection } from 'mongoose';
+import { Connection } from 'mongoose';
 import { User } from '../../../models';
-import { UserSchema } from '../../../models/User';
+import { UserModel, UserSchema } from '../../../models/User';
 import { getModelToken } from '@nestjs/mongoose';
 import { MessagesProducerService } from '../../messages/messages-producer.service';
 import { CreateUserDto } from '../dto/input/create-user.dto';
 import { Role } from '../../../global/types/roles';
 import { omit } from '../../../utils/helpers';
-import { clearCollections, fakeTime } from '../../../utils/tests';
+import { fakeTime } from '../../../utils/tests';
 import { ExchangeTypes } from '../../messages/types/exchanges';
 import { SendMessageParams } from '../../messages/types/producer';
 import { notNil } from '../../../utils/validation';
+import {
+  setupTest,
+  WithServiceSetupTestResult,
+} from '../../../../test/setup/setup';
+
+type UsersServiceExtension = WithServiceSetupTestResult<{
+  models: {
+    userModel: UserModel;
+  };
+  services: {
+    messagesProducerService: MessagesProducerService;
+    usersService: UsersService;
+  };
+}>;
 
 describe('UsersService', () => {
-  let service: UsersService;
   const now = new Date();
 
-  const userDtos: CreateUserDto[] = [
-    {
+  const userDtos: (() => CreateUserDto)[] = [
+    () => ({
       username: 'testUser',
       password: 'testPassword',
       c8yCredentials: {
@@ -28,8 +41,8 @@ describe('UsersService', () => {
         tenantID: 'c8y-tenat',
       },
       role: [Role.Admin],
-    },
-    {
+    }),
+    () => ({
       username: 'temporaryUser',
       password: 'temporaryPassword',
       c8yCredentials: {
@@ -38,154 +51,196 @@ describe('UsersService', () => {
         baseAddress: 'https://localhost/',
         tenantID: 'temp-tenant',
       },
-    },
+    }),
   ];
 
-  const userModel = connection.model(User.name, UserSchema);
-  const messageProducerService = new MessagesProducerService(null);
-  const sendMessageSpy = jest
-    .spyOn(messageProducerService, 'sendMessage')
-    .mockImplementation((_args) => undefined);
+  function withTest(
+    callback: (params: UsersServiceExtension) => Promise<void>,
+  ): () => Promise<void> {
+    async function setupFn(
+      connection: Connection,
+    ): Promise<UsersServiceExtension> {
+      const userModel = connection.model(User.name, UserSchema);
+      const messagesProducerService = new MessagesProducerService(null);
 
-  beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        { provide: getModelToken(User.name), useValue: userModel },
-        {
-          provide: MessagesProducerService,
-          useValue: messageProducerService,
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          { provide: getModelToken(User.name), useValue: userModel },
+          {
+            provide: MessagesProducerService,
+            useValue: messagesProducerService,
+          },
+          UsersService,
+        ],
+      }).compile();
+
+      const service = module.get<UsersService>(UsersService);
+
+      return {
+        models: {
+          userModel,
         },
-        UsersService,
-      ],
-    }).compile();
+        services: {
+          usersService: service,
+          messagesProducerService,
+        },
+      };
+    }
 
-    service = module.get<UsersService>(UsersService);
-  });
+    return setupTest<UsersServiceExtension>(setupFn, callback);
+  }
 
-  beforeEach(() => fakeTime({ now, fake: ['Date'] }));
   afterEach(async () => {
-    jest.useRealTimers();
-    clearCollections(connection);
+    jest.clearAllMocks();
   });
+  afterAll(jest.useRealTimers);
 
-  it('handles user creation', async () => {
-    const registeredUser = await service.create(userDtos[0]);
-    const leanUser = registeredUser.toObject();
+  it.concurrent(
+    'handles user creation',
+    withTest(async ({ services }) => {
+      fakeTime({ now, fake: ['Date'] });
+      const user = userDtos[0]();
+      const registeredUser = await services.usersService.create(user);
+      const leanUser = registeredUser.toObject();
 
-    expect(leanUser.password).toBeUndefined();
-    expect(registeredUser.toObject()).toMatchObject({
-      ...omit(userDtos[0], 'role', 'password'),
-      roles: [Role.Admin, Role.User],
-    });
-  });
+      expect(leanUser.password).toBeUndefined();
+      expect(registeredUser.toObject()).toMatchObject({
+        ...omit(userDtos[0](), 'role', 'password'),
+        roles: [Role.Admin, Role.User],
+      });
+    }),
+  );
 
-  it('finds a user', async () => {
-    const users = [...userDtos];
-    users[0].username = 'testUser2';
-    users[1].username = 'testUser3';
+  it.concurrent(
+    'finds a user',
+    withTest(async ({ models, services }) => {
+      const users = userDtos.map((dtoFn) => dtoFn());
+      users[0].username = 'testUser2';
+      users[1].username = 'testUser3';
 
-    const createdUsers = await userModel.create(users);
-    const userToFind = createdUsers.find(
-      (user) => user.username === 'testUser2',
-    );
-    const foundUser = await service.findOne({
-      username: 'testUser2',
-      id: userToFind._id,
-    });
+      const createdUsers = await models.userModel.create(users);
+      const userToFind = createdUsers.find(
+        (user) => user.username === 'testUser2',
+      );
+      const foundUser = await services.usersService.findOne({
+        username: 'testUser2',
+        id: userToFind._id,
+      });
 
-    expect(foundUser).toBeDefined();
-    const leanUser = foundUser.toObject();
-    expect(leanUser.password).toBeUndefined();
-    expect(leanUser).toMatchObject({
-      ...omit(userDtos[0], 'role', 'password'),
-      roles: [Role.User],
-    });
-  });
+      expect(foundUser).toBeDefined();
+      const leanUser = foundUser.toObject();
+      expect(leanUser.password).toBeUndefined();
+      expect(leanUser).toMatchObject({
+        ...omit(users[0], 'role', 'password'),
+        roles: [Role.User],
+      });
+    }),
+  );
 
-  it('selects user with password', async () => {
-    const users = [...userDtos];
-    users[0].username = 'testUser4';
-    users[1].username = 'temporaryUser';
+  it.concurrent(
+    'selects user with password',
+    withTest(async ({ models, services }) => {
+      const users = userDtos.map((dtoFn) => dtoFn());
+      users[0].username = 'testUser4';
+      users[1].username = 'temporaryUser';
 
-    await userModel.create(users);
-    const foundUser = await service.findOne(
-      { username: 'temporaryUser' },
-      true,
-    );
+      await models.userModel.create(users);
+      const foundUser = await services.usersService.findOne(
+        { username: 'temporaryUser' },
+        true,
+      );
 
-    expect(notNil(foundUser)).toBe(true);
-    const leanUser = foundUser.toObject();
-    expect(leanUser.password).toBeDefined();
-    expect(leanUser).toMatchObject({
-      ...omit(userDtos[1], 'role', 'password'),
-      roles: [Role.User],
-    });
-  });
+      expect(notNil(foundUser)).toBe(true);
+      const leanUser = foundUser.toObject();
+      expect(leanUser.password).toBeDefined();
+      expect(leanUser).toMatchObject({
+        ...omit(userDtos[1](), 'role', 'password'),
+        roles: [Role.User],
+      });
+    }),
+  );
 
-  it('updates user', async () => {
-    const users = [...userDtos];
-    users[0].username = 'testUser6';
-    users[1].username = 'temporaryUser2';
+  it.concurrent(
+    'updates user',
+    withTest(async ({ models, services }) => {
+      const sendMessageSpy = jest
+        .spyOn(services.messagesProducerService, 'sendMessage')
+        .mockImplementation((_args) => undefined);
 
-    const createdUsers = await userModel.create(users);
-    const userToUpdate = createdUsers.find(
-      (user) => user.username === users[1].username,
-    );
+      const users = userDtos.map((dtoFn) => dtoFn());
+      users[0].username = 'testUser6';
+      users[1].username = 'temporaryUser2';
 
-    expect(userToUpdate.roles.includes(Role.Admin)).toBe(false);
-    const updatedUser = await service.updateOne(userToUpdate._id, {
-      role: [Role.Admin],
-    });
+      const createdUsers = await models.userModel.create(users);
+      const userToUpdate = createdUsers.find(
+        (user) => user.username === users[1].username,
+      );
 
-    expect(updatedUser).toBeDefined();
-    const leanUpdatedUser = updatedUser.toObject();
-    expect(leanUpdatedUser).toMatchObject({
-      ...omit(users[1], 'password'),
-      roles: [Role.Admin, Role.User],
-    });
+      expect(userToUpdate.roles.includes(Role.Admin)).toBe(false);
+      const updatedUser = await services.usersService.updateOne(
+        userToUpdate._id,
+        {
+          role: [Role.Admin],
+        },
+      );
 
-    expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
-      ExchangeTypes.GENERAL,
-      'user.user',
-      {
-        id: leanUpdatedUser._id.toString(),
-        c8yCredentials: leanUpdatedUser.c8yCredentials,
-      },
-    );
-  });
+      expect(updatedUser).toBeDefined();
+      const leanUpdatedUser = updatedUser.toObject();
+      expect(leanUpdatedUser).toMatchObject({
+        ...omit(users[1], 'password'),
+        roles: [Role.Admin, Role.User],
+      });
 
-  it('deletes users', async () => {
-    const users = [...userDtos];
-    users[0].username = 'abcd';
-    users[1].username = 'qwerty';
+      expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
+        ExchangeTypes.GENERAL,
+        'user.user',
+        {
+          id: leanUpdatedUser._id.toString(),
+          c8yCredentials: leanUpdatedUser.c8yCredentials,
+        },
+      );
+    }),
+  );
 
-    const createdUsers = await userModel.create(users);
-    const deleteResponse = await service.delete({
-      items: createdUsers.map((user) => user._id.toString()),
-    });
+  it.concurrent(
+    'deletes users',
+    withTest(async ({ models, services }) => {
+      const sendMessageSpy = jest
+        .spyOn(services.messagesProducerService, 'sendMessage')
+        .mockImplementation((_args) => undefined);
 
-    expect(deleteResponse).toEqual({ deletedCount: 2 });
-    expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
-      ExchangeTypes.GENERAL,
-      'user.user',
-      {
-        id: createdUsers[0]._id.toString(),
-        deletedAt: now.toISOString(),
-      },
-    );
-    expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
-      ExchangeTypes.GENERAL,
-      'user.user',
-      {
-        id: createdUsers[1]._id.toString(),
-        deletedAt: now.toISOString(),
-      },
-    );
+      const users = userDtos.map((dtoFn) => dtoFn());
+      users[0].username = 'abcd';
+      users[1].username = 'qwerty';
 
-    await expect(
-      userModel
-        .find({ _id: { $in: createdUsers.map((user) => user._id) } })
-        .exec(),
-    ).resolves.toHaveLength(0);
-  });
+      const createdUsers = await models.userModel.create(users);
+      const deleteResponse = await services.usersService.delete({
+        items: createdUsers.map((user) => user._id.toString()),
+      });
+
+      expect(deleteResponse).toEqual({ deletedCount: 2 });
+      expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
+        ExchangeTypes.GENERAL,
+        'user.user',
+        {
+          id: createdUsers[0]._id.toString(),
+          deletedAt: now.toISOString(),
+        },
+      );
+      expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
+        ExchangeTypes.GENERAL,
+        'user.user',
+        {
+          id: createdUsers[1]._id.toString(),
+          deletedAt: now.toISOString(),
+        },
+      );
+
+      await expect(
+        models.userModel
+          .find({ _id: { $in: createdUsers.map((user) => user._id) } })
+          .exec(),
+      ).resolves.toHaveLength(0);
+    }),
+  );
 });
