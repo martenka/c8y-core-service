@@ -232,8 +232,9 @@ describe('TasksService', () => {
       const foundTask = await services.service.findById(taskId);
 
       const leanTask = foundTask.toObject();
+
       expect(leanTask).toMatchObject({
-        _id: taskId,
+        _id: taskId.toString(),
         initiatedByUser: '645677573f56adad8ddcc091',
         taskType: TaskTypes.OBJECT_SYNC,
         name: 'TEST',
@@ -269,7 +270,7 @@ describe('TasksService', () => {
       const leanUpdatedTask = updatedTask.toObject();
 
       expect(leanUpdatedTask).toMatchObject({
-        _id: taskId,
+        _id: taskId.toString(),
         initiatedByUser: '645677573f56adad8ddcc091',
         taskType: TaskTypes.OBJECT_SYNC,
         name: 'Failing task',
