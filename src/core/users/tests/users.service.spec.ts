@@ -90,6 +90,7 @@ describe('UsersService', () => {
     return setupTest<UsersServiceExtension>(setupFn, callback);
   }
 
+  beforeAll(() => fakeTime({ now, fake: ['Date'] }));
   afterEach(async () => {
     jest.clearAllMocks();
   });
@@ -98,7 +99,6 @@ describe('UsersService', () => {
   it.concurrent(
     'handles user creation',
     withTest(async ({ services }) => {
-      fakeTime({ now, fake: ['Date'] });
       const user = userDtos[0]();
       const registeredUser = await services.usersService.create(user);
       const leanUser = registeredUser.toObject();
