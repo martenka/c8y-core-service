@@ -90,12 +90,12 @@ export class TasksService {
     const mappedPayload =
       this.taskMessageMapperService.mapTaskToMessage(createdTask);
 
-    let periodicData;
+    let periodicData: TaskScheduledMessage['periodicData'];
     if (notNil(createdTask.metadata?.periodicData)) {
       periodicData = {
         pattern: createdTask.metadata.periodicData.pattern,
-        fetchDurationSeconds:
-          createdTask.metadata.periodicData.fetchDurationSeconds,
+        windowDurationSeconds:
+          createdTask.metadata.periodicData.windowDurationSeconds,
       };
     }
 
@@ -183,6 +183,10 @@ export class TasksService {
     if (statusMessage.status === TaskSteps.PROCESSING) {
       update['metadata.lastRanAt'] = parseDateOrNow(statusMessage.timestamp);
     }
+
+    update['mode'] = statusMessage.mode;
+    update['metadata.nextRunAt'] = statusMessage.nextRunAt;
+
     return await this.taskModel.findByIdAndUpdate(id, update).exec();
   }
 
@@ -290,7 +294,8 @@ export class TasksService {
     if (notNil(result.payload.completedAt)) {
       task.metadata.lastCompletedAt = new Date(result.payload.completedAt);
     }
-    task.status = TaskSteps.DONE;
+    task.status = result.status;
+
     return await task.save();
   }
 

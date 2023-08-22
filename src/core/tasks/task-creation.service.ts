@@ -43,6 +43,7 @@ import { Platform } from '../../global/tokens';
 import { FilesService } from '../files/files.service';
 import { CustomException } from '../../global/exceptions/custom.exception';
 import crypto from 'crypto';
+import { notNil } from '../../utils/validation';
 
 @Injectable()
 export class TaskCreationService implements OnModuleInit {
@@ -200,6 +201,14 @@ export class TaskCreationService implements OnModuleInit {
   private async createDataFetchTaskEntity(
     taskDetails: WithInitiatedByUser<CreateDataFetchDto>,
   ): Promise<DataFetchTaskDocument> {
+    if (
+      notNil(taskDetails.periodicData?.pattern) &&
+      isNil(taskDetails.periodicData?.windowDurationSeconds)
+    ) {
+      throw new CustomException(
+        `Cannot create periodic ${taskDetails.taskType} without window duration set`,
+      );
+    }
     switch (taskDetails.taskPayload.entityType) {
       case 'GROUP': {
         const groupSensorIds = (

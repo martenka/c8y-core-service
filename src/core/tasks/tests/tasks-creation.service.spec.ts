@@ -173,7 +173,7 @@ describe('TasksCreationService', () => {
         firstRunAt: new Date('2023-04-12T12:00:00.000Z'),
         periodicData: {
           pattern: '0 0 0 ? * * *',
-          fetchDurationSeconds: 0,
+          windowDurationSeconds: 0,
         },
         taskPayload: {
           dateFrom: new Date('2023-04-01T12:00:00.000Z'),
@@ -197,7 +197,7 @@ describe('TasksCreationService', () => {
           firstRunAt: new Date('2023-04-12T12:00:00.000Z'),
           periodicData: {
             pattern: '0 0 0 ? * * *',
-            fetchDurationSeconds: 0,
+            windowDurationSeconds: 0,
           },
         }),
         payload: expect.objectContaining({

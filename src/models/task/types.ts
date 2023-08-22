@@ -6,6 +6,7 @@ import { DataUploadTaskDocument, DataUploadTaskType } from './data-upload-task';
 export enum TaskSteps {
   NOT_STARTED = 'NOT_STARTED',
   IN_QUEUE = 'IN_QUEUE',
+  WAITING_NEXT_CYCLE = 'WAITING_NEXT_CYCLE',
   PROCESSING = 'PROCESSING',
   DONE = 'DONE',
   FAILED = 'FAILED',

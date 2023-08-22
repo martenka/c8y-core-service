@@ -9,7 +9,7 @@ export class OutputTaskPeriodicData {
   pattern: string;
 
   @Expose()
-  fetchDurationSeconds?: number;
+  windowDurationSeconds?: number;
 }
 
 @Exclude()

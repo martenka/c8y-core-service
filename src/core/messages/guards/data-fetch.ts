@@ -6,9 +6,12 @@ import { TaskSteps, TaskTypes } from '../../../models';
 export function isDataFetchTaskResultMessage(
   message: TaskStatusMessage,
 ): message is DataFetchTaskResult {
+  const isCorrectTaskStep =
+    message.status === TaskSteps.DONE ||
+    message.status === TaskSteps.WAITING_NEXT_CYCLE;
   return (
     notNil(message) &&
-    message.status === TaskSteps.DONE &&
+    isCorrectTaskStep &&
     message.taskType === TaskTypes.DATA_FETCH &&
     'sensors' in message.payload
   );

@@ -26,7 +26,7 @@ export class PeriodicData {
 
   @IsOptional()
   @IsNumber()
-  fetchDurationSeconds = 0;
+  windowDurationSeconds: number;
 }
 
 export class CreateTaskDto {

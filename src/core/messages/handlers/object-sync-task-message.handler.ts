@@ -22,11 +22,6 @@ export class ObjectSyncTaskMessageHandler {
   ) {}
 
   async handleStatusMessage(message: ObjectSyncTaskStatusMessage) {
-    await this.tasksService.updateTaskStatus(
-      new Types.ObjectId(message.taskId),
-      message,
-    );
-
     for (const object of message.payload.objects) {
       if (isSensor(object)) {
         const existingSensor = await this.sensorsService.findOne({

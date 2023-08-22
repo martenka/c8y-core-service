@@ -1,4 +1,5 @@
 import {
+  TaskMode,
   TaskPeriodicDataType,
   TaskSteps,
   TaskType,
@@ -11,7 +12,10 @@ export interface TaskScheduledMessage<P extends object = object>
   taskName: string;
   initiatedByUser: string;
   firstRunAt?: string;
-  periodicData?: Pick<TaskPeriodicDataType, 'pattern' | 'fetchDurationSeconds'>;
+  periodicData?: Pick<
+    TaskPeriodicDataType,
+    'pattern' | 'windowDurationSeconds'
+  >;
   payload: P;
 }
 
@@ -24,11 +28,13 @@ export interface TaskStatusMessage<
   S extends TaskSteps = TaskSteps,
 > {
   taskId: string;
+  mode?: TaskMode;
   taskType: keyof typeof TaskTypes;
   status: S;
   /**
    * The date when the status event happened
    */
   timestamp?: string;
+  nextRunAt?: string;
   payload: P;
 }

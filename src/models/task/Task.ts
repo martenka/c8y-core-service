@@ -13,7 +13,7 @@ export class PeriodicData {
   pattern: string;
 
   @Prop()
-  fetchDurationSeconds?: number;
+  windowDurationSeconds?: number;
 }
 
 @Schema({ _id: false })
@@ -35,6 +35,9 @@ export class TaskMetadata {
 
   @Prop({ type: Date })
   firstRunAt?: Date;
+
+  @Prop({ type: Date })
+  nextRunAt?: Date;
 
   @Prop({ type: PeriodicData })
   periodicData?: PeriodicData;

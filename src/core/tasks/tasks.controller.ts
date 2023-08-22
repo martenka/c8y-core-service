@@ -81,7 +81,7 @@ export class TasksController {
     try {
       return await this.tasksService.createAndScheduleTask(user._id, task);
     } catch (e) {
-      if (e instanceof CustomException) {
+      if (e instanceof Error) {
         throw new BadRequestException(e.message);
       }
     }
