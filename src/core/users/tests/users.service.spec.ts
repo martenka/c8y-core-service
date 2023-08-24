@@ -11,11 +11,13 @@ import { omit } from '../../../utils/helpers';
 import { fakeTime } from '../../../utils/tests';
 import { ExchangeTypes } from '../../messages/types/exchanges';
 import { SendMessageParams } from '../../messages/types/producer';
-import { notNil } from '../../../utils/validation';
+import { isPresent } from '../../../utils/validation';
 import {
   setupTest,
   WithServiceSetupTestResult,
 } from '../../../../test/setup/setup';
+import * as assert from 'assert';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 type UsersServiceExtension = WithServiceSetupTestResult<{
   models: {
@@ -61,7 +63,9 @@ describe('UsersService', () => {
       connection: Connection,
     ): Promise<UsersServiceExtension> {
       const userModel = connection.model(User.name, UserSchema);
-      const messagesProducerService = new MessagesProducerService(null);
+      const messagesProducerService = new MessagesProducerService(
+        null as unknown as AmqpConnection,
+      );
 
       const module: TestingModule = await Test.createTestingModule({
         providers: [
@@ -101,10 +105,10 @@ describe('UsersService', () => {
     withTest(async ({ services }) => {
       const user = userDtos[0]();
       const registeredUser = await services.usersService.create(user);
-      const leanUser = registeredUser.toObject();
+      const leanUser = registeredUser!.toObject();
 
       expect(leanUser.password).toBeUndefined();
-      expect(registeredUser.toObject()).toMatchObject({
+      expect(registeredUser!.toObject()).toMatchObject({
         ...omit(userDtos[0](), 'role', 'password'),
         roles: [Role.Admin, Role.User],
       });
@@ -122,12 +126,14 @@ describe('UsersService', () => {
       const userToFind = createdUsers.find(
         (user) => user.username === 'testUser2',
       );
+
+      assert.ok(isPresent(userToFind));
       const foundUser = await services.usersService.findOne({
         username: 'testUser2',
         id: userToFind._id,
       });
 
-      expect(foundUser).toBeDefined();
+      assert.ok(isPresent(foundUser));
       const leanUser = foundUser.toObject();
       expect(leanUser.password).toBeUndefined();
       expect(leanUser).toMatchObject({
@@ -150,9 +156,10 @@ describe('UsersService', () => {
         true,
       );
 
-      expect(notNil(foundUser)).toBe(true);
-      const leanUser = foundUser.toObject();
-      expect(leanUser.password).toBeDefined();
+      expect(isPresent(foundUser)).toBe(true);
+      const leanUser = foundUser?.toObject();
+
+      expect(leanUser?.password).toBeDefined();
       expect(leanUser).toMatchObject({
         ...omit(userDtos[1](), 'role', 'password'),
         roles: [Role.User],
@@ -176,7 +183,9 @@ describe('UsersService', () => {
         (user) => user.username === users[1].username,
       );
 
-      expect(userToUpdate.roles.includes(Role.Admin)).toBe(false);
+      assert.ok(isPresent(userToUpdate));
+      expect(userToUpdate?.roles.includes(Role.Admin)).toBe(false);
+
       const updatedUser = await services.usersService.updateOne(
         userToUpdate._id,
         {
@@ -185,6 +194,8 @@ describe('UsersService', () => {
       );
 
       expect(updatedUser).toBeDefined();
+      assert.ok(isPresent(updatedUser));
+
       const leanUpdatedUser = updatedUser.toObject();
       expect(leanUpdatedUser).toMatchObject({
         ...omit(users[1], 'password'),

@@ -13,7 +13,7 @@ interface DataFetchTaskSpecificOverrides {
 }
 
 interface DataUploadTaskSpecificOverrides {
-  fileIds?: Partial<CreateDataUploadTaskDto['taskPayload']['fileIds']>;
+  fileIds?: CreateDataUploadTaskDto['taskPayload']['fileIds'];
 }
 export function getCreateDataFetchTaskStub(
   override?: Partial<CreateDataFetchDto>,
@@ -70,6 +70,7 @@ export function getTaskStub(
   override?: Partial<Task>,
 ): Task {
   return {
+    _id: new Types.ObjectId('64e666bf168f8d93e1d7964a'),
     status: TaskSteps.PROCESSING,
     mode: TaskMode.ENABLED,
     name: 'TestingTask',

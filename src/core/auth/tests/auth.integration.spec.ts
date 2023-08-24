@@ -36,6 +36,7 @@ import {
   setupTest,
   WithIntegrationSetupTestResult,
 } from '../../../../test/setup/setup';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 type AuthIntegrationExtension = WithIntegrationSetupTestResult<{
   models: {
@@ -97,7 +98,9 @@ describe('Auth integration test', () => {
 
       const usersModel = connection.model(User.name, UserSchema);
 
-      const messagesProducerService = new MessagesProducerService(null);
+      const messagesProducerService = new MessagesProducerService(
+        null as unknown as AmqpConnection,
+      );
 
       const testJwtService = new JwtService(getTestJwtConfig());
 
@@ -183,7 +186,7 @@ describe('Auth integration test', () => {
 
       expect(userEntity).toBeDefined();
 
-      expect(await bcrypt.compare('1234', userEntity.password)).toBe(true);
+      expect(await bcrypt.compare('1234', userEntity!.password!)).toBe(true);
       expect(output.status).toEqual(201);
       expect(output.body).toMatchObject<Partial<UserOutputDto>>({
         username: 'auth_test_user',

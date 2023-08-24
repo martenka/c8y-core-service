@@ -7,9 +7,12 @@ import { isGroup, isSensor } from '../guards/object-sync';
 import { GroupsService } from '../../groups/groups.service';
 import { Group, Sensor } from '../types/message-types/task/object-sync';
 import { SensorDocument } from '../../../models/Sensor';
-import { notNil } from '../../../utils/validation';
+import { isPresent, notPresent } from '../../../utils/validation';
 import { GroupDocument } from '../../../models/Group';
-import { CreateSensorDtoProperties } from '../../sensors/dto/create-sensor.dto';
+import {
+  CreateSensorDto,
+  CreateSensorDtoProperties,
+} from '../../sensors/dto/create-sensor.dto';
 
 @Injectable()
 export class ObjectSyncTaskMessageHandler {
@@ -29,13 +32,19 @@ export class ObjectSyncTaskMessageHandler {
           managedObjectName: object.managedObjectName,
           valueFragmentType: object.valueFragmentType,
         });
-        if (notNil(existingSensor)) {
+        if (isPresent(existingSensor)) {
           this.logger.log(
             `Skipping creation for existing sensor for triple {${existingSensor.managedObjectId},${existingSensor.managedObjectName},${existingSensor.valueFragmentType}}`,
           );
           continue;
         }
 
+        if (notPresent(object.valueFragmentType)) {
+          this.logger.log(
+            'Skipping creation of sensor as valueFragmentType is missing',
+          );
+          continue;
+        }
         const sensorToCreate: CreateSensorDtoProperties = {
           managedObjectId: object.managedObjectId,
           managedObjectName: object.managedObjectName,
@@ -70,7 +79,7 @@ export class ObjectSyncTaskMessageHandler {
         managedObjectId: group.managedObjectId,
       });
 
-    if (notNil(existingGroup)) {
+    if (isPresent(existingGroup)) {
       await this.groupsService.updateGroups([
         {
           id: existingGroup._id.toString(),
@@ -105,18 +114,32 @@ export class ObjectSyncTaskMessageHandler {
           sensor.valueFragmentType === inputSensor.valueFragmentType,
       );
 
-      if (notNil(existingSensor)) {
+      if (isPresent(existingSensor)) {
         sensorId = existingSensor._id;
       } else {
+        if (notPresent(inputSensor.valueFragmentType)) {
+          this.logger.log(
+            'Skipping creation of group sensor as valueFragmentType is missing',
+          );
+          continue;
+        }
+        const sensorToCreate: CreateSensorDto = {
+          managedObjectId: inputSensor.managedObjectId,
+          managedObjectName: inputSensor.managedObjectName,
+          valueFragmentType: inputSensor.valueFragmentType,
+          type: inputSensor.type,
+          owner: inputSensor.owner,
+        };
         const createdSensor = await this.sensorsService.createSensors([
-          {
-            managedObjectId: inputSensor.managedObjectId,
-            managedObjectName: inputSensor.managedObjectName,
-            valueFragmentType: inputSensor.valueFragmentType,
-            type: inputSensor.type,
-            owner: inputSensor.owner,
-          },
+          sensorToCreate,
         ]);
+        if (notPresent(createdSensor)) {
+          this.logger.error(
+            'Skipping creating a sensor due to a problem',
+            sensorToCreate,
+          );
+          continue;
+        }
         sensorId = createdSensor[0]._id;
       }
       groupSensorIds.push(sensorId);
@@ -134,11 +157,11 @@ export class ObjectSyncTaskMessageHandler {
         await this.groupsService.findOne({
           managedObjectId: nestedGroup.managedObjectId,
         });
-      if (notNil(existingNestedGroup)) {
+      if (isPresent(existingNestedGroup)) {
         nestedGroupIds.push(existingNestedGroup._id);
       } else {
         const createdGroup = await this.mapAndCreateGroup(nestedGroup);
-        if (notNil(createdGroup) && createdGroup.length > 0) {
+        if (isPresent(createdGroup) && createdGroup.length > 0) {
           nestedGroupIds.push(createdGroup[0]._id);
         }
       }

@@ -23,7 +23,7 @@ import { GroupModel, GroupSchema } from '../../../models/Group';
 import { GroupsController } from '../groups.controller';
 import { GroupsService } from '../groups.service';
 import { getCreateGroupDtoStub } from '../../../tests/stubs/group';
-import { notNil } from '../../../utils/validation';
+import { isPresent } from '../../../utils/validation';
 import { OutputGroupDto } from '../dto/output-group.dto';
 import { OutputSensorDto } from '../../sensors/dto/output-sensor.dto';
 import { Role } from '../../../global/types/roles';
@@ -150,12 +150,14 @@ describe('Groups integration test', () => {
       await models.groupModel.create({
         _id: new Types.ObjectId('64799c0527047d801cc7dd3f'),
         name: 'Group2',
-        sensors: [sensor1._id.toString()],
+        sensors: [sensor1._id!.toString()],
       });
 
       const sensors = [sensor1, sensor2, sensor3];
       const createGroupDto = getCreateGroupDtoStub({
-        sensors: sensors.map((sensor) => sensor._id?.toString()).filter(notNil),
+        sensors: sensors
+          .map((sensor) => sensor._id?.toString())
+          .filter(isPresent),
         groups: ['64799c0527047d801cc7dd3f'],
       });
 
@@ -214,7 +216,7 @@ describe('Groups integration test', () => {
       await models.groupModel.create({
         _id: new Types.ObjectId('64799f492acb7fe2134fdd17'),
         name: 'ExistingGroup2',
-        sensors: [sensor1._id.toString()],
+        sensors: [sensor1._id!.toString()],
       });
 
       await models.sensorModel.create(sensors);
@@ -363,7 +365,9 @@ describe('Groups integration test', () => {
       const sensors = [sensor1, sensor2, sensor3];
       const createGroupDto = getCreateGroupDtoStub({
         name: 'GroupToBeDeletedName',
-        sensors: sensors.map((sensor) => sensor._id?.toString()).filter(notNil),
+        sensors: sensors
+          .map((sensor) => sensor._id?.toString())
+          .filter(isPresent),
       });
 
       await sensorModel.create(sensors);
@@ -449,7 +453,9 @@ describe('Groups integration test', () => {
       const sensors = [sensor1, sensor2];
       const createGroupDto = getCreateGroupDtoStub({
         name: 'OriginalGroupToBeUpdatedName',
-        sensors: sensors.map((sensor) => sensor._id?.toString()).filter(notNil),
+        sensors: sensors
+          .map((sensor) => sensor._id?.toString())
+          .filter(isPresent),
       });
 
       await models.sensorModel.create([...sensors, sensor3]);

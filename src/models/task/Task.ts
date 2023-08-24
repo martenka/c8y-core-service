@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Base } from '../Base';
-import { notNil } from '../../utils/validation';
+import { isPresent } from '../../utils/validation';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { User } from '../User';
 import { Properties } from '../../global/types/types';
@@ -65,7 +65,7 @@ export class Task extends Base {
     default: TaskSteps.NOT_STARTED,
     validate: {
       validator: (input) =>
-        notNil(input) && Object.values(TaskSteps).includes(input),
+        isPresent(input) && Object.values(TaskSteps).includes(input),
       message: (props) =>
         `${props?.value ?? 'UNKNOWN'} is not a valid status value!`,
     },
@@ -77,7 +77,7 @@ export class Task extends Base {
     default: TaskMode.ENABLED,
     validate: {
       validator: (input) =>
-        notNil(input) && Object.values(TaskMode).includes(input),
+        isPresent(input) && Object.values(TaskMode).includes(input),
       message: (props) =>
         `${props?.value ?? 'UNKNOWN'} is not a valid mode value!`,
     },

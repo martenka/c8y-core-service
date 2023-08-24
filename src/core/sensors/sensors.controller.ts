@@ -36,6 +36,7 @@ import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { removeNilProperties } from '../../utils/helpers';
 import { Types } from 'mongoose';
 import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
+import { notPresent } from '../../utils/validation';
 
 @Controller('sensors')
 @UseInterceptors(DtoTransformInterceptor)
@@ -146,7 +147,15 @@ export class SensorsController {
     @Body(new ParseArrayPipe({ items: UpdateSensorDto }))
     updateSensorDtos: UpdateSensorDto[],
   ): Promise<SensorDocument[]> {
-    return this.sensorsService.updateSensors(updateSensorDtos);
+    const updatedSensors = await this.sensorsService.updateSensors(
+      updateSensorDtos,
+    );
+    if (notPresent(updatedSensors)) {
+      throw new BadRequestException(
+        'Something went wrong with sensor update, check update query and if all sensors exist',
+      );
+    }
+    return updatedSensors;
   }
 
   @Delete(':id')

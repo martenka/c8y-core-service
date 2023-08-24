@@ -5,6 +5,8 @@ import * as bcrypt from 'bcrypt';
 import { CustomAttributes } from './types/types';
 import { Role } from '../global/types/roles';
 import { Properties } from '../global/types/types';
+import { notPresent } from '../utils/validation';
+import { InternalServerErrorException, Logger } from '@nestjs/common';
 
 @Schema({ _id: false })
 export class C8yCredentials {
@@ -39,8 +41,8 @@ export class User extends Base {
   @Prop({ required: true, unique: true })
   username: string;
 
-  @Prop({ required: true, select: false })
-  password: string;
+  @Prop({ type: String, required: true, select: false })
+  password: string | undefined;
 
   @Prop({ type: () => [Role], default: [Role.User] })
   roles: Role[];
@@ -66,7 +68,13 @@ UserSchema.methods.isPasswordMatch = async function (
   passwordToCompare: string,
 ): Promise<boolean> {
   const user = this as UserDocument;
-  return await bcrypt.compare(passwordToCompare, user.password);
+  const userPassword = user.password;
+  if (notPresent(userPassword)) {
+    new Logger().error(`User ${user?._id?.toString()} password not found`);
+    throw new InternalServerErrorException();
+  }
+
+  return await bcrypt.compare(passwordToCompare, userPassword);
 };
 
 export interface PasswordCheck {

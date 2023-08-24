@@ -1,15 +1,14 @@
 import { Types } from 'mongoose';
-import { notNil } from './validation';
+import { isPresent, notPresent } from './validation';
 import { BSONTypeError, ObjectIdLike } from 'bson';
 import { isArray } from 'class-validator';
 import { Buffer } from 'buffer';
 import { KeyValue } from '../global/query/key-value';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 
 export type ParsedPromisesResult<T> = { fulfilled: T[]; rejected: unknown[] };
 
 export function removeNilProperties<T extends object>(value: T): Partial<T> {
-  return pickBy(value, (element) => notNil(element));
+  return pickBy(value, (element) => isPresent(element));
 }
 
 export function remapIDAndRemoveNil<T extends { id?: string }>(
@@ -18,7 +17,7 @@ export function remapIDAndRemoveNil<T extends { id?: string }>(
 ) {
   const mappedObj: Partial<T> = { ...value };
 
-  if (notNil(value.id)) {
+  if (isPresent(value.id)) {
     mappedObj['_id'] = newID ?? idToObjectIDOrOriginal(value.id);
   }
 
@@ -35,16 +34,18 @@ type TestType =
 
 export function idToObjectIDOrUndefined<T extends TestType | TestType[]>(
   id: T,
-): T extends TestType[] ? Types.ObjectId[] : Types.ObjectId;
+): T extends TestType[]
+  ? Types.ObjectId[] | undefined
+  : Types.ObjectId | undefined;
 export function idToObjectIDOrUndefined(
   id: TestType | TestType[],
-): Types.ObjectId[] | Types.ObjectId {
-  if (isNil(id)) {
+): Types.ObjectId[] | Types.ObjectId | undefined {
+  if (notPresent(id)) {
     return undefined;
   }
   try {
     if (isArray(id)) {
-      return id.filter(notNil).map((value) => new Types.ObjectId(value));
+      return id.filter(isPresent).map((value) => new Types.ObjectId(value));
     }
     return new Types.ObjectId(id);
   } catch (e) {
@@ -55,14 +56,16 @@ export function idToObjectIDOrUndefined(
   }
 }
 
-export function idToObjectIDOrOriginal<T extends TestType>(id: T) {
-  if (isNil(id)) {
+export function idToObjectIDOrOriginal<T extends TestType>(
+  id: T | undefined | null,
+) {
+  if (notPresent(id)) {
     return id;
   }
   try {
     if (isArray(id)) {
       return id.map((value) => {
-        return notNil(value) ? new Types.ObjectId(value) : value;
+        return isPresent(value) ? new Types.ObjectId(value) : value;
       });
     }
     return new Types.ObjectId(id);
@@ -92,7 +95,7 @@ export function pickBy<T extends object>(
 export async function awaitAllPromises<T>(
   promises: Promise<T>[],
 ): Promise<ParsedPromisesResult<T>> {
-  const settled = await Promise.allSettled(promises);
+  const settled = await Promise.allSettled(promises.filter(isPresent));
   const result: ParsedPromisesResult<T> = {
     fulfilled: [],
     rejected: [],
@@ -153,7 +156,7 @@ export function convertArrayToMap<T>(
 
   for (const element of arr) {
     const key = keyFn(element);
-    if (isNil(key)) {
+    if (notPresent(key)) {
       continue;
     }
     resultMap.set(key, element);
@@ -199,7 +202,7 @@ export function pick<T extends object, K extends (keyof T)[]>(
   return result;
 }
 
-export function nullToUndefined<T>(value: T): Omit<T, null> {
+export function nullToUndefined<T>(value: T): NonNullable<T> | undefined {
   if (value === null) {
     return undefined;
   }
@@ -210,7 +213,7 @@ export function nullToUndefined<T>(value: T): Omit<T, null> {
  * Parses the date from input into date or return current date on failure
  */
 export function parseDateOrNow(inputDate: string | undefined): Date {
-  if (isNil(inputDate)) {
+  if (notPresent(inputDate)) {
     return new Date();
   }
   const date = new Date(inputDate);

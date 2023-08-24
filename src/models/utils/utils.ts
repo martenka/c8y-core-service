@@ -1,14 +1,13 @@
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Base } from '../Base';
-import { ensureArray, notNil } from '../../utils/validation';
+import { ensureArray, isPresent, notPresent } from '../../utils/validation';
 import { BasicAttributes } from '../types/types';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 
 export async function getDeletedIds<T extends Base = Base>(
   model: Model<T>,
   deletion: Types.ObjectId | Types.ObjectId[] | undefined | null,
 ): Promise<Types.ObjectId[]> {
-  const itemsToDelete = ensureArray(deletion).filter(notNil);
+  const itemsToDelete = ensureArray(deletion).filter(isPresent);
   const deleteCheck = await model.find(
     {
       _id: { $in: itemsToDelete },
@@ -45,7 +44,7 @@ export const taskEntityConverter = (
   if (ret.initiatedByUser instanceof Types.ObjectId) {
     ret.initiatedByUser = ret.initiatedByUser.toString();
   }
-  ret._id = ret._id.toString();
+  ret._id = ret._id?.toString();
 };
 
 /**
@@ -60,8 +59,8 @@ export const taskEntityConverter = (
 export function transformAttributesToQuery(
   attributes: BasicAttributes | undefined | null,
   objectName: string,
-): BasicAttributes {
-  if (isNil(objectName) || isNil(attributes)) {
+): BasicAttributes | undefined | null {
+  if (notPresent(objectName) || notPresent(attributes)) {
     return attributes;
   }
 
@@ -87,7 +86,7 @@ export function transformKeysToUnsetForm(
   keys: string[] | undefined | null,
   objectName: string,
 ): Record<string, 1> {
-  if (isNil(objectName) || isNil(keys)) {
+  if (notPresent(objectName) || notPresent(keys)) {
     return {};
   }
 

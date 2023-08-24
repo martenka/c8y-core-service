@@ -8,9 +8,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Request } from 'express';
-import { ensureArray } from '../utils/validation';
+import { ensureArray, notPresent } from '../utils/validation';
 import { Role } from '../global/types/roles';
 import { ROLES_KEY } from '../decorators/authorization';
 
@@ -27,18 +26,19 @@ export class RolesGuard implements CanActivate {
     );
 
     // By default all routes are normal user routes
-    if (isNil(requiredRoles) || requiredRoles.length === 0) {
+    if (notPresent(requiredRoles) || requiredRoles.length === 0) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest<Request>();
 
-    if (isNil(request.user)) {
+    const requestingUser = request.user;
+    if (notPresent(requestingUser)) {
       this.logger.warn('User object on Request not present!');
       throw new InternalServerErrorException();
     }
 
-    return requiredRoles.some((role) => request.user.roles.includes(role));
+    return requiredRoles.some((role) => requestingUser.roles.includes(role));
   }
 }
 

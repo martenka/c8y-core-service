@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -16,7 +17,7 @@ import {
   VisibilityState,
 } from '../../models';
 import { SensorsService } from '../sensors/sensors.service';
-import { ensureArray, notNil } from '../../utils/validation';
+import { ensureArray, isPresent, notPresent } from '../../utils/validation';
 import {
   idToObjectIDOrOriginal,
   idToObjectIDOrUndefined,
@@ -34,7 +35,6 @@ import {
   FileSetVisibilityStateParams,
   FileWithSensorProblem,
 } from './types/types';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { ApplicationConfigService } from '../application-config/application-config.service';
 import { DeleteInputProperties } from '../../global/dto/deletion';
 import { IDeleteResponse } from '../../global/dto/types';
@@ -47,6 +47,8 @@ import { SensorType } from '../../models/Sensor';
 
 @Injectable()
 export class FilesService {
+  private readonly logger = new Logger(FilesService.name);
+
   constructor(
     @InjectModel(File.name) private readonly fileModel: FileModel,
     private readonly configService: ApplicationConfigService,
@@ -64,6 +66,10 @@ export class FilesService {
       const existingSensor = await this.sensorsService.findOne({
         id: sensor.sensorId,
       });
+      if (notPresent(sensor.filePath)) {
+        this.logger.log('Skipping creating file as storage path is missing');
+        continue;
+      }
       const fileStorageInfo: FileStorageProperties = {
         bucket: sensor.bucket,
         url: this.getFileUrl(sensor.bucket, sensor.filePath),
@@ -71,7 +77,7 @@ export class FilesService {
       };
 
       const valueFragments: FileValueFragmentProperties[] = [];
-      if (notNil(existingSensor)) {
+      if (isPresent(existingSensor)) {
         valueFragments.push({
           type: existingSensor.valueFragmentType,
           description: existingSensor.valueFragmentDisplayName,
@@ -82,7 +88,7 @@ export class FilesService {
         managedObjectId: existingSensor?.managedObjectId.toString(),
         managedObjectName: existingSensor?.managedObjectName,
         valueFragments,
-        sensors: notNil(existingSensor) ? [existingSensor._id] : [],
+        sensors: isPresent(existingSensor) ? [existingSensor._id] : [],
         dateFrom: new Date(sensor.dateFrom),
         dateTo: new Date(sensor.dateTo),
       };
@@ -120,7 +126,7 @@ export class FilesService {
       'metadata.valueFragments.type': searchOptions.valueFragmentType,
       'metadata.valueFragments.description':
         searchOptions.valueFragmentDisplayName,
-      $expr: notNil(searchOptions.sensors)
+      $expr: isPresent(searchOptions.sensors)
         ? {
             $gt: [
               {
@@ -135,10 +141,10 @@ export class FilesService {
             ],
           }
         : undefined,
-      'metadata.dateFrom': notNil(searchOptions.dateFrom)
+      'metadata.dateFrom': isPresent(searchOptions.dateFrom)
         ? { $gte: new Date(searchOptions.dateFrom) }
         : undefined,
-      'metadata.dateTo': notNil(searchOptions.dateTo)
+      'metadata.dateTo': isPresent(searchOptions.dateTo)
         ? { $lte: new Date(searchOptions.dateTo) }
         : undefined,
     };
@@ -162,6 +168,10 @@ export class FilesService {
     isAdmin?: boolean,
   ): Promise<FileDocument | undefined> {
     const file = await this.fileModel.findById(id).exec();
+    if (notPresent(file)) {
+      return undefined;
+    }
+
     if (!isAdmin && !file.visibilityState.published) {
       throw new ForbiddenException();
     }
@@ -176,7 +186,7 @@ export class FilesService {
       _id: { $in: deleteInput.items },
     });
 
-    if (isNil(existingFiles) || existingFiles.length === 0) {
+    if (notPresent(existingFiles) || existingFiles.length === 0) {
       return undefined;
     }
     const deleteResponse = await this.fileModel.deleteMany({
@@ -204,12 +214,12 @@ export class FilesService {
       });
     }
 
-    return notNil(deletedCount) ? { deletedCount } : undefined;
+    return isPresent(deletedCount) ? { deletedCount } : undefined;
   }
 
   async removeFile(id: Types.ObjectId) {
     const result = await this.fileModel.findByIdAndDelete(id).exec();
-    if (isNil(result)) {
+    if (notPresent(result)) {
       return result;
     }
 
@@ -225,7 +235,7 @@ export class FilesService {
   ): Promise<FileLink | undefined> {
     const file = await this.fileModel.findById(id).exec();
 
-    if (isNil(file)) {
+    if (notPresent(file)) {
       return undefined;
     }
 
@@ -251,16 +261,18 @@ export class FilesService {
       'visibilityState.stateChanging': isSyncing,
     };
 
-    if (notNil(errorMessage)) {
+    if (isPresent(errorMessage)) {
       fileUpdate['visibilityState.errorMessage'] = errorMessage;
     } else {
       fileUpdate['visibilityState.published'] =
         visibilityState === VisibilityState.PUBLIC;
-      if (notNil(storage.bucket)) {
-        fileUpdate['storage.bucket'] = storage.bucket;
-      }
-      if (notNil(storage.path)) {
-        fileUpdate['storage.path'] = storage.path;
+      if (isPresent(storage)) {
+        if (isPresent(storage.bucket)) {
+          fileUpdate['storage.bucket'] = storage.bucket;
+        }
+        if (isPresent(storage.path)) {
+          fileUpdate['storage.path'] = storage.path;
+        }
       }
     }
     await this.fileModel.findByIdAndUpdate(id, fileUpdate).exec();
@@ -273,15 +285,15 @@ export class FilesService {
   ): Promise<FileDocument> {
     const file = await this.findById(fileId, isAdmin);
 
-    if (isNil(file)) {
+    if (notPresent(file)) {
       throw new NotFoundException();
     }
 
     const fileStorage = file.storage;
     if (
-      isNil(fileStorage) ||
-      isNil(fileStorage.path) ||
-      isNil(fileStorage.bucket)
+      notPresent(fileStorage) ||
+      notPresent(fileStorage.path) ||
+      notPresent(fileStorage.bucket)
     ) {
       throw new BadRequestException(
         `Not enough information present on file storage object. Check if path and bucket are present!`,
@@ -306,13 +318,15 @@ export class FilesService {
   }
 
   private populateUrl(files: File | File[] | undefined | null) {
-    ensureArray(files).forEach((file) => {
-      if (file.visibilityState.published) {
-        file.url = this.getFileUrl(file.storage.bucket, file.storage.path);
-      } else {
-        file.url = undefined;
-      }
-    });
+    ensureArray(files)
+      .filter(isPresent)
+      .forEach((file) => {
+        if (file.visibilityState.published) {
+          file.url = this.getFileUrl(file.storage.bucket, file.storage.path);
+        } else {
+          file.url = undefined;
+        }
+      });
   }
 
   private getFileUrl(bucket: string, pathInBucket: string): string {
@@ -358,17 +372,30 @@ export class FilesService {
     const problematicFiles = files.filter((file) => {
       const filteredSensors = ensureArray(
         file.metadata.sensors as SensorType[],
-      ).filter(notNil);
+      ).filter(isPresent);
       return filteredSensors.length > 0;
     });
 
-    return problematicFiles.map((file) => ({
-      fileId: file._id.toString(),
-      sensor: {
-        sensorId: file.metadata.sensors[0]._id.toString(),
-        problem:
-          'valueFragmentDisplayName must be present for uploading file to external system',
-      },
-    }));
+    return problematicFiles
+      .map((file) => {
+        if (
+          notPresent(file.metadata.sensors) ||
+          notPresent(file.metadata.sensors[0]._id)
+        ) {
+          this.logger.warn(
+            `Unable to return problem description for file id: ${file._id?.toString()} as sensor ids are missing`,
+          );
+          return;
+        }
+        return {
+          fileId: file._id.toString(),
+          sensor: {
+            sensorId: file.metadata.sensors[0]._id.toString(),
+            problem:
+              'valueFragmentDisplayName must be present for uploading file to external system',
+          },
+        };
+      })
+      .filter(isPresent);
   }
 }

@@ -350,7 +350,7 @@ describe('TasksCreationService', () => {
           },
           files: [
             {
-              fileId: fileStub._id.toString(),
+              fileId: fileStub._id!.toString(),
               fileName: fileStub.name,
               storage: {
                 bucket: fileStub.storage.bucket,

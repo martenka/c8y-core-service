@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateSensorDtoProperties } from './dto/create-sensor.dto';
 import {
   UpdateSensorsAttributesDto,
@@ -9,7 +9,7 @@ import {
 import { Sensor } from '../../models';
 import { SensorDocument, SensorModel } from '../../models/Sensor';
 import { InjectModel } from '@nestjs/mongoose';
-import { hasNoOwnKeys, notNil } from '../../utils/validation';
+import { hasNoOwnKeys, isPresent, notPresent } from '../../utils/validation';
 import {
   awaitAllPromises,
   idToObjectIDOrOriginal,
@@ -21,7 +21,6 @@ import {
   removeNilProperties,
   pick,
 } from '../../utils/helpers';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { DBPagingResult, IPagingOptions } from '../../global/pagination/types';
 import { SensorSearchOptions } from '../../global/query/types';
@@ -37,6 +36,7 @@ import { SearchType } from '../../global/query/key-value';
 
 @Injectable()
 export class SensorsService {
+  private readonly logger = new Logger('SensorsService');
   constructor(
     @InjectModel(Sensor.name)
     private sensorModel: SensorModel,
@@ -92,7 +92,7 @@ export class SensorsService {
     const result = await this.sensorModel
       .find(query, undefined, queryOptions)
       .exec();
-    if (isNil(result)) {
+    if (notPresent(result)) {
       return [];
     }
     return result;
@@ -114,42 +114,66 @@ export class SensorsService {
   async updateSensors(
     updates: UpdateSensorDto[],
   ): Promise<SensorDocument[] | undefined> {
-    const updatesInProgress: Promise<SensorDocument>[] = [];
+    const updatesInProgress: Promise<SensorDocument | null>[] = [];
+    let completedUpdates: SensorDocument[] | undefined = undefined;
 
-    updates.forEach((update) => {
-      const objectId = idToObjectIDOrUndefined(update.id);
+    const session = await this.sensorModel.startSession();
+    try {
+      await session.withTransaction(async () => {
+        updates.forEach((update) => {
+          const objectId = idToObjectIDOrUndefined(update.id);
 
-      if (isNil(objectId)) {
-        return undefined;
-      }
+          if (notPresent(objectId)) {
+            return;
+          }
 
-      updatesInProgress.push(
-        this.sensorModel
-          .findByIdAndUpdate(
-            objectId,
-            removeNilProperties({
-              ...omit(update, 'customAttributes'),
-              ...(transformAttributesToQuery(
-                update.customAttributes,
-                'customAttributes' as keyof Sensor,
-              ) ?? {}),
-            }),
-            { returnDocument: 'after' },
-          )
-          .exec(),
-      );
-    });
+          const updatedSensor = this.sensorModel
+            .findByIdAndUpdate(
+              objectId,
+              removeNilProperties({
+                ...omit(update, 'customAttributes'),
+                ...(transformAttributesToQuery(
+                  update.customAttributes,
+                  'customAttributes' as keyof Sensor,
+                ) ?? {}),
+              }),
+              { returnDocument: 'after' },
+            )
+            .exec();
 
-    return (await awaitAllPromises(updatesInProgress)).fulfilled;
+          if (notPresent(updatedSensor)) {
+            throw new BadRequestException(
+              `Sensor with id ${objectId.toString()} not found`,
+            );
+          }
+
+          updatesInProgress.push(updatedSensor);
+        });
+        completedUpdates = (
+          await awaitAllPromises(updatesInProgress)
+        ).fulfilled.filter(isPresent);
+      });
+    } catch (e) {
+      await session.abortTransaction();
+      await session.endSession();
+      this.logger.error(e);
+
+      return undefined;
+    }
+
+    await session.endSession();
+    return completedUpdates;
   }
 
   async updateOne(
     id: Types.ObjectId,
     update: UpdateOneSensorDto,
   ): Promise<SensorDocument | undefined> {
-    return await this.sensorModel
-      .findByIdAndUpdate(id, update, { returnDocument: 'after' })
-      .exec();
+    return nullToUndefined(
+      await this.sensorModel
+        .findByIdAndUpdate(id, update, { returnDocument: 'after' })
+        .exec(),
+    );
   }
 
   async updateSensorsByCommonIdentifiers(
@@ -157,7 +181,7 @@ export class SensorsService {
   ): Promise<void> {
     const updateFilter: FilterQuery<Sensor> = {
       valueFragmentType: update.identifiers.valueFragmentType,
-      _id: notNil(update.identifiers.sensorIds)
+      _id: isPresent(update.identifiers.sensorIds)
         ? { $in: update.identifiers.sensorIds }
         : undefined,
     };
@@ -187,7 +211,7 @@ export class SensorsService {
   ): Promise<void> {
     const updateFilter: FilterQuery<Sensor> = {
       valueFragmentType: update.identifiers.valueFragmentType,
-      _id: notNil(update.identifiers.sensorIds)
+      _id: isPresent(update.identifiers.sensorIds)
         ? { $in: update.identifiers.sensorIds }
         : undefined,
     };
@@ -200,7 +224,7 @@ export class SensorsService {
     );
 
     const transformedFieldsToRemove = removeNilProperties(
-      Object.fromEntries<number>(
+      Object.fromEntries<number | undefined>(
         Object.entries(fieldsToRemove).map(([key, value]) => [
           key,
           value === true ? 1 : undefined,
@@ -229,7 +253,7 @@ export class SensorsService {
   async removeSensor(id: string): Promise<SensorDocument | undefined> {
     const objectId = idToObjectIDOrUndefined(id);
 
-    if (isNil(objectId)) {
+    if (notPresent(objectId)) {
       return undefined;
     }
 

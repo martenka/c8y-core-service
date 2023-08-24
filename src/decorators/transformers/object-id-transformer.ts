@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import { Types } from 'mongoose';
 import { isEmpty } from '@nestjs/common/utils/shared.utils';
-import { notNil } from '../../utils/validation';
+import { isPresent } from '../../utils/validation';
 
 /**
  * Converts stringified ObjectIds / MongoIds to Types.ObjectId.
@@ -25,11 +25,11 @@ export function TransformMongoId(delimiter?: string) {
         if (Array.isArray(value)) {
           return value
             .map((item) => {
-              if (notNil(item) && item !== '') {
+              if (isPresent(item) && item !== '') {
                 return new Types.ObjectId(item);
               }
             })
-            .filter(notNil);
+            .filter(isPresent);
         }
         return new Types.ObjectId(value);
       }

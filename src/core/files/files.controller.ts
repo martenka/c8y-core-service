@@ -23,7 +23,6 @@ import {
 } from '../../decorators/dto';
 import { Groups } from '../../global/tokens';
 import { idToObjectIDOrUndefined } from '../../utils/helpers';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { OutputFileDto, PaginatedOutputFileDto } from './dto/output-file.dto';
 import { FileQuery } from './query/file-query.dto';
 import {
@@ -43,6 +42,7 @@ import { LoggedInUser } from '../../decorators/user';
 import { LoggedInUserType } from '../auth/types/types';
 import { Role } from '../../global/types/roles';
 import { UseRolesGuard } from '../../guards/RoleGuard';
+import { notPresent } from '../../utils/validation';
 
 @Controller('files')
 @UseRolesGuard()
@@ -90,7 +90,7 @@ export class FilesController {
     @LoggedInUser() user: LoggedInUserType,
   ): Promise<FileDocument | undefined> {
     const fileId = idToObjectIDOrUndefined(id);
-    if (isNil(fileId)) {
+    if (notPresent(fileId)) {
       throw new NotFoundException();
     }
     return await this.filesService.findById(
@@ -119,7 +119,7 @@ export class FilesController {
     @LoggedInUser() user: LoggedInUserType,
   ): Promise<FileLink | undefined> {
     const fileId = idToObjectIDOrUndefined(id);
-    if (isNil(fileId)) {
+    if (notPresent(fileId)) {
       throw new NotFoundException();
     }
     return await this.filesService.getFileLink(

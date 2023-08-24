@@ -1,13 +1,13 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   OnApplicationBootstrap,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { CreateUserDto } from '../users/dto/input/create-user.dto';
 import { PasswordCheck, UserDocument, UserType } from '../../models/User';
 import {
@@ -18,7 +18,7 @@ import {
 import { MongoServerError } from 'mongodb';
 import { MessagesProducerService } from '../messages/messages-producer.service';
 import { ApplicationConfigService } from '../application-config/application-config.service';
-import { notNil } from '../../utils/validation';
+import { isPresent, notPresent } from '../../utils/validation';
 
 @Injectable()
 export class AuthService implements OnApplicationBootstrap {
@@ -42,7 +42,7 @@ export class AuthService implements OnApplicationBootstrap {
       true,
     )) as UserDocument & PasswordCheck;
 
-    if (isNil(user) || !(await user.isPasswordMatch(password))) {
+    if (notPresent(user) || !(await user.isPasswordMatch(password))) {
       throw new UnauthorizedException();
     }
 
@@ -60,10 +60,26 @@ export class AuthService implements OnApplicationBootstrap {
     };
   }
 
+  /**
+   *
+   * Throws **BadRequestException** if username already exists, user cannot be created or user id is missing
+   */
   async register(user: CreateUserDto): Promise<UserDocument> {
     try {
       const createdUser = await this.userService.create(user);
+      if (notPresent(createdUser)) {
+        throw new BadRequestException(
+          'Check your request - unable to register a new user',
+        );
+      }
       const leanUser: UserType = createdUser.toObject();
+      if (notPresent(leanUser._id)) {
+        this.logger.error(
+          'Unable to register new user - user id is missing',
+          user,
+        );
+        throw new InternalServerErrorException();
+      }
       this.messagesProducerService.sendUserMessage({
         id: leanUser._id.toString(),
         c8yCredentials: leanUser.c8yCredentials,
@@ -81,11 +97,17 @@ export class AuthService implements OnApplicationBootstrap {
 
   async handleDefaultUser() {
     const user = this.configService.defaultUser;
-    if (notNil(user) && notNil(user.username)) {
+    if (isPresent(user) && isPresent(user.username)) {
       const existingUser = await this.userService.findOne({
         username: user.username,
       });
-      if (isNil(existingUser)) {
+      if (notPresent(existingUser)) {
+        if (notPresent(user.password)) {
+          this.logger.log(
+            'Skipping creation of default user as user password is missing',
+          );
+          return;
+        }
         await this.register({
           username: user.username,
           password: user.password,

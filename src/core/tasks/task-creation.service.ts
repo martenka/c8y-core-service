@@ -26,7 +26,6 @@ import { Properties } from '../../global/types/types';
 import { CreateTaskDto } from './dto/input/create-task.dto';
 import { CreateObjectSyncDto } from './dto/input/create-objectsync-task.dto';
 import { TaskCreationDtosType, TaskHandlersType } from './dto/dto-map';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Types } from 'mongoose';
 import { GroupModel } from '../../models/Group';
 import { WithInitiatedByUser } from '../auth/types/types';
@@ -43,7 +42,7 @@ import { Platform } from '../../global/tokens';
 import { FilesService } from '../files/files.service';
 import { CustomException } from '../../global/exceptions/custom.exception';
 import crypto from 'crypto';
-import { notNil } from '../../utils/validation';
+import { isPresent, notPresent } from '../../utils/validation';
 
 @Injectable()
 export class TaskCreationService implements OnModuleInit {
@@ -98,7 +97,7 @@ export class TaskCreationService implements OnModuleInit {
       .populate('metadata.sensors')
       .exec();
 
-    if (isNil(files) || files.length === 0) {
+    if (notPresent(files) || files.length === 0) {
       throw new BadRequestException(
         `Could not find suitable files to upload with given ids - Already present files won't be uploaded`,
       );
@@ -123,11 +122,11 @@ export class TaskCreationService implements OnModuleInit {
         file.customAttributes ?? {};
 
       let dataUploadFileMetadata: DataUploadTaskFileMetadataProperties;
-      if (isNil(fileSensor) || fileSensor instanceof Types.ObjectId) {
+      if (notPresent(fileSensor) || fileSensor instanceof Types.ObjectId) {
         if (
-          isNil(fileMetadata.managedObjectId) ||
-          isNil(fileMetadata.valueFragments) ||
-          fileMetadata.valueFragments.length === 0
+          notPresent(fileMetadata.managedObjectId) ||
+          notPresent(fileMetadata.valueFragments) ||
+          fileMetadata.valueFragments?.length === 0
         ) {
           this.logger.warn(
             `createDataUploadTask: Could not find managedObjectId or valueFragmentType for taskId ${file._id.toString()}. Skipping this file`,
@@ -135,6 +134,14 @@ export class TaskCreationService implements OnModuleInit {
           continue;
         }
 
+        if (
+          notPresent(fileMetadata.valueFragments) ||
+          notPresent(fileMetadata.managedObjectId)
+        ) {
+          throw new BadRequestException(
+            'File missing either valueFragments or managedObjectId',
+          );
+        }
         dataUploadFileMetadata = {
           dateTo: fileMetadata.dateTo,
           dateFrom: fileMetadata.dateFrom,
@@ -145,6 +152,11 @@ export class TaskCreationService implements OnModuleInit {
           fileDescription: file.description,
         };
       } else {
+        if (notPresent(fileSensor)) {
+          throw new BadRequestException(
+            'File does not have information about any sensors!',
+          );
+        }
         dataUploadFileMetadata = {
           dateTo: file.metadata.dateTo,
           dateFrom: file.metadata.dateFrom,
@@ -189,7 +201,7 @@ export class TaskCreationService implements OnModuleInit {
     taskDetails: T,
   ): Promise<TaskDocument> {
     const handler = this.taskCreationHandlers[taskDetails.taskType];
-    if (isNil(handler)) {
+    if (notPresent(handler)) {
       this.logger.error(
         `Task creation with unknown task type - ${taskDetails?.taskType}. This should not happen`,
       );
@@ -202,8 +214,8 @@ export class TaskCreationService implements OnModuleInit {
     taskDetails: WithInitiatedByUser<CreateDataFetchDto>,
   ): Promise<DataFetchTaskDocument> {
     if (
-      notNil(taskDetails.periodicData?.pattern) &&
-      isNil(taskDetails.periodicData?.windowDurationSeconds)
+      isPresent(taskDetails.periodicData?.pattern) &&
+      notPresent(taskDetails.periodicData?.windowDurationSeconds)
     ) {
       throw new CustomException(
         `Cannot create periodic ${taskDetails.taskType} without window duration set`,
@@ -211,12 +223,15 @@ export class TaskCreationService implements OnModuleInit {
     }
     switch (taskDetails.taskPayload.entityType) {
       case 'GROUP': {
-        const groupSensorIds = (
-          await this.groupModel
-            .findById(taskDetails.taskPayload.entities[0].id)
-            .select({ sensors: 1 })
-            .exec()
-        ).toObject().sensors as unknown as Types.ObjectId[];
+        const group = await this.groupModel
+          .findById(taskDetails.taskPayload.entities[0].id)
+          .select({ sensors: 1 })
+          .exec();
+        if (notPresent(group)) {
+          throw new BadRequestException('Group entity with given id not found');
+        }
+        const groupSensorIds = group.toObject()
+          .sensors as unknown as Types.ObjectId[];
 
         const sensorsWithFilenames = groupSensorIds.map((sensor) => ({
           sensor,

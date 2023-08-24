@@ -27,7 +27,6 @@ import {
 } from './dto/output/output-task.dto';
 import { Groups } from '../../global/tokens';
 import { idToObjectIDOrUndefined } from '../../utils/helpers';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Task, TaskDocument } from '../../models';
 import { DBPagingResult } from '../../global/pagination/types';
 import { PagingQuery } from '../../global/pagination/pagination.dto';
@@ -35,11 +34,11 @@ import { LoggedInUser } from '../../decorators/user';
 import { LoggedInUserType } from '../auth/types/types';
 import { ApiBody, ApiOperation, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { TaskQuery } from './query/task-query.dto';
-import { CustomException } from '../../global/exceptions/custom.exception';
 import { CreateDataFetchDto } from './dto/input/create-datafetch-task.dto';
 import { CreateDataUploadTaskDto } from './dto/input/create-dataupload-task.dto';
 import { CreateObjectSyncDto } from './dto/input/create-objectsync-task.dto';
 import { TaskModeDto } from './dto/input/task-mode.dto';
+import { notPresent } from '../../utils/validation';
 
 @Controller('tasks')
 @UseInterceptors(DtoTransformInterceptor)
@@ -105,9 +104,13 @@ export class TasksController {
   @ApiOperation({ operationId: 'Get one task' })
   async getTaskDetails(@Param('id') id: string): Promise<TaskDocument> {
     const objectId = idToObjectIDOrUndefined(id);
-    if (isNil(objectId)) {
+    if (notPresent(objectId)) {
       throw new NotFoundException();
     }
-    return await this.tasksService.findById(objectId);
+    const foundTask = await this.tasksService.findById(objectId);
+    if (notPresent(foundTask)) {
+      throw new NotFoundException();
+    }
+    return foundTask;
   }
 }

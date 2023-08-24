@@ -7,7 +7,7 @@ import { TaskStatusMessage } from './types/message-types/task/types';
 import { NoAuthRoute } from '../../decorators/authentication';
 import { ConsumeMessage } from 'amqplib';
 import { VisibilityStateResultMessage } from './types/message-types/file/types';
-import { notNil } from '../../utils/validation';
+import { isPresent } from '../../utils/validation';
 import { MessageTypes } from './types/message-types/messageTypes';
 
 @Controller()
@@ -40,7 +40,7 @@ export class MessagesController {
       ...message,
       timestamp: typeof timestamp === 'string' ? timestamp : undefined,
     };
-    if (typeof timestamp === 'string' && notNil(message.timestamp)) {
+    if (typeof timestamp === 'string' && isPresent(message.timestamp)) {
       message.timestamp = timestamp;
     }
     await this.messageHandlerService.handleTaskStatusMessage(updatedMessage);

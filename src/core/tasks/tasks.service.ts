@@ -28,9 +28,13 @@ import {
   TaskStatusMessage,
 } from '../messages/types/message-types/task/types';
 
-import { ensureArray, hasNoOwnKeys, notNil } from '../../utils/validation';
+import {
+  ensureArray,
+  hasNoOwnKeys,
+  isPresent,
+  notPresent,
+} from '../../utils/validation';
 import { TaskMessageMapperService } from './task-message-mapper.service';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { TaskFailedMessage } from '../messages/types/message-types/messageTypes';
 import { TaskQueryProperties } from './query/task-query.dto';
 import {
@@ -78,7 +82,7 @@ export class TasksService {
       .findOne({ name: task.name })
       .exec();
 
-    if (notNil(existingTask)) {
+    if (isPresent(existingTask)) {
       throw new AlreadyExistsException(`Task ${task.name} already exists!`);
     }
 
@@ -91,7 +95,7 @@ export class TasksService {
       this.taskMessageMapperService.mapTaskToMessage(createdTask);
 
     let periodicData: TaskScheduledMessage['periodicData'];
-    if (notNil(createdTask.metadata?.periodicData)) {
+    if (isPresent(createdTask.metadata?.periodicData)) {
       periodicData = {
         pattern: createdTask.metadata.periodicData.pattern,
         windowDurationSeconds:
@@ -118,6 +122,10 @@ export class TasksService {
   async findById(id: Types.ObjectId): Promise<TaskDocument | undefined> {
     const task = await this.taskModel.findById(id).exec();
 
+    if (notPresent(task)) {
+      return undefined;
+    }
+
     return this.convertTaskToSubtask(task);
   }
 
@@ -130,10 +138,10 @@ export class TasksService {
       _id: searchQuery.id,
       name: searchQuery.name,
       status: searchQuery.taskStatus,
-      'metadata.periodicData': notNil(searchQuery.isPeriodic)
+      'metadata.periodicData': isPresent(searchQuery.isPeriodic)
         ? { $exists: searchQuery.isPeriodic }
         : undefined,
-      'metadata.firstRunAt': notNil(searchQuery.firstRunAt)
+      'metadata.firstRunAt': isPresent(searchQuery.firstRunAt)
         ? { $gte: new Date(searchQuery.firstRunAt) }
         : undefined,
     };
@@ -230,7 +238,7 @@ export class TasksService {
     result: TaskStatusMessage<DataFetchTaskResultStatusPayload>,
     createdFiles: FileDocument[] = [],
   ) {
-    if (isNil(result.payload) || hasNoOwnKeys(result.payload)) {
+    if (notPresent(result.payload) || hasNoOwnKeys(result.payload)) {
       this.logger.log(
         `Data fetch task result payload is empty, not updating task ${taskId.toString()}`,
       );
@@ -238,7 +246,7 @@ export class TasksService {
     }
 
     const task = await this.dataFetchTaskModel.findById(taskId).exec();
-    if (isNil(task)) {
+    if (notPresent(task)) {
       this.logger.log(
         `Did not find task with id ${taskId.toString()} in data-fetch task result handler`,
       );
@@ -258,20 +266,22 @@ export class TasksService {
 
     for (const file of result.payload.sensors) {
       const dataId = file.dataId;
-      const existingSensorData = existingTaskDataByDataId.get(dataId);
+      const existingSensorData = isPresent(dataId)
+        ? existingTaskDataByDataId.get(dataId)
+        : undefined;
 
       const newFile = createdFilesByFileNameMap.get(file.fileName);
       /**
        * If file data already exists under task payload, then update its fields
        * Otherwise add new file data entity to task payload
        */
-      if (notNil(existingSensorData)) {
+      if (isPresent(existingSensorData) && isPresent(dataId)) {
         existingTaskDataByDataId.set(dataId, {
           ...this.mapFileToSensorData(file, newFile?._id.toString()),
           sensor: existingSensorData.sensor,
         });
       } else {
-        if (isNil(newFile)) {
+        if (notPresent(newFile)) {
           this.logger.log(
             `Received new file ${file?.fileName} but have no matching file entity.\n Skipping adding new file to existing task payload`,
           );
@@ -291,7 +301,7 @@ export class TasksService {
     });
 
     task.payload.data = updatedTaskDataArray;
-    if (notNil(result.payload.completedAt)) {
+    if (isPresent(result.payload.completedAt)) {
       task.metadata.lastCompletedAt = new Date(result.payload.completedAt);
     }
     task.status = result.status;
@@ -307,9 +317,9 @@ export class TasksService {
   async getDataUploadTaskFileIds(
     taskId: Types.ObjectId,
   ): Promise<Types.ObjectId[]> {
-    const task: DataUploadTaskDocument | undefined =
+    const task: DataUploadTaskDocument | null =
       await this.dataUploadTaskModel.findById(taskId);
-    if (isNil(task)) {
+    if (notPresent(task)) {
       this.logger.log(
         `Can't update files exposed to platform setting - did not find DataUploadTask for id: ${taskId.toString()}`,
       );
@@ -317,7 +327,7 @@ export class TasksService {
     }
 
     const fileIds = task.payload.files.map((file) => file?.fileId);
-    return fileIds.filter(notNil);
+    return fileIds.filter(isPresent);
   }
 
   private mapFileToSensorData(

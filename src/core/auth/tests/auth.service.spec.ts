@@ -19,6 +19,7 @@ import {
   setupTest,
   WithServiceSetupTestResult,
 } from '../../../../test/setup/setup';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 type AuthServiceExtensions = WithServiceSetupTestResult<{
   models: {
@@ -69,7 +70,9 @@ describe('AuthService', () => {
         },
       };
 
-      const messagesProducerService = new MessagesProducerService(null);
+      const messagesProducerService = new MessagesProducerService(
+        null as unknown as AmqpConnection,
+      );
       const sendMessageSpy: jest.SpyInstance<void, SendMessageParams> = jest
         .spyOn(messagesProducerService, 'sendMessage')
         .mockImplementation((_args) => undefined);
@@ -197,7 +200,7 @@ describe('AuthService', () => {
         username: getDefaultUser().username,
       });
 
-      const leanUser = createdUser.toObject();
+      const leanUser = createdUser!.toObject();
       expect(leanUser).toMatchObject({
         username: 'test-default-user',
         roles: [Role.Admin, Role.User],

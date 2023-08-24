@@ -1,19 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateGroupDtoProperties } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 
-import { ensureArray, hasNoOwnKeys, notNil } from '../../utils/validation';
+import {
+  ensureArray,
+  hasNoOwnKeys,
+  isPresent,
+  notPresent,
+} from '../../utils/validation';
 
 import {
   awaitAllPromises,
   idToObjectIDOrOriginal,
   idToObjectIDOrUndefined,
+  nullToUndefined,
   pickBy,
   remapIDAndRemoveNil,
   removeNilProperties,
 } from '../../utils/helpers';
 
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Group, GroupDocument, GroupModel } from '../../models/Group';
 import { InjectModel } from '@nestjs/mongoose';
 import { GroupSearchOptions } from '../../global/query/types';
@@ -24,12 +29,14 @@ import {
   PagingOptionsType,
 } from '../../global/pagination/types';
 import { GroupQueryOptions } from './query/group-query.dto';
-import { FilterQuery } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 import { Sort } from '../paging/types/types';
 import { SearchType } from '../../global/query/key-value';
+import { Sensor } from '../../models';
 
 @Injectable()
 export class GroupsService {
+  private readonly logger = new Logger(GroupsService.name);
   constructor(
     @InjectModel(Group.name) private groupModel: GroupModel,
     private readonly pagingService: SkipPagingService,
@@ -38,16 +45,20 @@ export class GroupsService {
   async createGroups(
     createGroupDto: CreateGroupDtoProperties[],
   ): Promise<GroupDocument[] | undefined> {
-    const mappedGroupDtos = [];
+    const mappedGroupDtos: Partial<Group>[] = [];
     for (const dto of createGroupDto) {
       const groups = idToObjectIDOrUndefined(dto.groups);
       const sensors = idToObjectIDOrUndefined(dto.sensors);
 
-      if (isNil(groups) || isNil(sensors)) {
+      if (notPresent(groups) || notPresent(sensors)) {
         return undefined;
       }
 
-      mappedGroupDtos.push({ ...dto, sensors, groups });
+      mappedGroupDtos.push({
+        ...dto,
+        sensors: sensors as unknown as Types.DocumentArray<Sensor>,
+        groups: groups as unknown as Types.DocumentArray<Group>,
+      });
     }
 
     return await this.groupModel.create(mappedGroupDtos, {});
@@ -67,6 +78,18 @@ export class GroupsService {
     let sort: Sort<Group> = {};
     const modifiedPagingOptions: IPagingOptions = pagingOptions;
 
+    if (
+      isPresent(searchOptions.searchType) &&
+      [SearchType.PREFIX, SearchType.TOKEN].includes(
+        searchOptions.searchType,
+      ) &&
+      notPresent(searchOptions.name)
+    ) {
+      throw new BadRequestException(
+        `Name must be present for search type ${searchOptions.searchType}`,
+      );
+    }
+
     switch (searchOptions.searchType) {
       case SearchType.PREFIX: {
         filter.name = {
@@ -77,7 +100,7 @@ export class GroupsService {
         break;
       }
       case SearchType.TOKEN: {
-        filter.$text = { $search: searchOptions.name };
+        filter.$text = { $search: searchOptions.name! };
         filter.score = { $meta: 'textScore' };
         sort = { score: { $meta: 'textScore' } };
         modifiedPagingOptions.pageSize ??= 30;
@@ -104,59 +127,85 @@ export class GroupsService {
     if (hasNoOwnKeys(searchOptions)) {
       return undefined;
     }
-    return await this.groupModel
-      .findOne(searchOptions)
-      .populate('sensors')
-      .exec();
+    return nullToUndefined(
+      await this.groupModel.findOne(searchOptions).populate('sensors').exec(),
+    );
   }
 
   async updateGroups(
     updates: UpdateGroupDto[],
   ): Promise<GroupDocument[] | undefined> {
-    const updatesInProgress: Promise<GroupDocument>[] = [];
+    const updatesInProgress: Promise<GroupDocument | null>[] = [];
+    let completedUpdates: GroupDocument[] | undefined = undefined;
 
-    updates.forEach((update) => {
-      const objectId = idToObjectIDOrUndefined(update.id);
+    const session = await this.groupModel.startSession();
+    try {
+      await session.withTransaction(async () => {
+        updates.forEach((update) => {
+          const objectId = idToObjectIDOrUndefined(update.id);
 
-      if (isNil(objectId)) {
-        return undefined;
-      }
-      const { sensors, groups, ...otherItems } = pickBy(update, (value) =>
-        notNil(value),
-      );
+          if (notPresent(objectId)) {
+            return;
+          }
+          const { sensors, groups, ...otherItems } = pickBy(update, (value) =>
+            isPresent(value),
+          );
 
-      updatesInProgress.push(
-        this.groupModel
-          .findByIdAndUpdate(
-            objectId,
-            {
-              ...otherItems,
-              $addToSet: {
-                sensors: {
-                  $each: ensureArray(idToObjectIDOrUndefined(sensors)),
-                  groups: {
-                    $each: ensureArray(idToObjectIDOrUndefined(groups)),
+          const updatedGroup = this.groupModel
+            .findByIdAndUpdate(
+              objectId,
+              {
+                ...otherItems,
+                $addToSet: {
+                  sensors: {
+                    $each: ensureArray(
+                      idToObjectIDOrUndefined(sensors as Types.ObjectId[]),
+                    ),
+                    groups: {
+                      $each: ensureArray(
+                        idToObjectIDOrUndefined(groups as Types.ObjectId[]),
+                      ),
+                    },
                   },
                 },
               },
-            },
-            { returnDocument: 'after' },
-          )
-          .populate('sensors')
-          .exec(),
-      );
-    });
+              { returnDocument: 'after' },
+            )
+            .populate('sensors')
+            .exec();
 
-    return (await awaitAllPromises(updatesInProgress)).fulfilled;
+          if (notPresent(updatedGroup)) {
+            throw new BadRequestException(
+              `Group with id ${objectId.toString()} not found`,
+            );
+          }
+
+          updatesInProgress.push(updatedGroup);
+        });
+        completedUpdates = (
+          await awaitAllPromises(updatesInProgress)
+        ).fulfilled.filter(isPresent);
+      });
+    } catch (e) {
+      await session.abortTransaction();
+      await session.endSession();
+      this.logger.error(e);
+
+      return undefined;
+    }
+
+    return completedUpdates;
   }
 
   async removeGroup(id: string): Promise<GroupDocument | undefined> {
     const objectId = idToObjectIDOrUndefined(id);
 
-    if (isNil(objectId)) {
+    if (notPresent(objectId)) {
       return undefined;
     }
 
-    return await this.groupModel.findByIdAndDelete(objectId).exec();
+    return nullToUndefined(
+      await this.groupModel.findByIdAndDelete(objectId).exec(),
+    );
   }
 }

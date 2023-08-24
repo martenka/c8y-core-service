@@ -7,7 +7,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Expose, Transform, Type } from 'class-transformer';
-import { notNil } from '../../utils/validation';
+import { isPresent } from '../../utils/validation';
 import { HydratedDocument } from 'mongoose';
 import { PageInfo } from './page-info.dto';
 import { ApiProperty } from '@nestjs/swagger';
@@ -16,7 +16,7 @@ import { TransformBoolean } from '../../decorators/transformers/boolean-transfor
 
 export class BaseDBPagination<T> implements DBPagingResult<T> {
   constructor(input?: DBPagingResult<T>) {
-    if (notNil(input)) {
+    if (isPresent(input)) {
       this.data = input.data;
       this.pageInfo = input.pageInfo;
     }

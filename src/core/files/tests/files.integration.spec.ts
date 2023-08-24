@@ -39,6 +39,7 @@ import {
   setupTest,
   WithIntegrationSetupTestResult,
 } from '../../../../test/setup/setup';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 type FilesIntegrationExtension = WithIntegrationSetupTestResult<{
   models: {
@@ -63,7 +64,9 @@ describe('Files integration test', () => {
       const sensorModel = connection.model(Sensor.name, SensorSchema);
       const fileModel = connection.model(File.name, FileSchema);
 
-      const messagesProducerService = new MessagesProducerService(null);
+      const messagesProducerService = new MessagesProducerService(
+        null as unknown as AmqpConnection,
+      );
 
       const testingConfigService = {
         get mongooseModuleOptions(): MongooseModuleOptions {
@@ -524,7 +527,7 @@ describe('Files integration test', () => {
       expect(output.status).toEqual(200);
       expect(output.body).toEqual({});
       expect(
-        (await models.sensorModel.findById(sensor1Id))._id.toString(),
+        (await models.sensorModel.findById(sensor1Id))!._id.toString(),
       ).toEqual('647c5cbb41c4e44da374e62b');
       expect(await models.fileModel.findById(fileStub._id)).toBeNull();
       expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
@@ -630,13 +633,13 @@ describe('Files integration test', () => {
 
       expect(output.status).toEqual(200);
       expect(output.body).toEqual({});
-      expect((await sensorModel.findById(sensor1Id))._id.toString()).toEqual(
+      expect((await sensorModel.findById(sensor1Id))!._id.toString()).toEqual(
         '647c5ec0ed490d06731b3e7d',
       );
-      expect((await sensorModel.findById(sensor2Id))._id.toString()).toEqual(
+      expect((await sensorModel.findById(sensor2Id))!._id.toString()).toEqual(
         '647c5edd7f8e4625f962b69f',
       );
-      expect((await fileModel.findById(fileStub3._id))._id.toString()).toEqual(
+      expect((await fileModel.findById(fileStub3._id))!._id.toString()).toEqual(
         '647c618d450d066fa64f7f17',
       );
       expect(

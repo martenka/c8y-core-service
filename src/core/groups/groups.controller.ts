@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -27,6 +28,7 @@ import { GroupQuery } from './query/group-query.dto';
 import { PagingQuery } from '../../global/pagination/pagination.dto';
 import { DBPagingResult } from '../../global/pagination/types';
 import { Groups } from '../../global/tokens';
+import { notPresent } from '../../utils/validation';
 
 @Controller('groups')
 @UseInterceptors(DtoTransformInterceptor)
@@ -48,6 +50,11 @@ export class GroupsController {
     createGroupDto: CreateGroupDto[],
   ): Promise<GroupDocument[] | undefined> {
     const newGroups = await this.groupsService.createGroups(createGroupDto);
+    if (notPresent(newGroups)) {
+      throw new BadRequestException(
+        'Unable to create groups, check that all the information in the request is correct',
+      );
+    }
     for (const group of newGroups) {
       await group.populate('sensors');
     }

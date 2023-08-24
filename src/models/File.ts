@@ -6,7 +6,7 @@ import { Sensor } from './Sensor';
 import { CustomAttributes } from './types/types';
 import { DataFetchTask, DataFetchTaskType } from './task/data-fetch-task';
 import { Platform } from '../global/tokens';
-import { notNil } from '../utils/validation';
+import { isPresent } from '../utils/validation';
 
 @Schema({ _id: false })
 export class FileStorageInfo {
@@ -41,7 +41,7 @@ export class FileVisibilityState {
       validator: (input) => {
         const platformValues = Object.values(Platform);
         return (
-          notNil(input) &&
+          isPresent(input) &&
           Array.isArray(input) &&
           input.every((value) => platformValues.includes(value))
         );

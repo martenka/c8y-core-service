@@ -6,9 +6,10 @@ import {
 } from '@nestjs/common';
 import { Task } from '../models';
 import { plainToInstance } from 'class-transformer';
-import { isNil, isString } from '@nestjs/common/utils/shared.utils';
+import { isString } from '@nestjs/common/utils/shared.utils';
 import { validate } from 'class-validator';
 import { TaskTypesMap } from '../models';
+import { notPresent } from '../utils/validation';
 
 @Injectable()
 export class TaskTransformPipe
@@ -19,7 +20,11 @@ export class TaskTransformPipe
     const taskTypeKey = value?.taskType;
     const taskDto = this.dtoMap[taskTypeKey];
 
-    if (isNil(taskTypeKey) || !isString(taskTypeKey) || isNil(taskDto)) {
+    if (
+      notPresent(taskTypeKey) ||
+      !isString(taskTypeKey) ||
+      notPresent(taskDto)
+    ) {
       throw new BadRequestException('Unknown task type provided!');
     }
 

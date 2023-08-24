@@ -20,10 +20,10 @@ import { DeleteUserInputDto } from './dto/input/delete-user.dto';
 
 import { AdminRoute } from '../../decorators/authorization';
 import { UpdateUserDto } from './dto/input/update-user.dto';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { MongoIdTransformPipe } from '../../pipes/mongo-id.pipe';
 import { Types } from 'mongoose';
+import { notPresent } from '../../utils/validation';
 
 @Controller('users')
 @UseInterceptors(DtoTransformInterceptor)
@@ -67,7 +67,7 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserDocument> {
     const result = await this.usersService.updateOne(id, updateUserDto);
-    if (isNil(result)) {
+    if (notPresent(result)) {
       throw new NotFoundException();
     }
     return result;

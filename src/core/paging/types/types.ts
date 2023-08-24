@@ -9,7 +9,7 @@ import { IPagingOptions } from '../../../global/pagination/types';
 
 export type Sort<T extends object> =
   | {
-      [key in keyof T]?: SortOrder | undefined | null;
+      [key in keyof T]?: SortOrder;
     }
   | { score: { $meta: 'textScore' } };
 

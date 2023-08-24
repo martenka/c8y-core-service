@@ -32,6 +32,7 @@ import {
   WithIntegrationSetupTestResult,
 } from '../../../../test/setup/setup';
 import { fakeTime } from '../../../utils/tests';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 type UsersIntegrationExtension = WithIntegrationSetupTestResult<{
   models: {
@@ -54,7 +55,9 @@ describe('Users integration test', () => {
     ): Promise<UsersIntegrationExtension> {
       const userModel = connection.model(User.name, UserSchema);
 
-      const messagesProducerService = new MessagesProducerService(null);
+      const messagesProducerService = new MessagesProducerService(
+        null as unknown as AmqpConnection,
+      );
       const sendMessageSpy: jest.SpyInstance<void, SendMessageParams> = jest
         .spyOn(messagesProducerService, 'sendMessage')
         .mockImplementation((_args) => undefined);
@@ -138,7 +141,10 @@ describe('Users integration test', () => {
       };
     }
 
-    return setupTest<UsersIntegrationExtension>(setupFn, callback);
+    async function cleanupFn(params: UsersIntegrationExtension) {
+      await params.app.close();
+    }
+    return setupTest<UsersIntegrationExtension>(setupFn, callback, cleanupFn);
   }
 
   beforeEach(() => fakeTime({ now, fake: ['Date'] }));

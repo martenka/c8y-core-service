@@ -16,9 +16,14 @@ export type TestFn<SetupResult extends object> = (
   params: SetupResult,
 ) => Promise<void>;
 
+export type CleanupFn<SetupResult extends object> = (
+  params: SetupResult | undefined,
+) => Promise<void>;
+
 export function setupTest<SetupReturn extends object>(
   setUpTestFn: SetupTestFn<SetupReturn>,
   testFn: TestFn<SetupReturn>,
+  cleanupFn?: CleanupFn<SetupReturn>,
 ): () => Promise<void> {
   return async () => {
     const instance = await MongoMemoryServer.create();
@@ -36,10 +41,12 @@ export function setupTest<SetupReturn extends object>(
       });
     });
 
+    let setupResult: SetupReturn | undefined = undefined;
     try {
-      const setupResult = await setUpTestFn(connection);
+      setupResult = await setUpTestFn(connection);
       await testFn(setupResult);
     } finally {
+      await cleanupFn?.(setupResult);
       await connection.close(true);
       await instance.stop({ doCleanup: true, force: true });
     }

@@ -1,7 +1,7 @@
 import { Task } from './Task';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
-import { notNil } from '../../utils/validation';
+import { isPresent } from '../../utils/validation';
 import { Sensor } from '../Sensor';
 import { Group } from '../Group';
 import { Properties } from '../../global/types/types';
@@ -12,12 +12,12 @@ import { taskEntityConverter } from '../utils/utils';
   _id: false,
   toJSON: {
     transform: (doc, ret) => {
-      if (notNil(ret?.sensor)) ret.sensor = ret.sensor.toString();
+      if (isPresent(ret?.sensor)) ret.sensor = ret.sensor.toString();
     },
   },
   toObject: {
     transform: (doc, ret) => {
-      if (notNil(ret?.sensor) && ret.sensor instanceof Types.ObjectId)
+      if (isPresent(ret?.sensor) && ret.sensor instanceof Types.ObjectId)
         ret.sensor = ret.sensor.toString();
     },
   },

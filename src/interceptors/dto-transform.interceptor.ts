@@ -15,7 +15,7 @@ import {
   EXPOSE_GROUPS,
 } from '../decorators/dto';
 import { isArray } from 'class-validator';
-import { isNil } from '@nestjs/common/utils/shared.utils';
+import { notPresent } from '../utils/validation';
 
 @Injectable()
 /**
@@ -57,7 +57,7 @@ export class DtoTransformInterceptor implements NestInterceptor {
 }
 
 function noDtoHandler(dto, logger: Logger) {
-  if (isNil(dto)) {
+  if (notPresent(dto)) {
     logger?.warn(
       'DTO transform interceptor set, but not DTO was provided. Check your controller annotations! ',
     );
@@ -71,7 +71,7 @@ function toOutputDTO(
   exposeGroups?: string[],
   noDtoProvidedHandler?: () => void,
 ) {
-  if (isNil(input)) {
+  if (notPresent(input)) {
     return undefined;
   }
 
@@ -79,8 +79,8 @@ function toOutputDTO(
     return input;
   }
 
-  if (isNil(dto)) {
-    noDtoProvidedHandler();
+  if (notPresent(dto)) {
+    noDtoProvidedHandler?.();
   }
 
   return plainToInstance(dto, input.toObject(), {

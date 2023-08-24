@@ -11,9 +11,8 @@ import { MongooseModuleOptions } from '@nestjs/mongoose';
 import { RabbitMQConfig } from '@golevelup/nestjs-rabbitmq';
 import { ExchangeTypes } from '../messages/types/exchanges';
 import { JwtModuleOptions } from '@nestjs/jwt/dist/interfaces/jwt-module-options.interface';
-import { isNil } from '@nestjs/common/utils/shared.utils';
 import { Role } from '../../global/types/roles';
-import { notNil } from '../../utils/validation';
+import { isPresent, notPresent } from '../../utils/validation';
 import { DefaultUserType } from './types/types';
 
 @Injectable()
@@ -30,11 +29,11 @@ export class ApplicationConfigService {
   ) {
     const mongoConfig = this.mongoEnvironment;
     if (
-      isNil(mongoConfig.CONNECTION_URI) &&
-      (isNil(mongoConfig.USER) ||
-        isNil(mongoConfig.PASS) ||
-        isNil(mongoConfig.DB) ||
-        isNil(mongoConfig.PORT))
+      notPresent(mongoConfig.CONNECTION_URI) &&
+      (notPresent(mongoConfig.USER) ||
+        notPresent(mongoConfig.PASS) ||
+        notPresent(mongoConfig.DB) ||
+        notPresent(mongoConfig.PORT))
     ) {
       throw new Error(
         'Unable to create MongoDB connection. Check Mongo ENV variables, either URI or USER,PASS, DB and PORT must be present!',
@@ -98,18 +97,25 @@ export class ApplicationConfigService {
   }
 
   get defaultUser(): DefaultUserType | undefined {
+    if (
+      notPresent(this.defaultUserEnvironment) ||
+      Object.keys(this.defaultUserEnvironment).length === 0
+    ) {
+      return undefined;
+    }
+
     if (!this.defaultUserViewed) {
       if (this.defaultUserEnvironment.USER === '') {
         throw new Error('Default user username cannot be empty string!');
       }
 
       if (
-        notNil(this.defaultUserEnvironment.USER) &&
-        (isNil(this.defaultUserEnvironment.C8Y_USER) ||
-          isNil(this.defaultUserEnvironment.C8Y_TENANT_ID) ||
-          isNil(this.defaultUserEnvironment.PASS) ||
-          isNil(this.defaultUserEnvironment.C8Y_PASS) ||
-          isNil(this.defaultUserEnvironment.C8Y_TENANT_DOMAIN))
+        isPresent(this.defaultUserEnvironment.USER) &&
+        (notPresent(this.defaultUserEnvironment.C8Y_USER) ||
+          notPresent(this.defaultUserEnvironment.C8Y_TENANT_ID) ||
+          notPresent(this.defaultUserEnvironment.PASS) ||
+          notPresent(this.defaultUserEnvironment.C8Y_PASS) ||
+          notPresent(this.defaultUserEnvironment.C8Y_TENANT_DOMAIN))
       ) {
         throw new Error(
           'Default user password and Cumulocity account details must also be provided if default username is provided',
@@ -127,7 +133,11 @@ export class ApplicationConfigService {
         },
       };
       this.defaultUserViewed = true;
-      return user;
+      if (notPresent(user.username)) {
+        return undefined;
+      }
+
+      return user as DefaultUserType;
     }
     return undefined;
   }

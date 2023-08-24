@@ -68,6 +68,7 @@ import {
   setupTest,
   WithIntegrationSetupTestResult,
 } from '../../../../test/setup/setup';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 type TasksIntegrationExtension = WithIntegrationSetupTestResult<{
   models: {
@@ -146,7 +147,9 @@ describe('Tasks integration test', () => {
       const groupModel = connection.model(Group.name, GroupSchema);
       const fileModel = connection.model(File.name, FileSchema);
       const sensorModel = connection.model(Sensor.name, SensorSchema);
-      const messagesProducerService = new MessagesProducerService(null);
+      const messagesProducerService = new MessagesProducerService(
+        null as unknown as AmqpConnection,
+      );
 
       const testJwtService = new JwtService(getTestJwtConfig());
 
@@ -249,7 +252,7 @@ describe('Tasks integration test', () => {
         {},
         {
           taskPayloadEntities: [
-            { id: sensorStub._id, fileName: 'DataFetchFile1' },
+            { id: sensorStub._id!, fileName: 'DataFetchFile1' },
           ],
         },
       );
@@ -482,7 +485,7 @@ describe('Tasks integration test', () => {
         { name: 'GetTaskName' },
         {
           taskPayloadEntities: [
-            { id: sensorStub._id, fileName: 'DataFetchFile12' },
+            { id: sensorStub._id!, fileName: 'DataFetchFile12' },
           ],
         },
       );

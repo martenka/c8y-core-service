@@ -7,6 +7,7 @@ import {
 
 import humanInterval from 'human-interval';
 import cronParser from 'cron-parser';
+import { notPresent } from '../../utils/validation';
 
 export function IsValidTaskPeriodicPattern(
   validationOptions?: ValidationOptions,
@@ -26,6 +27,9 @@ export function IsValidTaskPeriodicPattern(
               }
 
               const interval = humanInterval(value);
+              if (notPresent(interval)) {
+                return false;
+              }
 
               if (!isNaN(interval) && interval > 0) {
                 return true;

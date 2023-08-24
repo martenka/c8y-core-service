@@ -2,12 +2,10 @@ import {
   Body,
   Controller,
   Post,
-  Request,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Request as ExpressRequest } from 'express';
 import { CreateUserDto } from '../users/dto/input/create-user.dto';
 import { DtoTransformInterceptor } from '../../interceptors/dto-transform.interceptor';
 import { NoDTOValidation, SetControllerDTO } from '../../decorators/dto';
@@ -17,10 +15,11 @@ import { UserDocument } from '../../models/User';
 import { NoAuthRoute } from '../../decorators/authentication';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoginDto } from './dto/input/login.dto';
-import { AccessResponse } from './types/types';
+import { AccessResponse, LoggedInUserType } from './types/types';
 import { LoginResponseDto } from './dto/output/login-response.dto';
 import { AdminRoute } from '../../decorators/authorization';
 import { UseRolesGuard } from '../../guards/RoleGuard';
+import { LoggedInUser } from '../../decorators/user';
 
 @UseInterceptors(DtoTransformInterceptor)
 @UseRolesGuard()
@@ -43,8 +42,8 @@ export class AuthController {
     type: LoginResponseDto,
     description: 'Access token was created',
   })
-  async login(@Request() req: ExpressRequest): Promise<AccessResponse> {
-    return this.authService.login(req.user);
+  async login(@LoggedInUser() user: LoggedInUserType): Promise<AccessResponse> {
+    return this.authService.login(user);
   }
 
   @Post('/register')

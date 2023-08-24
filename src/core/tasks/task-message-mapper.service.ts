@@ -14,12 +14,15 @@ import {
   TaskTypes,
 } from '../../models';
 import { HandlersType } from '../../global/types/types';
-import { isNil } from '@nestjs/common/utils/shared.utils';
+
 import { SensorType } from '../../models/Sensor';
-import { notNil } from '../../utils/validation';
+import { isPresent, notPresent } from '../../utils/validation';
 import { DataFetchTaskMessagePayload } from '../messages/types/message-types/task/data-fetch';
 import { DataUploadTaskDocument } from '../../models/task/data-upload-task';
-import { DataUploadTaskMessagePayload } from '../messages/types/message-types/task/file-upload';
+import {
+  DataUploadMessageFile,
+  DataUploadTaskMessagePayload,
+} from '../messages/types/message-types/task/file-upload';
 
 @Injectable()
 export class TaskMessageMapperService implements OnModuleInit {
@@ -29,7 +32,7 @@ export class TaskMessageMapperService implements OnModuleInit {
 
   mapTaskToMessage(task: TaskDocument) {
     const handler = this.mapperHandlers[task.taskType];
-    if (isNil(handler)) {
+    if (notPresent(handler)) {
       this.logger.error(
         `Task mapping with unknown task type - ${task?.taskType}.`,
       );
@@ -47,13 +50,14 @@ export class TaskMessageMapperService implements OnModuleInit {
 
     const mappedSensorData = leanTask.payload.data
       .map((sensorData) => {
-        if (isNil(sensorData.sensor)) {
+        const currentSensor = sensorData.sensor as SensorType;
+        if (notPresent(currentSensor) || notPresent(currentSensor._id)) {
           this.logger.warn(
-            `Ignoring unknown sensor id value for task: ${leanTask._id.toString()}`,
+            `Ignoring unknown sensor id value for task: ${leanTask._id?.toString()}`,
           );
           return;
         }
-        const currentSensor = sensorData.sensor as SensorType;
+
         return {
           fileName: sensorData.fileName,
           dataId: sensorData.dataId,
@@ -64,7 +68,7 @@ export class TaskMessageMapperService implements OnModuleInit {
           },
         };
       })
-      .filter(notNil);
+      .filter(isPresent);
 
     return {
       data: mappedSensorData,
@@ -79,23 +83,31 @@ export class TaskMessageMapperService implements OnModuleInit {
     const leanTask = task.toObject();
     return {
       platform: leanTask.payload.platform,
-      files: leanTask.payload.files.map((file) => {
-        return {
-          fileName: file.fileName,
-          storage: file.storage,
-          customAttributes: file.customAttributes,
-          metadata: {
-            managedObjectId: file.metadata.managedObjectId,
-            valueFragmentType: file.metadata.valueFragmentType,
-            managedObjectName: file.metadata.managedObjectName,
-            valueFragmentDescription: file.metadata.valueFragmentDescription,
-            sensorDescription: file.metadata.sensorDescription,
-            fileDescription: file.metadata.fileDescription,
-            dateFrom: file.metadata.dateFrom.toISOString(),
-            dateTo: file.metadata.dateTo.toISOString(),
-          },
-        };
-      }),
+      files: leanTask.payload.files
+        .map((file): DataUploadMessageFile | undefined => {
+          if (notPresent(file.metadata.valueFragmentDescription)) {
+            this.logger.log(
+              `Skipping file ${file.fileId?.toString()} mapping for DataUploadTask as valueFragmentDescription is not present`,
+            );
+            return;
+          }
+          return {
+            fileName: file.fileName,
+            storage: file.storage,
+            customAttributes: file.customAttributes,
+            metadata: {
+              managedObjectId: file.metadata.managedObjectId,
+              valueFragmentType: file.metadata.valueFragmentType,
+              managedObjectName: file.metadata.managedObjectName,
+              valueFragmentDescription: file.metadata.valueFragmentDescription,
+              sensorDescription: file.metadata.sensorDescription,
+              fileDescription: file.metadata.fileDescription,
+              dateFrom: file.metadata.dateFrom.toISOString(),
+              dateTo: file.metadata.dateTo.toISOString(),
+            },
+          };
+        })
+        .filter(isPresent),
     };
   }
 

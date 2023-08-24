@@ -4,9 +4,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument, UserModel } from '../../models/User';
 import {
   idToObjectIDOrUndefined,
+  nullToUndefined,
   removeNilProperties,
 } from '../../utils/helpers';
-import { hasNoOwnKeys, notNil } from '../../utils/validation';
+import { hasNoOwnKeys, isPresent, notPresent } from '../../utils/validation';
 import { CreateUserDto } from './dto/input/create-user.dto';
 import { IDeleteUsers, IDeleteUsersResponse, IUpdateUser } from './dto/types';
 import { Role } from '../../global/types/roles';
@@ -38,10 +39,12 @@ export class UsersService {
       query = query.select(`+${passwordField}`);
     }
 
-    return await query.exec();
+    return nullToUndefined(await query.exec());
   }
 
-  async create(input: CreateUserDto): Promise<Omit<UserDocument, 'password'>> {
+  async create(
+    input: CreateUserDto,
+  ): Promise<Omit<UserDocument, 'password'> | undefined> {
     const { role: roles, ...other } = input;
 
     if (roles?.length === 1 && roles[0] === Role.Admin) {
@@ -49,6 +52,9 @@ export class UsersService {
     }
 
     const user = await this.userModel.create({ roles, ...other });
+    if (notPresent(user)) {
+      return undefined;
+    }
     user.password = undefined;
 
     this.logger.log(`Created user with username: ${user?.username ?? 'N/A'}`);
@@ -83,6 +89,9 @@ export class UsersService {
     };
   }
 
+  /**
+   * Returns the updated entity or **undefined** if user was not found
+   */
   async updateOne(
     id: Types.ObjectId,
     input: IUpdateUser,
@@ -100,7 +109,7 @@ export class UsersService {
     for (const key of Object.keys(updateData.c8yCredentials)) {
       setOperation[`c8yCredentials.${key}`] = updateData.c8yCredentials[key];
     }
-    if (notNil(updateData?.role)) {
+    if (isPresent(updateData?.role)) {
       setOperation['roles'] = updateData.role;
     }
 
@@ -113,6 +122,10 @@ export class UsersService {
         { new: true },
       )
       .exec();
+
+    if (notPresent(updatedUser)) {
+      return undefined;
+    }
 
     const leanUpdatedUser = updatedUser.toObject();
     this.messagesProducerService.sendUserMessage({

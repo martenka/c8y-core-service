@@ -13,7 +13,7 @@ export interface IAccessTokenPayload {
 export type AccessResponse = Properties<LoginResponseDto>;
 
 export type LoggedInUserType = {
-  [P in keyof Pick<UserType, 'username' | '_id'>]: string;
+  [P in keyof Required<Pick<UserType, 'username' | '_id'>>]: string;
 } & Pick<UserType, 'roles'>;
 
 export type WithInitiatedByUser<T> = T & Pick<TaskType, 'initiatedByUser'>;

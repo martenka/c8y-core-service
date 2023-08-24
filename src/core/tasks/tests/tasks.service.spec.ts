@@ -43,6 +43,8 @@ import {
   WithServiceSetupTestResult,
 } from '../../../../test/setup/setup';
 
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+
 type TasksServiceExtension = WithServiceSetupTestResult<{
   models: {
     taskModel: TaskModel;
@@ -110,7 +112,9 @@ describe('TasksService', () => {
           ),
       };
 
-      const messagesProducerService = new MessagesProducerService(null);
+      const messagesProducerService = new MessagesProducerService(
+        null as unknown as AmqpConnection,
+      );
 
       const module = await Test.createTestingModule({
         providers: [
@@ -179,6 +183,7 @@ describe('TasksService', () => {
         .mockImplementation((_args) => undefined);
 
       const objectSyncTask: ObjectSyncTask = {
+        _id: new Types.ObjectId('64e666bf168f8d93e1d7964a'),
         taskType: TaskTypes.OBJECT_SYNC,
         mode: TaskMode.ENABLED,
         name: 'Test Object Syncing',
@@ -195,7 +200,7 @@ describe('TasksService', () => {
         {
           taskType: objectSyncTask.taskType,
           name: objectSyncTask.name,
-          firstRunAt: objectSyncTask.metadata.firstRunAt,
+          firstRunAt: objectSyncTask.metadata.firstRunAt!,
         },
       );
 
@@ -206,7 +211,7 @@ describe('TasksService', () => {
           taskType: 'OBJECT_SYNC',
           initiatedByUser: '645677573f56adad8ddcc091',
           taskName: objectSyncTask.name,
-          firstRunAt: objectSyncTask.metadata.firstRunAt.toISOString(),
+          firstRunAt: objectSyncTask.metadata.firstRunAt?.toISOString(),
           customAttributes: {},
           payload: {},
           taskId: createdTask._id.toString(),
@@ -231,7 +236,7 @@ describe('TasksService', () => {
       });
       const foundTask = await services.service.findById(taskId);
 
-      const leanTask = foundTask.toObject();
+      const leanTask = foundTask?.toObject();
 
       expect(leanTask).toMatchObject({
         _id: taskId.toString(),
@@ -267,7 +272,7 @@ describe('TasksService', () => {
           reason: 'Task failed to run',
         },
       });
-      const leanUpdatedTask = updatedTask.toObject();
+      const leanUpdatedTask = updatedTask?.toObject();
 
       expect(leanUpdatedTask).toMatchObject({
         _id: taskId.toString(),
@@ -334,7 +339,7 @@ describe('TasksService', () => {
       const updatedEntity = await models.dataFetchTaskModel
         .findById(taskId)
         .exec();
-      const leanEntity = updatedEntity.toObject();
+      const leanEntity = updatedEntity?.toObject();
 
       expect(leanEntity).toMatchObject({
         _id: '64569195c710ff3cad6b4d7f',
@@ -454,7 +459,8 @@ describe('TasksService', () => {
         );
 
         const updatedEntity = await dataFetchTaskModel.findById(taskId).exec();
-        const leanEntity = updatedEntity.toObject();
+
+        const leanEntity = updatedEntity?.toObject();
 
         expect(leanEntity).toMatchObject({
           _id: '64592e30a16f4a1d83a5945c',

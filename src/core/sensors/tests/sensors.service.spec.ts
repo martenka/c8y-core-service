@@ -51,8 +51,8 @@ describe('SensorsService', () => {
     }),
   ];
 
-  const firstSensorId = testSensorEntities[0]()._id.toString();
-  const secondSensorId = testSensorEntities[1]()._id.toString();
+  const firstSensorId = testSensorEntities[0]()._id!.toString();
+  const secondSensorId = testSensorEntities[1]()._id!.toString();
   const leanTestSensorEntity = {
     ...omit(testSensorEntities[0](), '_id'),
     _id: firstSensorId,
@@ -99,12 +99,10 @@ describe('SensorsService', () => {
     withTest(async ({ models, services }) => {
       await models.sensorModel.create(testSensorEntities[0]());
 
-      const sensor = (
-        await services.service.findOne({
-          id: firstSensorId,
-          managedObjectId: '123',
-        })
-      ).toObject();
+      const sensor = (await services.service.findOne({
+        id: firstSensorId,
+        managedObjectId: '123',
+      }))!.toObject();
       expect(sensor).toMatchObject(leanTestSensorEntity);
     }),
   );
@@ -128,7 +126,7 @@ describe('SensorsService', () => {
       ]);
       expect(Array.isArray(createResponse)).toBe(true);
       expect(createResponse).toHaveLength(1);
-      const leanResponse = createResponse.map((sensor) => sensor.toObject());
+      const leanResponse = createResponse!.map((sensor) => sensor.toObject());
 
       expect(leanResponse).toEqual([
         expect.objectContaining(
@@ -196,7 +194,7 @@ describe('SensorsService', () => {
 
       expect(updatedSensors).toBeDefined();
       expect(updatedSensors).toHaveLength(1);
-      const leanUpdatedSensor = updatedSensors[0].toObject();
+      const leanUpdatedSensor = updatedSensors![0].toObject();
 
       expect(leanUpdatedSensor).toMatchObject({
         ...omit(
@@ -237,7 +235,7 @@ describe('SensorsService', () => {
       expect(updatedSensors).toBeDefined();
       expect(Array.isArray(updatedSensors)).toBe(true);
 
-      const leanUpdatedSensors = updatedSensors.map((sensor) =>
+      const leanUpdatedSensors = updatedSensors!.map((sensor) =>
         sensor.toObject(),
       );
 

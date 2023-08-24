@@ -30,6 +30,7 @@ import {
   setupTest,
   WithServiceSetupTestResult,
 } from '../../../../test/setup/setup';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 type FilesServiceExtension = WithServiceSetupTestResult<{
   models: {
@@ -110,7 +111,9 @@ describe('FilesService', () => {
           }),
       };
 
-      const messagesProducerService = new MessagesProducerService(null);
+      const messagesProducerService = new MessagesProducerService(
+        null as unknown as AmqpConnection,
+      );
 
       const module: TestingModule = await Test.createTestingModule({
         providers: [
@@ -217,7 +220,7 @@ describe('FilesService', () => {
         );
       expect(updatedFile.visibilityState.stateChanging).toEqual(true);
       const updatedFileFromDB = await models.fileModel.findById(fileId).exec();
-      expect(updatedFileFromDB.visibilityState.stateChanging).toEqual(true);
+      expect(updatedFileFromDB!.visibilityState.stateChanging).toEqual(true);
       expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
         ExchangeTypes.GENERAL,
         'file.status.visibility.state',
@@ -293,7 +296,7 @@ describe('FilesService', () => {
 
       expect(updateResult.modifiedCount).toBe(1);
       const updatedFile = await models.fileModel.findById(fileId).exec();
-      const leanUpdatedFile = updatedFile.toObject();
+      const leanUpdatedFile = updatedFile!.toObject();
       expect(leanUpdatedFile.visibilityState).toMatchObject({
         published: false,
         stateChanging: false,
@@ -323,7 +326,7 @@ describe('FilesService', () => {
       });
 
       const updatedFile = await models.fileModel.findById(fileId).exec();
-      const leanUpdatedFile = updatedFile.toObject();
+      const leanUpdatedFile = updatedFile!.toObject();
       expect(leanUpdatedFile.visibilityState).toMatchObject({
         published: true,
         stateChanging: false,
