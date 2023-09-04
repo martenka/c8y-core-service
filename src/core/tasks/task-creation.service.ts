@@ -221,6 +221,11 @@ export class TaskCreationService implements OnModuleInit {
         `Cannot create periodic ${taskDetails.taskType} without window duration set`,
       );
     }
+    if (notPresent(taskDetails.taskPayload.dateFrom)) {
+      throw new BadRequestException(
+        'Time period start date (dateFrom) must be present!',
+      );
+    }
     switch (taskDetails.taskPayload.entityType) {
       case 'GROUP': {
         const group = await this.groupModel

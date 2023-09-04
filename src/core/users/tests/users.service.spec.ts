@@ -78,6 +78,10 @@ describe('UsersService', () => {
         ],
       }).compile();
 
+      jest
+        .spyOn(messagesProducerService, 'publishMessage')
+        .mockImplementation((_args) => undefined);
+
       const service = module.get<UsersService>(UsersService);
 
       return {
@@ -170,9 +174,10 @@ describe('UsersService', () => {
   it.concurrent(
     'updates user',
     withTest(async ({ models, services }) => {
-      const sendMessageSpy = jest
-        .spyOn(services.messagesProducerService, 'sendMessage')
-        .mockImplementation((_args) => undefined);
+      const sendMessageSpy = jest.spyOn(
+        services.messagesProducerService,
+        'sendMessage',
+      );
 
       const users = userDtos.map((dtoFn) => dtoFn());
       users[0].username = 'testUser6';
@@ -216,9 +221,10 @@ describe('UsersService', () => {
   it.concurrent(
     'deletes users',
     withTest(async ({ models, services }) => {
-      const sendMessageSpy = jest
-        .spyOn(services.messagesProducerService, 'sendMessage')
-        .mockImplementation((_args) => undefined);
+      const sendMessageSpy = jest.spyOn(
+        services.messagesProducerService,
+        'sendMessage',
+      );
 
       const users = userDtos.map((dtoFn) => dtoFn());
       users[0].username = 'abcd';

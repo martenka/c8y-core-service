@@ -1,22 +1,16 @@
 import { Controller } from '@nestjs/common';
-import { MessagesProducerService } from './messages-producer.service';
 import { ExchangeTypes } from './types/exchanges';
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { MessagesHandlerService } from './messages-handler.service';
-import { TaskStatusMessage } from './types/message-types/task/types';
 import { NoAuthRoute } from '../../decorators/authentication';
 import { ConsumeMessage } from 'amqplib';
-import { VisibilityStateResultMessage } from './types/message-types/file/types';
-import { isPresent } from '../../utils/validation';
-import { MessageTypes } from './types/message-types/messageTypes';
+import { isPresent, messageValidator } from '../../utils/validation';
+import { MessageMap, MessagesValidationMap } from './types/runtypes/map';
 
 @Controller()
 @NoAuthRoute()
 export class MessagesController {
-  constructor(
-    private readonly messagesService: MessagesProducerService,
-    private readonly messageHandlerService: MessagesHandlerService,
-  ) {}
+  constructor(private readonly messageHandlerService: MessagesHandlerService) {}
 
   @RabbitSubscribe({
     exchange: ExchangeTypes.GENERAL,
@@ -31,19 +25,55 @@ export class MessagesController {
       console.error(channel);
     },
   })
-  async consumeTaskStatusMessage(
-    message: TaskStatusMessage,
-    amqpMsg: ConsumeMessage,
-  ) {
-    const timestamp = amqpMsg.properties.timestamp;
-    const updatedMessage = {
-      ...message,
-      timestamp: typeof timestamp === 'string' ? timestamp : undefined,
+  async consumeTaskStatusMessage(payload: object, amqpMsg: ConsumeMessage) {
+    const timestampEnhancer = async <T extends { timestamp?: string }>(
+      message: T,
+      callback: (updatedMessage: T) => Promise<void>,
+    ) => {
+      const timestamp = amqpMsg.properties.timestamp;
+      const updatedMessage = {
+        ...message,
+        timestamp: typeof timestamp === 'string' ? timestamp : undefined,
+      };
+      if (typeof timestamp === 'string' && isPresent(message.timestamp)) {
+        updatedMessage.timestamp = timestamp;
+      }
+
+      await callback(updatedMessage);
     };
-    if (typeof timestamp === 'string' && isPresent(message.timestamp)) {
-      message.timestamp = timestamp;
-    }
-    await this.messageHandlerService.handleTaskStatusMessage(updatedMessage);
+
+    const handleMessage = async (message: MessageMap['taskStatusMessage']) => {
+      await timestampEnhancer(message, (updatedMessage) =>
+        this.messageHandlerService.handleTaskStatusMessage(updatedMessage),
+      );
+    };
+
+    const handleFailedMessage = async (
+      message: MessageMap['task.status.failed'],
+    ) => {
+      await timestampEnhancer(message, (updatedMessage) =>
+        this.messageHandlerService.handleTaskFailedMessage(updatedMessage),
+      );
+    };
+
+    const handleGeneralTaskStatusMessage = async (
+      message: MessageMap['task.status'],
+    ) => {
+      await timestampEnhancer(message, (updatedMessage) =>
+        this.messageHandlerService.handleGeneralTaskStatusMessage(
+          updatedMessage,
+        ),
+      );
+    };
+
+    await messageValidator(payload, amqpMsg, MessagesValidationMap, {
+      'task.status.object_sync': (message) => handleMessage(message),
+      'task.status.data_fetch.result': (message) => handleMessage(message),
+      'task.status.data_upload.result': (message) => handleMessage(message),
+      'task.status.object_sync.result': (message) => handleMessage(message),
+      'task.status.failed': (message) => handleFailedMessage(message),
+      'task.status': (message) => handleGeneralTaskStatusMessage(message),
+    });
   }
 
   @RabbitSubscribe({
@@ -59,14 +89,13 @@ export class MessagesController {
       console.error(channel);
     },
   })
-  async consumeFileResultMessage(message: object, amqpMsg: ConsumeMessage) {
-    switch (amqpMsg.fields.routingKey) {
-      case 'file.result.visibility.state': {
-        await this.messageHandlerService.handleFileVisibilityStateResultMessage(
-          message as VisibilityStateResultMessage,
-        );
-      }
-    }
+  async consumeFileResultMessage(payload: object, amqpMsg: ConsumeMessage) {
+    await messageValidator(payload, amqpMsg, MessagesValidationMap, {
+      'file.result.visibility.state': (message) =>
+        this.messageHandlerService.handleFileVisibilityStateResultMessage(
+          message,
+        ),
+    });
   }
   @RabbitSubscribe({
     exchange: ExchangeTypes.GENERAL,
@@ -77,9 +106,13 @@ export class MessagesController {
       console.error(error);
     },
   })
-  async consumeTaskModeChangedMessage(payload: object) {
-    await this.messageHandlerService.handleTaskModeChangedMessage(
-      payload as MessageTypes['task.mode'],
-    );
+  async consumeTaskModeChangedMessage(
+    payload: object,
+    amqpMsg: ConsumeMessage,
+  ) {
+    await messageValidator(payload, amqpMsg, MessagesValidationMap, {
+      'task.mode.changed': (message) =>
+        this.messageHandlerService.handleTaskModeChangedMessage(message),
+    });
   }
 }

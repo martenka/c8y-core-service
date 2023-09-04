@@ -35,9 +35,9 @@ export type TaskDocumentSubtypes =
   | DataUploadTaskDocument;
 
 export interface TaskMap {
-  [TaskTypes.DATA_FETCH]: DataFetchTaskType;
-  [TaskTypes.OBJECT_SYNC]: ObjectSyncTaskType;
-  [TaskTypes.DATA_UPLOAD]: DataUploadTaskType;
+  ['DATA_FETCH']: DataFetchTaskType;
+  ['OBJECT_SYNC']: ObjectSyncTaskType;
+  ['DATA_UPLOAD']: DataUploadTaskType;
 }
 
 export type TaskStatus = keyof typeof TaskSteps;

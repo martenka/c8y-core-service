@@ -15,7 +15,6 @@ import { MessagesProducerService } from '../../messages/messages-producer.servic
 import { SendMessageParams } from '../../messages/types/producer';
 import { getModelToken } from '@nestjs/mongoose';
 import { ApplicationConfigService } from '../../application-config/application-config.service';
-import { DataFetchTaskResultFile } from '../../messages/types/message-types/task/data-fetch';
 import { SensorSearchOptions } from '../../../global/query/types';
 import { SensorModel, SensorSchema, SensorType } from '../../../models/Sensor';
 import { getSensorStub } from '../../../tests/stubs/sensor';
@@ -31,6 +30,7 @@ import {
   WithServiceSetupTestResult,
 } from '../../../../test/setup/setup';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { DataFetchTaskResultSensor } from '../../messages/types/runtypes/task/data-fetch';
 
 type FilesServiceExtension = WithServiceSetupTestResult<{
   models: {
@@ -48,8 +48,8 @@ type FilesServiceExtension = WithServiceSetupTestResult<{
 describe('FilesService', () => {
   const urlDomain = 'http://localhost:1234';
   function getDataFetchSensorStub(
-    valueOverride: Partial<DataFetchTaskResultFile> = {},
-  ): DataFetchTaskResultFile {
+    valueOverride: Partial<DataFetchTaskResultSensor> = {},
+  ): DataFetchTaskResultSensor {
     return {
       bucket: 'test_bucket',
       dateFrom: '2023-01-03T12:00:00.000Z',
@@ -115,6 +115,10 @@ describe('FilesService', () => {
         null as unknown as AmqpConnection,
       );
 
+      jest
+        .spyOn(messagesProducerService, 'publishMessage')
+        .mockImplementation((_args) => undefined);
+
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           { provide: getModelToken(File.name), useValue: fileModel },
@@ -175,9 +179,10 @@ describe('FilesService', () => {
   it.concurrent(
     'removes files',
     withTest(async ({ models, services }) => {
-      const sendMessageSpy = jest
-        .spyOn(services.messagesProducerService, 'sendMessage')
-        .mockImplementation((_args) => undefined);
+      const sendMessageSpy = jest.spyOn(
+        services.messagesProducerService,
+        'sendMessage',
+      );
       const idToDelete = new Types.ObjectId('6452bcca3192dd4c4ded6333');
       await models.fileModel.create([
         getFileStub({ _id: new Types.ObjectId('6452bceae11b1c3216239762') }),
@@ -205,9 +210,10 @@ describe('FilesService', () => {
   it.concurrent(
     'handles visibility change request',
     withTest(async ({ models, services }) => {
-      const sendMessageSpy = jest
-        .spyOn(services.messagesProducerService, 'sendMessage')
-        .mockImplementation((_args) => undefined);
+      const sendMessageSpy = jest.spyOn(
+        services.messagesProducerService,
+        'sendMessage',
+      );
       const fileId = new Types.ObjectId('6452c1a13522331070faf106');
       await models.fileModel.create(getFileStub({ _id: fileId }));
       const updatedFile =

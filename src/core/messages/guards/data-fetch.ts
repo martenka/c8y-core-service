@@ -1,18 +1,11 @@
-import { TaskStatusMessage } from '../types/message-types/task/types';
-import { DataFetchTaskResult } from '../types/message-types/task/data-fetch';
 import { isPresent } from '../../../utils/validation';
-import { TaskSteps, TaskTypes } from '../../../models';
+import { MessageMap } from '../types/runtypes/map';
 
 export function isDataFetchTaskResultMessage(
-  message: TaskStatusMessage,
-): message is DataFetchTaskResult {
-  const isCorrectTaskStep =
-    message.status === TaskSteps.DONE ||
-    message.status === TaskSteps.WAITING_NEXT_CYCLE;
+  message: MessageMap['task.status.data_fetch.result'],
+): message is MessageMap['task.status.data_fetch.result'] {
+  const isCorrectTaskStep = message.status === 'DONE';
   return (
-    isPresent(message) &&
-    isCorrectTaskStep &&
-    message.taskType === TaskTypes.DATA_FETCH &&
-    'sensors' in message.payload
+    isPresent(message) && isCorrectTaskStep && message.taskType === 'DATA_FETCH'
   );
 }

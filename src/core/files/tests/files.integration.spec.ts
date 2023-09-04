@@ -93,6 +93,10 @@ describe('Files integration test', () => {
       };
       const testJwtService = new JwtService(getTestJwtConfig());
 
+      jest
+        .spyOn(messagesProducerService, 'publishMessage')
+        .mockImplementation((_args) => undefined);
+
       const testingModule: TestingModule = await Test.createTestingModule({
         imports: [
           PagingModule,
@@ -407,9 +411,10 @@ describe('Files integration test', () => {
         jwtService: services.jwtService,
       });
 
-      const sendMessageSpy = jest
-        .spyOn(services.messagesProducerService, 'sendMessage')
-        .mockImplementation((_args) => undefined);
+      const sendMessageSpy = jest.spyOn(
+        services.messagesProducerService,
+        'sendMessage',
+      );
 
       const sensor1Id = new Types.ObjectId('647c6f6dcb44af9700c3f8a6');
       const sensor1 = getSensorStub({
@@ -480,9 +485,10 @@ describe('Files integration test', () => {
         jwtService: services.jwtService,
       });
 
-      const sendMessageSpy = jest
-        .spyOn(services.messagesProducerService, 'sendMessage')
-        .mockImplementation((_args) => undefined);
+      const sendMessageSpy = jest.spyOn(
+        services.messagesProducerService,
+        'sendMessage',
+      );
 
       const sensor1Id = new Types.ObjectId('647c5cbb41c4e44da374e62b');
       const sensor1 = getSensorStub({
@@ -547,9 +553,10 @@ describe('Files integration test', () => {
         jwtService: services.jwtService,
       });
 
-      const sendMessageSpy = jest
-        .spyOn(services.messagesProducerService, 'sendMessage')
-        .mockImplementation((_args) => undefined);
+      const sendMessageSpy = jest.spyOn(
+        services.messagesProducerService,
+        'sendMessage',
+      );
 
       const sensor1Id = new Types.ObjectId('647c5ec0ed490d06731b3e7d');
       const sensor2Id = new Types.ObjectId('647c5edd7f8e4625f962b69f');

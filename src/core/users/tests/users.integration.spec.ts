@@ -58,9 +58,11 @@ describe('Users integration test', () => {
       const messagesProducerService = new MessagesProducerService(
         null as unknown as AmqpConnection,
       );
-      const sendMessageSpy: jest.SpyInstance<void, SendMessageParams> = jest
-        .spyOn(messagesProducerService, 'sendMessage')
+      jest
+        .spyOn(messagesProducerService, 'publishMessage')
         .mockImplementation((_args) => undefined);
+      const sendMessageSpy: jest.SpyInstance<void, SendMessageParams> =
+        jest.spyOn(messagesProducerService, 'sendMessage');
 
       const testingConfigService = {
         get mongooseModuleOptions(): MongooseModuleOptions {

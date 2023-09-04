@@ -1,15 +1,18 @@
 import {
   IsDate,
-  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { TaskTypes } from '../../../../models';
 import { Type } from 'class-transformer';
 import { IsValidTaskPeriodicPattern } from '../../../../decorators/custom-validators/task-periodic-pattern';
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  TaskTypes,
+  TaskTypesRuntype,
+} from '../../../messages/types/runtypes/common';
+import { IsRuntype } from '../../../../decorators/custom-validators/runtype.validator';
 
 export class PeriodicData {
   @IsValidTaskPeriodicPattern({
@@ -30,7 +33,7 @@ export class PeriodicData {
 }
 
 export class CreateTaskDto {
-  @IsEnum(TaskTypes)
+  @IsRuntype(TaskTypesRuntype)
   taskType: TaskTypes;
 
   @IsOptional()

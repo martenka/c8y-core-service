@@ -1,11 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SensorsService } from '../../sensors/sensors.service';
-import { ObjectSyncTaskStatusMessage } from '../types/message-types/messageTypes';
-import { TasksService } from '../../tasks/tasks.service';
 import { Types } from 'mongoose';
 import { isGroup, isSensor } from '../guards/object-sync';
 import { GroupsService } from '../../groups/groups.service';
-import { Group, Sensor } from '../types/message-types/task/object-sync';
 import { SensorDocument } from '../../../models/Sensor';
 import { isPresent, notPresent } from '../../../utils/validation';
 import { GroupDocument } from '../../../models/Group';
@@ -13,6 +10,8 @@ import {
   CreateSensorDto,
   CreateSensorDtoProperties,
 } from '../../sensors/dto/create-sensor.dto';
+import { MessageMap } from '../types/runtypes/map';
+import { Group, Sensor } from '../types/runtypes/task/object-sync';
 
 @Injectable()
 export class ObjectSyncTaskMessageHandler {
@@ -21,10 +20,9 @@ export class ObjectSyncTaskMessageHandler {
   constructor(
     private readonly sensorsService: SensorsService,
     private readonly groupsService: GroupsService,
-    private readonly tasksService: TasksService,
   ) {}
 
-  async handleStatusMessage(message: ObjectSyncTaskStatusMessage) {
+  async handleStatusMessage(message: MessageMap['task.status.object_sync']) {
     for (const object of message.payload.objects) {
       if (isSensor(object)) {
         const existingSensor = await this.sensorsService.findOne({

@@ -153,6 +153,10 @@ describe('Tasks integration test', () => {
 
       const testJwtService = new JwtService(getTestJwtConfig());
 
+      jest
+        .spyOn(messagesProducerService, 'publishMessage')
+        .mockImplementation((_args) => undefined);
+
       const testingModule: TestingModule = await Test.createTestingModule({
         imports: [
           PagingModule,
@@ -239,9 +243,10 @@ describe('Tasks integration test', () => {
         jwtService: services.jwtService,
       });
 
-      const sendMessageSpy = jest
-        .spyOn(services.messagesProducerService, 'sendMessage')
-        .mockImplementation((_args) => undefined);
+      const sendMessageSpy = jest.spyOn(
+        services.messagesProducerService,
+        'sendMessage',
+      );
 
       const sensorStub = getSensorStub({
         _id: new Types.ObjectId('647d9fb4f6f7e47d8723ad21'),
@@ -286,7 +291,7 @@ describe('Tasks integration test', () => {
       });
       expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
         ExchangeTypes.GENERAL,
-        'task.scheduled',
+        'task.scheduled.data_fetch',
         expect.objectContaining({
           taskId: expect.any(String),
           initiatedByUser: '647d9cd5f4f9ba0bc66b4ae8',
@@ -320,9 +325,10 @@ describe('Tasks integration test', () => {
         jwtService: services.jwtService,
       });
 
-      const sendMessageSpy = jest
-        .spyOn(services.messagesProducerService, 'sendMessage')
-        .mockImplementation((_args) => undefined);
+      const sendMessageSpy = jest.spyOn(
+        services.messagesProducerService,
+        'sendMessage',
+      );
 
       const createTaskStub = getCreateObjectSyncTaskStub({});
 
@@ -344,7 +350,7 @@ describe('Tasks integration test', () => {
       });
       expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
         ExchangeTypes.GENERAL,
-        'task.scheduled',
+        'task.scheduled.object_sync',
         expect.objectContaining({
           taskId: expect.any(String),
           initiatedByUser: '647dd6b0becf48db843af516',
@@ -430,7 +436,7 @@ describe('Tasks integration test', () => {
       });
       expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
         ExchangeTypes.GENERAL,
-        'task.scheduled',
+        'task.scheduled.data_upload',
         expect.objectContaining({
           taskId: expect.any(String),
           initiatedByUser: '647dda055fbd84a412682e22',

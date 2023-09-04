@@ -1,13 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import {
-  MessageTypes,
-  TaskFailedMessage,
-} from './types/message-types/messageTypes';
-
 import { Types } from 'mongoose';
 
-import { TaskStatusMessage } from './types/message-types/task/types';
 import { TasksService } from '../tasks/tasks.service';
 import { FilesService } from '../files/files.service';
 import {
@@ -15,12 +9,11 @@ import {
   isObjectSyncTaskStatusMessage,
 } from './guards/object-sync';
 import { ObjectSyncTaskMessageHandler } from './handlers/object-sync-task-message.handler';
-import { TaskSteps } from '../../models';
 
-import { VisibilityStateResultMessage } from './types/message-types/file/types';
 import { isDataFetchTaskResultMessage } from './guards/data-fetch';
 import { Platform } from '../../global/tokens';
 import { FileSetVisibilityStateParams } from '../files/types/types';
+import { MessageMap } from './types/runtypes/map';
 
 @Injectable()
 export class MessagesHandlerService {
@@ -32,17 +25,23 @@ export class MessagesHandlerService {
     private readonly objectSyncTaskHandler: ObjectSyncTaskMessageHandler,
   ) {}
 
-  async handleTaskStatusMessage(message: TaskStatusMessage) {
+  async handleGeneralTaskStatusMessage(
+    message: MessageMap['task.status'],
+    inputTaskId?: Types.ObjectId,
+  ) {
+    const taskId = inputTaskId ?? new Types.ObjectId(message.taskId);
+    await this.tasksService.updateTaskStatus(taskId, message);
+  }
+
+  async handleTaskFailedMessage(message: MessageMap['task.status.failed']) {
+    const taskId = new Types.ObjectId(message.taskId);
+    await this.tasksService.setFailedTaskInfo(taskId, message);
+  }
+
+  async handleTaskStatusMessage(message: MessageMap['taskStatusMessage']) {
     const taskId = new Types.ObjectId(message.taskId);
 
-    if (message.status === TaskSteps.FAILED) {
-      return await this.tasksService.setFailedTaskInfo(
-        taskId,
-        message as TaskFailedMessage,
-      );
-    }
-
-    await this.tasksService.updateTaskStatus(taskId, message);
+    await this.handleGeneralTaskStatusMessage(message, taskId);
 
     switch (message.taskType) {
       case 'DATA_FETCH':
@@ -66,7 +65,7 @@ export class MessagesHandlerService {
         }
         return;
       case 'DATA_UPLOAD':
-        if (message.status === TaskSteps.DONE) {
+        if (message.status === 'DONE') {
           const taskFileIds = await this.tasksService.getDataUploadTaskFileIds(
             taskId,
           );
@@ -80,7 +79,7 @@ export class MessagesHandlerService {
     }
   }
 
-  async handleTaskModeChangedMessage(message: MessageTypes['task.mode']) {
+  async handleTaskModeChangedMessage(message: MessageMap['task.mode.changed']) {
     await this.tasksService.changeTasksModes(
       message.tasks.map((task) => task.taskId),
       message.type,
@@ -88,7 +87,7 @@ export class MessagesHandlerService {
   }
 
   async handleFileVisibilityStateResultMessage(
-    message: VisibilityStateResultMessage,
+    message: MessageMap['file.result.visibility.state'],
   ) {
     const options: FileSetVisibilityStateParams = {
       id: new Types.ObjectId(message.fileId),

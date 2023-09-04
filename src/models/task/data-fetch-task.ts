@@ -5,8 +5,11 @@ import { isPresent } from '../../utils/validation';
 import { Sensor } from '../Sensor';
 import { Group } from '../Group';
 import { Properties } from '../../global/types/types';
-import { TaskTypes } from './types';
-import { taskEntityConverter } from '../utils/utils';
+import { runtypeFieldValidator, taskEntityConverter } from '../utils/utils';
+import {
+  TaskTypes,
+  TaskTypesRuntype,
+} from '../../core/messages/types/runtypes/common';
 
 @Schema({
   _id: false,
@@ -92,8 +95,15 @@ const DataFetchPayloadSchema = SchemaFactory.createForClass(DataFetchPayload);
   },
 })
 export class DataFetchTask extends Task {
-  @Prop({ default: TaskTypes.DATA_FETCH })
-  taskType: TaskTypes.DATA_FETCH = TaskTypes.DATA_FETCH;
+  @Prop({
+    type: String,
+    default: 'DATA_FETCH' as TaskTypes,
+    validate: runtypeFieldValidator(
+      TaskTypesRuntype.alternatives[0],
+      'TaskType',
+    ),
+  })
+  taskType: TaskTypes = 'DATA_FETCH';
 
   @Prop({ default: `DataFetch-${new Date().getTime()}`, index: true })
   name: string;

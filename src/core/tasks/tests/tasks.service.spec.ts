@@ -206,13 +206,12 @@ describe('TasksService', () => {
 
       expect(sendMessageSpy).toHaveBeenCalledWith<SendMessageParams>(
         ExchangeTypes.GENERAL,
-        'task.scheduled',
+        'task.scheduled.object_sync',
         {
           taskType: 'OBJECT_SYNC',
           initiatedByUser: '645677573f56adad8ddcc091',
           taskName: objectSyncTask.name,
           firstRunAt: objectSyncTask.metadata.firstRunAt?.toISOString(),
-          customAttributes: {},
           payload: {},
           taskId: createdTask._id.toString(),
         },

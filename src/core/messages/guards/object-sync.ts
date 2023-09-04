@@ -1,40 +1,31 @@
-import {
-  ObjectSyncTaskResultMessage,
-  ObjectSyncTaskStatusMessage,
-} from '../types/message-types/messageTypes';
-import { TaskStatusMessage } from '../types/message-types/task/types';
-import { TaskSteps, TaskTypes } from '../../../models';
+import { MessageMap } from '../types/runtypes/map';
 import {
   Group,
   ManagedObject,
-  ObjectTypes,
   Sensor,
-} from '../types/message-types/task/object-sync';
+} from '../types/runtypes/task/object-sync';
 
 export function isObjectSyncTaskStatusMessage(
-  message: TaskStatusMessage,
-): message is ObjectSyncTaskStatusMessage {
-  return (
-    message.status === TaskSteps.PROCESSING &&
-    message.taskType === TaskTypes.OBJECT_SYNC &&
-    Array.isArray(message?.payload['objects'])
-  );
+  message: MessageMap['task.status'],
+): message is MessageMap['task.status.object_sync'] {
+  return message.status === 'PROCESSING' && message.taskType === 'OBJECT_SYNC';
 }
 
 export function isObjectSyncTaskResultMessage(
-  message: TaskStatusMessage,
-): message is ObjectSyncTaskResultMessage {
+  message: MessageMap['task.status'],
+): message is MessageMap['task.status.object_sync.result'] {
   return (
-    message.status === TaskSteps.DONE &&
-    message.taskType === TaskTypes.OBJECT_SYNC &&
-    typeof message?.payload['objectAmount'] === 'number'
+    message.status === 'DONE' &&
+    message.taskType === 'OBJECT_SYNC' &&
+    ('objectAmount' as keyof MessageMap['task.status.object_sync.result']['payload']) in
+      message.payload
   );
 }
 
 export function isSensor(value: ManagedObject): value is Sensor {
-  return value.objectType === ObjectTypes.SENSOR;
+  return value.objectType === 'SENSOR';
 }
 
 export function isGroup(value: ManagedObject): value is Group {
-  return value.objectType === ObjectTypes.GROUP;
+  return value.objectType === 'GROUP';
 }

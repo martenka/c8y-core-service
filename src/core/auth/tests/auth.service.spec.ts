@@ -73,9 +73,12 @@ describe('AuthService', () => {
       const messagesProducerService = new MessagesProducerService(
         null as unknown as AmqpConnection,
       );
-      const sendMessageSpy: jest.SpyInstance<void, SendMessageParams> = jest
-        .spyOn(messagesProducerService, 'sendMessage')
+      jest
+        .spyOn(messagesProducerService, 'publishMessage')
         .mockImplementation((_args) => undefined);
+
+      const sendMessageSpy: jest.SpyInstance<void, SendMessageParams> =
+        jest.spyOn(messagesProducerService, 'sendMessage');
 
       const userModel = connection.model(User.name, UserSchema);
 

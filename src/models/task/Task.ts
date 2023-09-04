@@ -1,11 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Base } from '../Base';
-import { isPresent } from '../../utils/validation';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { User } from '../User';
 import { Properties } from '../../global/types/types';
-import { TaskMode, TaskStatus, TaskSteps, TaskTypes } from './types';
-import { taskEntityConverter } from '../utils/utils';
+import { runtypeFieldValidator, taskEntityConverter } from '../utils/utils';
+import {
+  TaskTypes,
+  TaskTypesRuntype,
+  TaskStatus,
+  TaskStatusRuntype,
+  TaskMode,
+  TaskModeRuntype,
+} from '../../core/messages/types/runtypes/common';
 
 @Schema({ _id: false })
 export class PeriodicData {
@@ -53,34 +59,25 @@ export class TaskMetadata {
   },
 })
 export class Task extends Base {
-  @Prop({ type: String, enum: TaskTypes })
-  taskType: keyof typeof TaskTypes;
+  @Prop({
+    type: String,
+    validate: runtypeFieldValidator(TaskTypesRuntype, 'TaskType'),
+  })
+  taskType: TaskTypes;
 
   @Prop()
   name: string;
 
   @Prop({
     required: true,
-    enum: TaskSteps,
-    default: TaskSteps.NOT_STARTED,
-    validate: {
-      validator: (input) =>
-        isPresent(input) && Object.values(TaskSteps).includes(input),
-      message: (props) =>
-        `${props?.value ?? 'UNKNOWN'} is not a valid status value!`,
-    },
+    default: 'NOT_STARTED' as TaskStatus,
+    validate: runtypeFieldValidator(TaskStatusRuntype, 'TaskStatus'),
   })
   status: TaskStatus;
 
   @Prop({
-    enum: TaskMode,
-    default: TaskMode.ENABLED,
-    validate: {
-      validator: (input) =>
-        isPresent(input) && Object.values(TaskMode).includes(input),
-      message: (props) =>
-        `${props?.value ?? 'UNKNOWN'} is not a valid mode value!`,
-    },
+    default: 'ENABLED' as TaskMode,
+    validate: runtypeFieldValidator(TaskModeRuntype, 'TaskMode'),
   })
   mode: TaskMode;
 

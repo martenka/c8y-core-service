@@ -2,8 +2,11 @@ import { Task } from './Task';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { Properties } from '../../global/types/types';
-import { TaskTypes } from './types';
-import { taskEntityConverter } from '../utils/utils';
+import { runtypeFieldValidator, taskEntityConverter } from '../utils/utils';
+import {
+  TaskTypes,
+  TaskTypesRuntype,
+} from '../../core/messages/types/runtypes/common';
 
 @Schema({
   toJSON: {
@@ -14,8 +17,15 @@ import { taskEntityConverter } from '../utils/utils';
   },
 })
 export class ObjectSyncTask extends Task {
-  @Prop({ default: TaskTypes.OBJECT_SYNC })
-  taskType: TaskTypes.OBJECT_SYNC = TaskTypes.OBJECT_SYNC;
+  @Prop({
+    type: String,
+    default: 'OBJECT_SYNC' as TaskTypes,
+    validate: runtypeFieldValidator(
+      TaskTypesRuntype.alternatives[2],
+      'TaskType',
+    ),
+  })
+  taskType: TaskTypes = 'OBJECT_SYNC';
 
   @Prop({ default: `ObjectSync-${new Date().getTime()}`, index: true })
   name: string;

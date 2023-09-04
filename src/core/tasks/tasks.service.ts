@@ -9,7 +9,6 @@ import {
   Task,
   TaskDocument,
   TaskDocumentSubtypes,
-  TaskMode,
   TaskModel,
   TaskSteps,
   TaskType,
@@ -23,10 +22,6 @@ import {
 } from '../../global/pagination/types';
 import { SkipPagingService } from '../paging/skip-paging.service';
 import { MessagesProducerService } from '../messages/messages-producer.service';
-import {
-  TaskScheduledMessage,
-  TaskStatusMessage,
-} from '../messages/types/message-types/task/types';
 
 import {
   ensureArray,
@@ -35,7 +30,6 @@ import {
   notPresent,
 } from '../../utils/validation';
 import { TaskMessageMapperService } from './task-message-mapper.service';
-import { TaskFailedMessage } from '../messages/types/message-types/messageTypes';
 import { TaskQueryProperties } from './query/task-query.dto';
 import {
   convertArrayToMap,
@@ -44,10 +38,6 @@ import {
   parseDateOrNow,
   removeNilProperties,
 } from '../../utils/helpers';
-import {
-  DataFetchTaskResultFile,
-  DataFetchTaskResultStatusPayload,
-} from '../messages/types/message-types/task/data-fetch';
 
 import {
   DataUploadTaskDocument,
@@ -56,6 +46,9 @@ import {
 import { AlreadyExistsException } from '../../global/exceptions/already-exists.exception';
 import * as crypto from 'crypto';
 import { TaskModeDto } from './dto/input/task-mode.dto';
+import { MessageMap } from '../messages/types/runtypes/map';
+import { TaskMode } from '../messages/types/runtypes/common';
+import { DataFetchTaskResultSensor } from '../messages/types/runtypes/task/data-fetch';
 
 @Injectable()
 export class TasksService {
@@ -91,30 +84,10 @@ export class TasksService {
       initiatedByUser: new Types.ObjectId(loggedInUserId),
     });
 
-    const mappedPayload =
+    const mappedMessage =
       this.taskMessageMapperService.mapTaskToMessage(createdTask);
 
-    let periodicData: TaskScheduledMessage['periodicData'];
-    if (isPresent(createdTask.metadata?.periodicData)) {
-      periodicData = {
-        pattern: createdTask.metadata.periodicData.pattern,
-        windowDurationSeconds:
-          createdTask.metadata.periodicData.windowDurationSeconds,
-      };
-    }
-
-    const message: TaskScheduledMessage = {
-      taskType: createdTask.taskType,
-      taskName: createdTask.name,
-      initiatedByUser: loggedInUserId,
-      taskId: createdTask._id.toString(),
-      payload: mappedPayload,
-      periodicData: periodicData,
-      firstRunAt: createdTask.metadata.firstRunAt?.toISOString(),
-      customAttributes: createdTask.customAttributes,
-    };
-
-    this.messageProducerService.sendTaskScheduledMessage(message);
+    this.messageProducerService.sendTaskScheduledMessage(mappedMessage);
 
     return createdTask.depopulate();
   }
@@ -159,7 +132,7 @@ export class TasksService {
 
   async setFailedTaskInfo(
     id: Types.ObjectId,
-    message: Omit<TaskFailedMessage, 'taskId'> | string,
+    message: Omit<MessageMap['task.status.failed'], 'taskId'> | string,
   ) {
     let statusUpdate: UpdateQuery<TaskType> = {};
 
@@ -183,12 +156,15 @@ export class TasksService {
       .exec();
   }
 
-  async updateTaskStatus(id: Types.ObjectId, statusMessage: TaskStatusMessage) {
+  async updateTaskStatus(
+    id: Types.ObjectId,
+    statusMessage: MessageMap['task.status'],
+  ) {
     const update: UpdateQuery<Task> = {
       status: statusMessage.status,
     };
 
-    if (statusMessage.status === TaskSteps.PROCESSING) {
+    if (statusMessage.status === 'PROCESSING') {
       update['metadata.lastRanAt'] = parseDateOrNow(statusMessage.timestamp);
     }
 
@@ -235,7 +211,7 @@ export class TasksService {
    */
   async handleDataFetchTaskResult(
     taskId: Types.ObjectId,
-    result: TaskStatusMessage<DataFetchTaskResultStatusPayload>,
+    result: MessageMap['task.status.data_fetch.result'],
     createdFiles: FileDocument[] = [],
   ) {
     if (notPresent(result.payload) || hasNoOwnKeys(result.payload)) {
@@ -331,7 +307,7 @@ export class TasksService {
   }
 
   private mapFileToSensorData(
-    file: DataFetchTaskResultFile,
+    file: DataFetchTaskResultSensor,
     fileId?: string,
   ): SensorDataType {
     return {

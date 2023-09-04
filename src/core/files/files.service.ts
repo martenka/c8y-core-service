@@ -41,9 +41,9 @@ import { IDeleteResponse } from '../../global/dto/types';
 import { MessagesProducerService } from '../messages/messages-producer.service';
 import { getDeletedIds } from '../../models/utils/utils';
 import { VisibilityStateDtoProperties } from './dto/visibility-state.dto';
-import { DataFetchTaskResult } from '../messages/types/message-types/task/data-fetch';
 import { Platform } from '../../global/tokens';
 import { SensorType } from '../../models/Sensor';
+import { MessageMap } from '../messages/types/runtypes/map';
 
 @Injectable()
 export class FilesService {
@@ -58,7 +58,7 @@ export class FilesService {
   ) {}
 
   async createFilesFromMessage(
-    message: DataFetchTaskResult,
+    message: MessageMap['task.status.data_fetch.result'],
   ): Promise<FileDocument[]> {
     const files: FileProperties[] = [];
     const taskId = idToObjectIDOrUndefined(message.taskId);

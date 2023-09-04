@@ -228,3 +228,12 @@ export function exhaustiveCheck(value: never, context: string): never {
     `${context} - This shouldn't have been called, got called with ${value}`,
   );
 }
+
+export function parseNumberOrThrow(input: string): number {
+  const number = parseFloat(input);
+  if (!Number.isFinite(number)) {
+    throw new Error(`Unable to convert ${number} to number`);
+  }
+
+  return number;
+}

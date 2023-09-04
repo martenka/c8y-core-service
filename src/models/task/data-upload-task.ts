@@ -1,11 +1,17 @@
 import { Task } from './Task';
-import { TaskTypes } from './types';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { DataUploadMessageStorage } from '../../core/messages/types/message-types/task/file-upload';
 import { CustomAttributes } from '../types/types';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { Properties } from '../../global/types/types';
-import { taskEntityConverter } from '../utils/utils';
+import { runtypeFieldValidator, taskEntityConverter } from '../utils/utils';
+import {
+  TaskTypes,
+  TaskTypesRuntype,
+} from '../../core/messages/types/runtypes/common';
+import {
+  AllowedPlatformIdentifiers,
+  PlatformIdentifiersRuntype,
+} from '../../core/messages/types/runtypes/task/data-upload';
 @Schema({ _id: false })
 export class DataUploadFileStorage {
   @Prop({ required: true })
@@ -66,7 +72,7 @@ export class DataUploadFile {
   fileName: string;
 
   @Prop({ type: () => DataUploadFileStorage, required: true })
-  storage: DataUploadMessageStorage;
+  storage: DataUploadFileStorage;
 
   @Prop({ type: () => DataUploadFileMetadata, required: true })
   metadata: DataUploadFileMetadata;
@@ -88,8 +94,14 @@ const DataUploadFileSchema = SchemaFactory.createForClass(DataUploadFile);
 
 @Schema({ _id: false })
 export class DataUploadPlatform {
-  @Prop({ required: true })
-  platformIdentifier: string;
+  @Prop({
+    required: true,
+    validate: runtypeFieldValidator(
+      PlatformIdentifiersRuntype,
+      'platformIdentifier',
+    ),
+  })
+  platformIdentifier: AllowedPlatformIdentifiers;
 }
 
 @Schema({ _id: false })
@@ -110,8 +122,15 @@ export class DataUploadPayload {
   },
 })
 export class DataUploadTask extends Task {
-  @Prop({ default: TaskTypes.DATA_UPLOAD })
-  taskType: TaskTypes.DATA_UPLOAD = TaskTypes.DATA_UPLOAD;
+  @Prop({
+    type: String,
+    default: 'DATA_UPLOAD' as TaskTypes,
+    validate: runtypeFieldValidator(
+      TaskTypesRuntype.alternatives[1],
+      'TaskType',
+    ),
+  })
+  taskType: TaskTypes = 'DATA_UPLOAD';
 
   @Prop({ default: `DataUpload-${new Date().getTime()}`, index: true })
   name: string;

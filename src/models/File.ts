@@ -7,6 +7,7 @@ import { CustomAttributes } from './types/types';
 import { DataFetchTask, DataFetchTaskType } from './task/data-fetch-task';
 import { Platform } from '../global/tokens';
 import { isPresent } from '../utils/validation';
+import { PlatformIdentifiersRuntype } from '../core/messages/types/runtypes/task/data-upload';
 
 @Schema({ _id: false })
 export class FileStorageInfo {
@@ -35,15 +36,13 @@ export class FileVisibilityState {
 
   @Prop({
     type: [String],
-    enum: [Platform.CKAN],
     default: [],
     validate: {
       validator: (input) => {
-        const platformValues = Object.values(Platform);
         return (
           isPresent(input) &&
           Array.isArray(input) &&
-          input.every((value) => platformValues.includes(value))
+          input.every((value) => PlatformIdentifiersRuntype.guard(value))
         );
       },
       message: (props) =>

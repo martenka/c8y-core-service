@@ -2,6 +2,7 @@ import { FilterQuery, Model, Types } from 'mongoose';
 import { Base } from '../Base';
 import { ensureArray, isPresent, notPresent } from '../../utils/validation';
 import { BasicAttributes } from '../types/types';
+import { Runtype } from 'runtypes';
 
 export async function getDeletedIds<T extends Base = Base>(
   model: Model<T>,
@@ -99,4 +100,12 @@ export function transformKeysToUnsetForm(
   });
 
   return transformedAttributes;
+}
+
+export function runtypeFieldValidator(type: Runtype, context: string) {
+  return {
+    validator: (value: unknown) => type.guard(value),
+    message: (props) =>
+      `${props?.value ?? 'UNKNOWN'} is not a valid ${context} value!`,
+  };
 }

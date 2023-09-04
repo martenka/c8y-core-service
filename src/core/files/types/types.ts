@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { VisibilityState } from '../../../models';
+import { VisibilityState } from '../../messages/types/runtypes/common';
 
 export interface FileLink {
   /**
